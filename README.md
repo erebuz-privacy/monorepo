@@ -1,7 +1,7 @@
 # Erebuz Monorepo
 
 A [pnpm workspace](https://pnpm.io/workspaces) housing the Erebuz apps, smart
-contracts and shared SDK.
+contracts and shared packages.
 
 ## Structure
 
@@ -11,23 +11,41 @@ erebuz-monorepo/
 │   ├── landing/    # Marketing site        (Next.js + Tailwind + shadcn/ui)
 │   └── app/        # wall8 — the product    (Next.js + Tailwind + shadcn/ui)
 ├── contracts/      # Smart contracts        (Hardhat, tests use @erebuz/sdk)
+├── packages/
+│   └── ui/         # @erebuz/ui — shared shadcn/ui component library
 └── sdk/            # @erebuz/sdk — shared types & helpers
 ```
 
-`@erebuz/sdk` is the shared layer: it's consumed by **app (wall8)** and by
-**contracts** so the frontend and on-chain tooling stay in sync.
+Two shared layers keep things in sync:
+
+- `@erebuz/ui` follows the [official shadcn monorepo pattern](https://ui.shadcn.com/docs/monorepo):
+  components live once in `packages/ui` and both apps import them, instead of
+  each app carrying its own copy.
+- `@erebuz/sdk` is consumed by **app (wall8)** and by **contracts** so the
+  frontend and on-chain tooling stay in sync.
 
 ```
-        ┌─────────────┐        ┌─────────────┐
-        │ apps/app     │        │ contracts    │
-        │  (wall8)     │        │             │
-        └──────┬──────┘        └──────┬──────┘
-               │   workspace:*        │
-               └────────┬─────────────┘
-                        ▼
-                 ┌─────────────┐
-                 │ @erebuz/sdk  │
-                 └─────────────┘
+┌─────────────┐        ┌─────────────┐
+│ apps/landing │        │  apps/app    │
+│              │        │   (wall8)    │
+└──────┬──────┘        └──────┬──────┘
+       │                       │  workspace:*
+       └───────────┬───────────┘
+                    ▼
+             ┌─────────────┐
+             │ @erebuz/ui   │
+             └─────────────┘
+
+                                ┌─────────────┐        ┌─────────────┐
+                                │ apps/app     │        │ contracts    │
+                                │  (wall8)     │        │             │
+                                └──────┬──────┘        └──────┬──────┘
+                                       │   workspace:*         │
+                                       └────────┬─────────────┘
+                                                ▼
+                                         ┌─────────────┐
+                                         │ @erebuz/sdk  │
+                                         └─────────────┘
 ```
 
 ## Prerequisites
@@ -47,14 +65,23 @@ pnpm build          # build every package in dependency order
 pnpm lint           # lint every package
 ```
 
+Add a new shadcn/ui component (run from inside an app; the CLI resolves the
+shared `packages/ui` layout automatically):
+
+```bash
+cd apps/app
+pnpm exec shadcn add <component>
+```
+
 ## Packages
 
-| Package            | Path          | Description                                  |
-| ------------------ | ------------- | -------------------------------------------- |
-| `@erebuz/landing`  | `apps/landing`| Marketing / landing site                     |
-| `@erebuz/app`      | `apps/app`    | wall8 — the main product app                 |
-| `@erebuz/contracts`| `contracts`   | Solidity contracts (Hardhat), tests use sdk  |
-| `@erebuz/sdk`      | `sdk`         | Shared types, chain config and helpers       |
+| Package             | Path           | Description                                  |
+| ------------------- | -------------- | --------------------------------------------- |
+| `@erebuz/landing`   | `apps/landing` | Marketing / landing site                      |
+| `@erebuz/app`       | `apps/app`     | wall8 — the main product app                  |
+| `@erebuz/contracts` | `contracts`    | Solidity contracts (Hardhat), tests use sdk   |
+| `@erebuz/ui`        | `packages/ui`  | Shared shadcn/ui component library            |
+| `@erebuz/sdk`       | `sdk`          | Shared types, chain config and helpers        |
 
 Target a single package with pnpm's `--filter`:
 

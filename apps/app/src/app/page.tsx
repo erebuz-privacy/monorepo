@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { EREBUZ_SDK_VERSION } from "@erebuz/sdk";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@erebuz/ui/components/button";
 
 export default function Home() {
   return (
