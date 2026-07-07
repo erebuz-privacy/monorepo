@@ -1,0 +1,27 @@
+{
+  "name": "erebuz-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel dev",
+    "lint": "pnpm -r lint",
+    "landing": "pnpm --filter @erebuz/landing dev",
+    "app": "pnpm --filter @erebuz/app dev",
+    "sdk": "pnpm --filter @erebuz/sdk",
+    "contracts": "pnpm --filter @erebuz/contracts"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "keccak",
+      "secp256k1",
+      "sharp",
+      "unrs-resolver"
+    ]
+  }
+}

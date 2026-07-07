@@ -1,0 +1,35 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# builds / outputs
+dist/
+build/
+out/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# smart contracts (hardhat)
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/
+
+# env
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# misc
+.DS_Store
+coverage/
+.vercel
+.idea/
+.vscode/*
+!.vscode/extensions.json
