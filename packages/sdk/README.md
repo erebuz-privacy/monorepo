@@ -5,9 +5,10 @@ Shared TypeScript library for the Erebuz monorepo.
 It is an **internal, source-only package** (no build step) consumed via the
 `workspace:*` protocol by:
 
-- [`apps/app`](../apps/app) — the wall8 frontend (transpiled through Next.js
-  `transpilePackages`).
-- [`contracts`](../contracts) — deployment / tooling scripts (run with `tsx`).
+- [`apps/app`](../../apps/app) — the wall8 frontend (transpiled through
+  Next.js `transpilePackages`).
+- [`contracts`](../../contracts) — deployment / tooling scripts (run with
+  `tsx`).
 
 Add shared chain config, types and helpers here so the frontend and on-chain
 tooling never drift apart.

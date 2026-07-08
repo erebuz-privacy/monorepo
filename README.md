@@ -11,9 +11,9 @@ erebuz-monorepo/
 │   ├── landing/    # Marketing site        (Next.js + Tailwind + shadcn/ui)
 │   └── app/        # wall8 — the product    (Next.js + Tailwind + shadcn/ui)
 ├── contracts/      # Smart contracts        (Hardhat, tests use @erebuz/sdk)
-├── packages/
-│   └── ui/         # @erebuz/ui — shared shadcn/ui component library
-└── sdk/            # @erebuz/sdk — shared types & helpers
+└── packages/
+    ├── ui/         # @erebuz/ui — shared shadcn/ui component library
+    └── sdk/        # @erebuz/sdk — shared types & helpers
 ```
 
 Two shared layers keep things in sync:
@@ -81,7 +81,7 @@ pnpm exec shadcn add <component>
 | `@erebuz/app`       | `apps/app`     | wall8 — the main product app                  |
 | `@erebuz/contracts` | `contracts`    | Solidity contracts (Hardhat), tests use sdk   |
 | `@erebuz/ui`        | `packages/ui`  | Shared shadcn/ui component library            |
-| `@erebuz/sdk`       | `sdk`          | Shared types, chain config and helpers        |
+| `@erebuz/sdk`       | `packages/sdk` | Shared types, chain config and helpers        |
 
 Target a single package with pnpm's `--filter`:
 
