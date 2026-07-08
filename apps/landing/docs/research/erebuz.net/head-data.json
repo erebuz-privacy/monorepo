@@ -1,0 +1,216 @@
+{
+  "links": [
+    {
+      "rel": "canonical",
+      "href": "https://namada.net/",
+      "as": ""
+    },
+    {
+      "rel": "apple-touch-icon",
+      "href": "https://namada.net/assets/apple-touch-icon.png",
+      "as": ""
+    },
+    {
+      "rel": "icon",
+      "href": "https://namada.net/assets/favicon-32x32.png",
+      "as": ""
+    },
+    {
+      "rel": "icon",
+      "href": "https://namada.net/assets/favicon-16x16.png",
+      "as": ""
+    },
+    {
+      "rel": "preload",
+      "href": "https://namada.net/_next/static/css/a6607899678d4094.css",
+      "as": "style"
+    },
+    {
+      "rel": "stylesheet",
+      "href": "https://namada.net/_next/static/css/a6607899678d4094.css",
+      "as": ""
+    },
+    {
+      "rel": "prefetch",
+      "href": "https://namada.net/_next/static/chunks/pages/roadmap-acb96ef87740da8b.js",
+      "as": "script"
+    },
+    {
+      "rel": "prefetch",
+      "href": "https://namada.net/_next/static/chunks/221-99d746192c634d53.js",
+      "as": "script"
+    },
+    {
+      "rel": "prefetch",
+      "href": "https://namada.net/_next/static/chunks/pages/ecosystem-d55b363324336a38.js",
+      "as": "script"
+    },
+    {
+      "rel": "prefetch",
+      "href": "https://namada.net/_next/static/chunks/pages/start-c4e7afde2b90f889.js",
+      "as": "script"
+    },
+    {
+      "rel": "prefetch",
+      "href": "https://namada.net/_next/static/chunks/pages/staking-72efffb1ad28b1f3.js",
+      "as": "script"
+    },
+    {
+      "rel": "prefetch",
+      "href": "https://namada.net/_next/static/chunks/pages/governance-066bde4db12f7c9f.js",
+      "as": "script"
+    },
+    {
+      "rel": "prefetch",
+      "href": "https://namada.net/_next/static/chunks/pages/visual-identity-cdb11caed7d71e99.js",
+      "as": "script"
+    },
+    {
+      "rel": "prefetch",
+      "href": "https://namada.net/_next/static/chunks/pages/validators-e3b11aae18e0e45c.js",
+      "as": "script"
+    },
+    {
+      "rel": "prefetch",
+      "href": "https://namada.net/_next/static/chunks/pages/testnets-45de497008934b64.js",
+      "as": "script"
+    },
+    {
+      "rel": "prefetch",
+      "href": "https://namada.net/_next/static/chunks/822-c10a0869c34bff26.js",
+      "as": "script"
+    },
+    {
+      "rel": "prefetch",
+      "href": "https://namada.net/_next/static/chunks/pages/blog-bf40c4ebc75e5e66.js",
+      "as": "script"
+    },
+    {
+      "rel": "prefetch",
+      "href": "https://namada.net/_next/static/chunks/620-7a75f2ba6e0d112f.js",
+      "as": "script"
+    },
+    {
+      "rel": "prefetch",
+      "href": "https://namada.net/_next/static/chunks/pages/trusted-setup-1c67c01c3add065f.js",
+      "as": "script"
+    },
+    {
+      "rel": "prefetch",
+      "href": "https://namada.net/_next/static/chunks/pages/security-54c5e7276b45d4d5.js",
+      "as": "script"
+    },
+    {
+      "rel": "prefetch",
+      "href": "https://namada.net/_next/static/chunks/pages/impressum-353abc4e9a10e8ae.js",
+      "as": "script"
+    }
+  ],
+  "scripts": [
+    {
+      "src": "https://cdn.usefathom.com/script.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/polyfills-78c92fac7aa8fdd8.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/webpack-cc646ae61e15e247.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/framework-702c2f33bd1366b7.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/main-0a95882e178b91ff.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/pages/_app-13482c2fd0475418.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/82-ca573417ab7e41b7.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/pages/index-c06bd8e9dc748ddf.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/T27OM5CiD5HQkoXiOrHEN/_buildManifest.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/T27OM5CiD5HQkoXiOrHEN/_ssgManifest.js",
+      "type": ""
+    },
+    {
+      "src": "",
+      "type": "application/json"
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/pages/roadmap-acb96ef87740da8b.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/pages/start-c4e7afde2b90f889.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/221-99d746192c634d53.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/pages/ecosystem-d55b363324336a38.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/pages/staking-72efffb1ad28b1f3.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/pages/governance-066bde4db12f7c9f.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/pages/visual-identity-cdb11caed7d71e99.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/pages/validators-e3b11aae18e0e45c.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/822-c10a0869c34bff26.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/pages/blog-bf40c4ebc75e5e66.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/pages/testnets-45de497008934b64.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/pages/security-54c5e7276b45d4d5.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/620-7a75f2ba6e0d112f.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/pages/trusted-setup-1c67c01c3add065f.js",
+      "type": ""
+    },
+    {
+      "src": "https://namada.net/_next/static/chunks/pages/impressum-353abc4e9a10e8ae.js",
+      "type": ""
+    }
+  ],
+  "title": "Namada - Your Gateway to the Shielded Multichain"
+}

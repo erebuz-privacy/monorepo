@@ -1,0 +1,108 @@
+{
+  "fontFamilies": [
+    "\"Space Grotesk\", Helvetica, sans-serif"
+  ],
+  "fontLinks": [
+    "https://namada.net/_next/static/css/a6607899678d4094.css"
+  ],
+  "favicons": [
+    {
+      "href": "https://namada.net/assets/apple-touch-icon.png",
+      "rel": "apple-touch-icon",
+      "sizes": "180x180",
+      "type": ""
+    },
+    {
+      "href": "https://namada.net/assets/favicon-32x32.png",
+      "rel": "icon",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "href": "https://namada.net/assets/favicon-16x16.png",
+      "rel": "icon",
+      "sizes": "16x16",
+      "type": "image/png"
+    }
+  ],
+  "metaTags": [
+    {
+      "name": "",
+      "content": ""
+    },
+    {
+      "name": "twitter:site",
+      "content": "@namada"
+    },
+    {
+      "name": "twitter:card",
+      "content": "summary_large_image"
+    },
+    {
+      "name": "twitter:title",
+      "content": "Namada - Your Gateway to the Shielded Multichain"
+    },
+    {
+      "name": "twitter:description",
+      "content": "The shielded asset hub rewarding you to protect the multichain. Namada introduces shielded set rewards and shielded cross-chain actions for any asset."
+    },
+    {
+      "name": "twitter:image",
+      "content": "https://namada.net/assets/opengraph.jpg"
+    },
+    {
+      "name": "twitter:creator",
+      "content": "@namada"
+    },
+    {
+      "name": "description",
+      "content": "The shielded asset hub rewarding you to protect the multichain. Namada introduces shielded set rewards and shielded cross-chain actions for any asset."
+    },
+    {
+      "name": "keywords",
+      "content": ""
+    },
+    {
+      "name": "viewport",
+      "content": "width=device-width, initial-scale=1"
+    },
+    {
+      "name": "og:title",
+      "content": "Namada - Your Gateway to the Shielded Multichain"
+    },
+    {
+      "name": "og:description",
+      "content": "The shielded asset hub rewarding you to protect the multichain. Namada introduces shielded set rewards and shielded cross-chain actions for any asset."
+    },
+    {
+      "name": "og:image",
+      "content": "https://namada.net/assets/opengraph.jpg"
+    },
+    {
+      "name": "og:type",
+      "content": "article"
+    },
+    {
+      "name": "og:url",
+      "content": "https://namada.net/"
+    },
+    {
+      "name": "theme-color",
+      "content": "#FFFF00"
+    },
+    {
+      "name": "next-head-count",
+      "content": "22"
+    }
+  ],
+  "bgColors": [
+    "rgb(255, 255, 0)",
+    "rgb(0, 0, 0)",
+    "rgb(0, 255, 255)"
+  ],
+  "textColors": [
+    "rgb(0, 0, 0)",
+    "rgb(255, 255, 0)",
+    "rgb(0, 255, 255)"
+  ]
+}
