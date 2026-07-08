@@ -16,12 +16,18 @@ importers:
       '@erebuz/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@web3icons/react':
+        specifier: ^4.1.17
+        version: 4.1.17(react@19.2.4)(typescript@5.9.3)
       lucide-react:
         specifier: ^1.23.0
         version: 1.23.0(react@19.2.4)
       next:
         specifier: 16.2.10
         version: 16.2.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      qrcode.react:
+        specifier: ^4.2.0
+        version: 4.2.0(react@19.2.4)
       react:
         specifier: 19.2.4
         version: 19.2.4
@@ -70,7 +76,7 @@ importers:
         version: 1.23.0(react@19.2.4)
       next:
         specifier: 16.2.1
-        version: 16.2.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 16.2.1(@babel/core@7.29.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react:
         specifier: 19.2.4
         version: 19.2.4
@@ -1675,6 +1681,16 @@ packages:
     resolution: {integrity: sha512-nAB74NfSNKknqQ1RrYj6uz8FcXEomu/MATJZxh/x+BArzN2U3JbOYC0APYzUIGhVY3m5hRxA8VPNdPBoG8txlA==}
     cpu: [x64]
     os: [win32]
+
+  '@web3icons/common@0.11.46':
+    resolution: {integrity: sha512-iwqDpB3sYLuBOM40jSci56Yj6XlkfSOaPRQqYYeGeWYtpsm9K5PVvJaC3bOfZxIYQ9zziu/Ncwm6Ma8bkNh/MA==}
+    peerDependencies:
+      typescript: ^5.0.0
+
+  '@web3icons/react@4.1.17':
+    resolution: {integrity: sha512-SNRvgjf+K83urUGjTYKxBKKJFQVozAyvFj6Rxmm8v81p+DbV6gK0RWjcrT/2/BkD5gLVYINdx+ATy0zIT5Vjlg==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
 
   abbrev@1.0.9:
     resolution: {integrity: sha512-LEyx4aLEC3x6T0UguF6YILf+ntvmOaWsVfENmIW0E9H09vKlLDGelMjjSm0jkDHALj8A8quZ/HapKNigzwge+Q==}
@@ -4043,6 +4059,11 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
+  qrcode.react@4.2.0:
+    resolution: {integrity: sha512-QpgqWi8rD9DsS9EP3z7BT+5lY5SFhsqGjpgW5DY/i3mK4M9DTBNz3ErMi8BWYEfI3L0d8GIbGmcdFAS1uIRGjA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   qs@6.15.3:
     resolution: {integrity: sha512-O9gl3zCl5h5blw1KGUzQKhA5oUXSl8rwUIM5o0S3nCXMliSvy5Dzx7/DJcI+SwgICv+IneSZwhBh1oSyEHA71A==}
     engines: {node: '>=0.6'}
@@ -6226,7 +6247,7 @@ snapshots:
 
   '@types/bn.js@5.2.0':
     dependencies:
-      '@types/node': 20.19.43
+      '@types/node': 24.13.3
 
   '@types/chai-as-promised@7.1.8':
     dependencies:
@@ -6236,18 +6257,18 @@ snapshots:
 
   '@types/concat-stream@1.6.1':
     dependencies:
-      '@types/node': 20.19.43
+      '@types/node': 24.13.3
 
   '@types/estree@1.0.9': {}
 
   '@types/form-data@0.0.33':
     dependencies:
-      '@types/node': 20.19.43
+      '@types/node': 24.13.3
 
   '@types/glob@7.2.0':
     dependencies:
       '@types/minimatch': 6.0.0
-      '@types/node': 20.19.43
+      '@types/node': 24.13.3
 
   '@types/json-schema@7.0.15': {}
 
@@ -6277,7 +6298,7 @@ snapshots:
 
   '@types/pbkdf2@3.1.2':
     dependencies:
-      '@types/node': 20.19.43
+      '@types/node': 24.13.3
 
   '@types/prettier@2.7.3': {}
 
@@ -6293,7 +6314,7 @@ snapshots:
 
   '@types/secp256k1@4.0.7':
     dependencies:
-      '@types/node': 20.19.43
+      '@types/node': 24.13.3
 
   '@types/validate-npm-package-name@4.0.2': {}
 
@@ -6457,6 +6478,17 @@ snapshots:
 
   '@unrs/resolver-binding-win32-x64-msvc@1.12.2':
     optional: true
+
+  '@web3icons/common@0.11.46(typescript@5.9.3)':
+    dependencies:
+      typescript: 5.9.3
+
+  '@web3icons/react@4.1.17(react@19.2.4)(typescript@5.9.3)':
+    dependencies:
+      '@web3icons/common': 0.11.46(typescript@5.9.3)
+      react: 19.2.4
+    transitivePeerDependencies:
+      - typescript
 
   abbrev@1.0.9: {}
 
@@ -7392,7 +7424,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.14.0(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0)):
+  eslint-module-utils@2.14.0(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@2.7.0)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
@@ -7413,7 +7445,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 9.39.4(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.14.0(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0)(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0))
+      eslint-module-utils: 2.14.0(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.4(jiti@2.7.0))
       hasown: 2.0.4
       is-core-module: 2.16.2
       is-glob: 4.0.3
@@ -8773,7 +8805,7 @@ snapshots:
 
   neo-async@2.6.2: {}
 
-  next@16.2.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  next@16.2.1(@babel/core@7.29.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@next/env': 16.2.1
       '@swc/helpers': 0.5.15
@@ -8782,7 +8814,7 @@ snapshots:
       postcss: 8.4.31
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      styled-jsx: 5.1.6(react@19.2.4)
+      styled-jsx: 5.1.6(@babel/core@7.29.7)(react@19.2.4)
     optionalDependencies:
       '@next/swc-darwin-arm64': 16.2.1
       '@next/swc-darwin-x64': 16.2.1
@@ -8806,7 +8838,7 @@ snapshots:
       postcss: 8.4.31
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
-      styled-jsx: 5.1.6(react@19.2.4)
+      styled-jsx: 5.1.6(@babel/core@7.29.7)(react@19.2.4)
     optionalDependencies:
       '@next/swc-darwin-arm64': 16.2.10
       '@next/swc-darwin-x64': 16.2.10
@@ -9125,6 +9157,10 @@ snapshots:
   proxy-from-env@2.1.0: {}
 
   punycode@2.3.1: {}
+
+  qrcode.react@4.2.0(react@19.2.4):
+    dependencies:
+      react: 19.2.4
 
   qs@6.15.3:
     dependencies:
@@ -9724,10 +9760,12 @@ snapshots:
 
   strip-json-comments@3.1.1: {}
 
-  styled-jsx@5.1.6(react@19.2.4):
+  styled-jsx@5.1.6(@babel/core@7.29.7)(react@19.2.4):
     dependencies:
       client-only: 0.0.1
       react: 19.2.4
+    optionalDependencies:
+      '@babel/core': 7.29.7
 
   supports-color@3.2.3:
     dependencies:
