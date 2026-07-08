@@ -1,0 +1,1442 @@
+[
+  {
+    "index": 0,
+    "tag": "a",
+    "text": "Mainnet LiveShields Up!Mainnet LiveShields Up!Mainnet LiveShields Up!Mainnet Liv",
+    "href": "https://namada.net/roadmap",
+    "classes": "flex items-center bg-black h-[40px] border-b border-yellow overflow-hidden text-nowrap text-yellow u",
+    "rect": {
+      "x": 0,
+      "y": -0.7502517700195312,
+      "width": 1440,
+      "height": 40,
+      "top": -0.7502517700195312,
+      "right": 1440,
+      "bottom": 39.24974822998047,
+      "left": 0
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 1,
+    "tag": "a",
+    "text": "",
+    "href": "https://namada.net/",
+    "classes": "",
+    "rect": {
+      "x": 16,
+      "y": 64.74974822998047,
+      "width": 240,
+      "height": 48.984375,
+      "top": 64.74974822998047,
+      "right": 256,
+      "bottom": 113.73412322998047,
+      "left": 16
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 4,
+    "tag": "a",
+    "text": "Composable Privacy Layer",
+    "href": "https://namada.net/#composable-privacy-layer",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 79,
+      "y": 267.249755859375,
+      "width": 427.328125,
+      "height": 130,
+      "top": 267.249755859375,
+      "right": 506.328125,
+      "bottom": 397.249755859375,
+      "left": 79
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 5,
+    "tag": "a",
+    "text": "Unified Shielded Set",
+    "href": "https://namada.net/#unified-shielded-set",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 506.328125,
+      "y": 267.249755859375,
+      "width": 427.328125,
+      "height": 130,
+      "top": 267.249755859375,
+      "right": 933.65625,
+      "bottom": 397.249755859375,
+      "left": 506.328125
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 6,
+    "tag": "a",
+    "text": "Get Rewards",
+    "href": "https://namada.net/#get-rewards",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 933.65625,
+      "y": 267.249755859375,
+      "width": 427.34375,
+      "height": 130,
+      "top": 267.249755859375,
+      "right": 1361,
+      "bottom": 397.249755859375,
+      "left": 933.65625
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 7,
+    "tag": "a",
+    "text": "Shielded Actions",
+    "href": "https://namada.net/#shielded-actions",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 79,
+      "y": 397.249755859375,
+      "width": 427.328125,
+      "height": 130,
+      "top": 397.249755859375,
+      "right": 506.328125,
+      "bottom": 527.249755859375,
+      "left": 79
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 8,
+    "tag": "a",
+    "text": "IBC Interoperability",
+    "href": "https://namada.net/#ibc-interoperability",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 506.328125,
+      "y": 397.249755859375,
+      "width": 427.328125,
+      "height": 130,
+      "top": 397.249755859375,
+      "right": 933.65625,
+      "bottom": 527.249755859375,
+      "left": 506.328125
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 9,
+    "tag": "a",
+    "text": "Staking",
+    "href": "https://namada.net/staking",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 933.65625,
+      "y": 397.249755859375,
+      "width": 427.34375,
+      "height": 130,
+      "top": 397.249755859375,
+      "right": 1361,
+      "bottom": 527.249755859375,
+      "left": 933.65625
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 10,
+    "tag": "a",
+    "text": "Governance",
+    "href": "https://namada.net/governance",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 79,
+      "y": 527.249755859375,
+      "width": 427.328125,
+      "height": 130,
+      "top": 527.249755859375,
+      "right": 506.328125,
+      "bottom": 657.249755859375,
+      "left": 79
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 11,
+    "tag": "a",
+    "text": "Get Started",
+    "href": "https://namada.net/start",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 506.328125,
+      "y": 527.249755859375,
+      "width": 427.328125,
+      "height": 130,
+      "top": 527.249755859375,
+      "right": 933.65625,
+      "bottom": 657.249755859375,
+      "left": 506.328125
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 12,
+    "tag": "a",
+    "text": "",
+    "href": "https://twitter.com/namada",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 79,
+      "y": 267.249755859375,
+      "width": 320.5,
+      "height": 300,
+      "top": 267.249755859375,
+      "right": 399.5,
+      "bottom": 567.249755859375,
+      "left": 79
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 13,
+    "tag": "a",
+    "text": "",
+    "href": "https://discord.com/invite/namada",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 399.5,
+      "y": 267.249755859375,
+      "width": 320.5,
+      "height": 300,
+      "top": 267.249755859375,
+      "right": 720,
+      "bottom": 567.249755859375,
+      "left": 399.5
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 14,
+    "tag": "a",
+    "text": "",
+    "href": "https://namada.community/",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 720,
+      "y": 267.249755859375,
+      "width": 320.5,
+      "height": 300,
+      "top": 267.249755859375,
+      "right": 1040.5,
+      "bottom": 567.249755859375,
+      "left": 720
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 15,
+    "tag": "a",
+    "text": "",
+    "href": "https://masp.knowable.run/",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 1040.5,
+      "y": 267.249755859375,
+      "width": 320.5,
+      "height": 300,
+      "top": 267.249755859375,
+      "right": 1361,
+      "bottom": 567.249755859375,
+      "left": 1040.5
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 16,
+    "tag": "a",
+    "text": "Visual Identity",
+    "href": "https://namada.net/visual-identity",
+    "classes": "text-lg uppercase",
+    "rect": {
+      "x": 79,
+      "y": 607.249755859375,
+      "width": 169,
+      "height": 30,
+      "top": 607.249755859375,
+      "right": 248,
+      "bottom": 637.249755859375,
+      "left": 79
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 17,
+    "tag": "a",
+    "text": "",
+    "href": "https://docs.namada.net/operators/ledger",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 79,
+      "y": 267.249755859375,
+      "width": 320.5,
+      "height": 300,
+      "top": 267.249755859375,
+      "right": 399.5,
+      "bottom": 567.249755859375,
+      "left": 79
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 18,
+    "tag": "a",
+    "text": "",
+    "href": "https://namada.net/validators",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 399.5,
+      "y": 267.249755859375,
+      "width": 320.5,
+      "height": 300,
+      "top": 267.249755859375,
+      "right": 720,
+      "bottom": 567.249755859375,
+      "left": 399.5
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 19,
+    "tag": "a",
+    "text": "",
+    "href": "https://docs.namada.net/networks/starting-network/local-network",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 720,
+      "y": 267.249755859375,
+      "width": 320.5,
+      "height": 300,
+      "top": 267.249755859375,
+      "right": 1040.5,
+      "bottom": 567.249755859375,
+      "left": 720
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 20,
+    "tag": "a",
+    "text": "",
+    "href": "https://www.npmjs.com/package/@namada/sdk",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 1040.5,
+      "y": 267.249755859375,
+      "width": 320.5,
+      "height": 300,
+      "top": 267.249755859375,
+      "right": 1361,
+      "bottom": 567.249755859375,
+      "left": 1040.5
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 21,
+    "tag": "a",
+    "text": "Testnets",
+    "href": "https://namada.net/testnets",
+    "classes": "text-lg uppercase",
+    "rect": {
+      "x": 79,
+      "y": 607.249755859375,
+      "width": 109.65625,
+      "height": 30,
+      "top": 607.249755859375,
+      "right": 188.65625,
+      "bottom": 637.249755859375,
+      "left": 79
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 22,
+    "tag": "a",
+    "text": "Docs",
+    "href": "https://docs.namada.net/",
+    "classes": "text-lg uppercase",
+    "rect": {
+      "x": 212.65625,
+      "y": 607.249755859375,
+      "width": 66.75,
+      "height": 30,
+      "top": 607.249755859375,
+      "right": 279.40625,
+      "bottom": 637.249755859375,
+      "left": 212.65625
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 23,
+    "tag": "a",
+    "text": "Github",
+    "href": "https://github.com/namada-net/namada",
+    "classes": "text-lg uppercase",
+    "rect": {
+      "x": 303.40625,
+      "y": 607.249755859375,
+      "width": 84.515625,
+      "height": 30,
+      "top": 607.249755859375,
+      "right": 387.921875,
+      "bottom": 637.249755859375,
+      "left": 303.40625
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 24,
+    "tag": "a",
+    "text": "Specs",
+    "href": "https://specs.namada.net/",
+    "classes": "text-lg uppercase",
+    "rect": {
+      "x": 411.921875,
+      "y": 607.249755859375,
+      "width": 75.65625,
+      "height": 30,
+      "top": 607.249755859375,
+      "right": 487.578125,
+      "bottom": 637.249755859375,
+      "left": 411.921875
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 25,
+    "tag": "a",
+    "text": "Forum",
+    "href": "https://forum.namada.net/",
+    "classes": "text-lg uppercase",
+    "rect": {
+      "x": 511.578125,
+      "y": 607.249755859375,
+      "width": 82.28125,
+      "height": 30,
+      "top": 607.249755859375,
+      "right": 593.859375,
+      "bottom": 637.249755859375,
+      "left": 511.578125
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 26,
+    "tag": "a",
+    "text": "",
+    "href": "https://namada.net/blog",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 79,
+      "y": 267.249755859375,
+      "width": 320.5,
+      "height": 300,
+      "top": 267.249755859375,
+      "right": 399.5,
+      "bottom": 567.249755859375,
+      "left": 79
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 27,
+    "tag": "a",
+    "text": "",
+    "href": "https://www.youtube.com/@namada-net",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 399.5,
+      "y": 267.249755859375,
+      "width": 320.5,
+      "height": 300,
+      "top": 267.249755859375,
+      "right": 720,
+      "bottom": 567.249755859375,
+      "left": 399.5
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 28,
+    "tag": "a",
+    "text": "",
+    "href": "https://www.namada.help/",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 720,
+      "y": 267.249755859375,
+      "width": 320.5,
+      "height": 300,
+      "top": 267.249755859375,
+      "right": 1040.5,
+      "bottom": 567.249755859375,
+      "left": 720
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 29,
+    "tag": "a",
+    "text": "",
+    "href": "https://namada.net/roadmap",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 1040.5,
+      "y": 267.249755859375,
+      "width": 320.5,
+      "height": 300,
+      "top": 267.249755859375,
+      "right": 1361,
+      "bottom": 567.249755859375,
+      "left": 1040.5
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 30,
+    "tag": "a",
+    "text": "Youtube",
+    "href": "https://www.youtube.com/@namada-net",
+    "classes": "text-lg uppercase",
+    "rect": {
+      "x": 79,
+      "y": 591.249755859375,
+      "width": 102.9375,
+      "height": 30,
+      "top": 591.249755859375,
+      "right": 181.9375,
+      "bottom": 621.249755859375,
+      "left": 79
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 31,
+    "tag": "a",
+    "text": "Ecosystem",
+    "href": "https://namada.net/ecosystem",
+    "classes": "gap-2 py-10 px-3 uppercase cursor-pointer flex items-center text-sm 2xl:px-3 2xl:text-base",
+    "rect": {
+      "x": 867.84375,
+      "y": 39.24974822998047,
+      "width": 114.53125,
+      "height": 100.00000762939453,
+      "top": 39.24974822998047,
+      "right": 982.375,
+      "bottom": 139.249755859375,
+      "left": 867.84375
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 32,
+    "tag": "a",
+    "text": "",
+    "href": "https://discord.com/invite/namada",
+    "classes": "block transition-color duration-150 px-2 mx-1 py-3 hover:text-cyan",
+    "rect": {
+      "x": 1126.75,
+      "y": 65.24974822998047,
+      "width": 40,
+      "height": 48,
+      "top": 65.24974822998047,
+      "right": 1166.75,
+      "bottom": 113.24974822998047,
+      "left": 1126.75
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 33,
+    "tag": "a",
+    "text": "",
+    "href": "https://github.com/namada-net/namada",
+    "classes": "block transition-color duration-150 px-2 mx-1 py-3 hover:text-cyan",
+    "rect": {
+      "x": 1174.75,
+      "y": 65.24974822998047,
+      "width": 40,
+      "height": 48,
+      "top": 65.24974822998047,
+      "right": 1214.75,
+      "bottom": 113.24974822998047,
+      "left": 1174.75
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 34,
+    "tag": "a",
+    "text": "",
+    "href": "https://twitter.com/namada",
+    "classes": "block transition-color duration-150 px-2 mx-1 py-3 hover:text-cyan",
+    "rect": {
+      "x": 1222.75,
+      "y": 65.24974822998047,
+      "width": 40,
+      "height": 48,
+      "top": 65.24974822998047,
+      "right": 1262.75,
+      "bottom": 113.24974822998047,
+      "left": 1222.75
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 35,
+    "tag": "a",
+    "text": "Get Started",
+    "href": "https://namada.net/start",
+    "classes": "group/button cursor-dot flex justify-center items-center relative text-center rounded-lg active:top-",
+    "rect": {
+      "x": 1274.75,
+      "y": 70.24974822998047,
+      "width": 149.25,
+      "height": 38,
+      "top": 70.24974822998047,
+      "right": 1424,
+      "bottom": 108.24974822998047,
+      "left": 1274.75
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 36,
+    "tag": "a",
+    "text": "Start shieldingStart shieldingStart shieldingStart shielding",
+    "href": "https://namada.net/start#shielding",
+    "classes": "block mt-24 md:mt-40 text-yellow text-5xl uppercase hover:text-cyan transition-colors duration-300",
+    "rect": {
+      "x": 0,
+      "y": 2068.796875,
+      "width": 1440,
+      "height": 70,
+      "top": 2068.796875,
+      "right": 1440,
+      "bottom": 2138.796875,
+      "left": 0
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 37,
+    "tag": "a",
+    "text": "Start shielding",
+    "href": "https://namada.net/start#shielding",
+    "classes": "group/button cursor-dot flex justify-center items-center relative text-center rounded-lg active:top-",
+    "rect": {
+      "x": 96,
+      "y": 7219.203125,
+      "width": 357.328125,
+      "height": 50,
+      "top": 7219.203125,
+      "right": 453.328125,
+      "bottom": 7269.203125,
+      "left": 96
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 38,
+    "tag": "a",
+    "text": "Learn more",
+    "href": "https://namada.net/staking",
+    "classes": "group/button cursor-dot flex justify-center items-center relative text-center rounded-lg active:top-",
+    "rect": {
+      "x": 541.328125,
+      "y": 7301.203125,
+      "width": 357.328125,
+      "height": 48,
+      "top": 7301.203125,
+      "right": 898.65625,
+      "bottom": 7349.203125,
+      "left": 541.328125
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 39,
+    "tag": "a",
+    "text": "Learn more",
+    "href": "https://namada.net/governance",
+    "classes": "group/button cursor-dot flex justify-center items-center relative text-center rounded-lg active:top-",
+    "rect": {
+      "x": 987.65625,
+      "y": 7378.203125,
+      "width": 355.34375,
+      "height": 50,
+      "top": 7378.203125,
+      "right": 1343,
+      "bottom": 7428.203125,
+      "left": 987.65625
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 40,
+    "tag": "a",
+    "text": "01",
+    "href": {},
+    "classes": "[object SVGAnimatedString]",
+    "rect": {
+      "x": 69.41766357421875,
+      "y": 7814.50927734375,
+      "width": 134.4944305419922,
+      "height": 134.49462890625,
+      "top": 7814.50927734375,
+      "right": 203.91209411621094,
+      "bottom": 7949.00390625,
+      "left": 69.41766357421875
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 41,
+    "tag": "a",
+    "text": "02",
+    "href": {},
+    "classes": "[object SVGAnimatedString]",
+    "rect": {
+      "x": 178.63143920898438,
+      "y": 7696.0546875,
+      "width": 73.44146728515625,
+      "height": 73.44140625,
+      "top": 7696.0546875,
+      "right": 252.07290649414062,
+      "bottom": 7769.49609375,
+      "left": 178.63143920898438
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 42,
+    "tag": "a",
+    "text": "03",
+    "href": {},
+    "classes": "[object SVGAnimatedString]",
+    "rect": {
+      "x": 587.8053588867188,
+      "y": 7803.0693359375,
+      "width": 73.44146728515625,
+      "height": 73.44140625,
+      "top": 7803.0693359375,
+      "right": 661.246826171875,
+      "bottom": 7876.5107421875,
+      "left": 587.8053588867188
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 43,
+    "tag": "a",
+    "text": "04",
+    "href": {},
+    "classes": "[object SVGAnimatedString]",
+    "rect": {
+      "x": 1214.15625,
+      "y": 7997.16455078125,
+      "width": 73.44140625,
+      "height": 73.44140625,
+      "top": 7997.16455078125,
+      "right": 1287.59765625,
+      "bottom": 8070.60595703125,
+      "left": 1214.15625
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 44,
+    "tag": "a",
+    "text": "",
+    "href": {},
+    "classes": "[object SVGAnimatedString]",
+    "rect": {
+      "x": 1200.51708984375,
+      "y": 8170.27685546875,
+      "width": 96.5230712890625,
+      "height": 96.52294921875,
+      "top": 8170.27685546875,
+      "right": 1297.0401611328125,
+      "bottom": 8266.7998046875,
+      "left": 1200.51708984375
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 45,
+    "tag": "a",
+    "text": "",
+    "href": "https://twitter.com/namada",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 74,
+      "y": 8835.8125,
+      "width": 323,
+      "height": 300,
+      "top": 8835.8125,
+      "right": 397,
+      "bottom": 9135.8125,
+      "left": 74
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 46,
+    "tag": "a",
+    "text": "",
+    "href": "https://discord.com/invite/namada",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 397,
+      "y": 8835.8125,
+      "width": 323,
+      "height": 300,
+      "top": 8835.8125,
+      "right": 720,
+      "bottom": 9135.8125,
+      "left": 397
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 47,
+    "tag": "a",
+    "text": "",
+    "href": "https://forum.namada.net/",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 720,
+      "y": 8835.8125,
+      "width": 646,
+      "height": 300,
+      "top": 8835.8125,
+      "right": 1366,
+      "bottom": 9135.8125,
+      "left": 720
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 48,
+    "tag": "a",
+    "text": "",
+    "href": "https://namada.net/visual-identity",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 74,
+      "y": 9135.8125,
+      "width": 646,
+      "height": 300,
+      "top": 9135.8125,
+      "right": 720,
+      "bottom": 9435.8125,
+      "left": 74
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 49,
+    "tag": "a",
+    "text": "",
+    "href": "https://namada.net/ecosystem",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 720,
+      "y": 9135.8125,
+      "width": 646,
+      "height": 300,
+      "top": 9135.8125,
+      "right": 1366,
+      "bottom": 9435.8125,
+      "left": 720
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 50,
+    "tag": "a",
+    "text": "",
+    "href": "https://docs.namada.net/operators/ledger",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 74,
+      "y": 9643.8125,
+      "width": 323,
+      "height": 300,
+      "top": 9643.8125,
+      "right": 397,
+      "bottom": 9943.8125,
+      "left": 74
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 51,
+    "tag": "a",
+    "text": "",
+    "href": "https://namada.net/validators",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 397,
+      "y": 9643.8125,
+      "width": 323,
+      "height": 300,
+      "top": 9643.8125,
+      "right": 720,
+      "bottom": 9943.8125,
+      "left": 397
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 52,
+    "tag": "a",
+    "text": "",
+    "href": "https://docs.namada.net/networks/starting-network/local-network",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 720,
+      "y": 9643.8125,
+      "width": 323,
+      "height": 300,
+      "top": 9643.8125,
+      "right": 1043,
+      "bottom": 9943.8125,
+      "left": 720
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 53,
+    "tag": "a",
+    "text": "",
+    "href": "https://www.npmjs.com/package/@namada/sdk",
+    "classes": "z-20 absolute w-full h-full top-0 left-0 transition-all duration-300",
+    "rect": {
+      "x": 1043,
+      "y": 9643.8125,
+      "width": 323,
+      "height": 300,
+      "top": 9643.8125,
+      "right": 1366,
+      "bottom": 9943.8125,
+      "left": 1043
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 54,
+    "tag": "input",
+    "text": "",
+    "href": "",
+    "classes": "bg-transparent border-2 border-yellow rounded-3xl h-8 px-3 py-5 max-w-full w-full placeholder:text-y",
+    "rect": {
+      "x": -390,
+      "y": 10289.8125,
+      "width": 350,
+      "height": 44,
+      "top": 10289.8125,
+      "right": -40,
+      "bottom": 10333.8125,
+      "left": -390
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": "text"
+  },
+  {
+    "index": 55,
+    "tag": "button",
+    "text": "",
+    "href": "",
+    "classes": "flex items-center justify-center absolute right-0 top-0 h-full w-12 rounded-3xl bg-yellow text-black",
+    "rect": {
+      "x": -88,
+      "y": 10289.8125,
+      "width": 48,
+      "height": 44,
+      "top": 10289.8125,
+      "right": -40,
+      "bottom": 10333.8125,
+      "left": -88
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": "submit"
+  },
+  {
+    "index": 56,
+    "tag": "a",
+    "text": "Home",
+    "href": "https://namada.net/",
+    "classes": "",
+    "rect": {
+      "x": 37,
+      "y": 10484.8125,
+      "width": 82.59375,
+      "height": 39,
+      "top": 10484.8125,
+      "right": 119.59375,
+      "bottom": 10523.8125,
+      "left": 37
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 57,
+    "tag": "a",
+    "text": "Press",
+    "href": "https://anoma.foundation/press",
+    "classes": "",
+    "rect": {
+      "x": 37,
+      "y": 10536.8125,
+      "width": 90.671875,
+      "height": 39,
+      "top": 10536.8125,
+      "right": 127.671875,
+      "bottom": 10575.8125,
+      "left": 37
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 58,
+    "tag": "a",
+    "text": "Trusted Setup",
+    "href": "https://namada.net/trusted-setup",
+    "classes": "",
+    "rect": {
+      "x": 37,
+      "y": 10588.8125,
+      "width": 227.140625,
+      "height": 39,
+      "top": 10588.8125,
+      "right": 264.140625,
+      "bottom": 10627.8125,
+      "left": 37
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 59,
+    "tag": "a",
+    "text": "Security",
+    "href": "https://namada.net/security",
+    "classes": "",
+    "rect": {
+      "x": 37,
+      "y": 10640.8125,
+      "width": 136.734375,
+      "height": 39,
+      "top": 10640.8125,
+      "right": 173.734375,
+      "bottom": 10679.8125,
+      "left": 37
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 60,
+    "tag": "a",
+    "text": "X",
+    "href": "https://twitter.com/namada",
+    "classes": "",
+    "rect": {
+      "x": 338.75,
+      "y": 10484.8125,
+      "width": 19.140625,
+      "height": 39,
+      "top": 10484.8125,
+      "right": 357.890625,
+      "bottom": 10523.8125,
+      "left": 338.75
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 61,
+    "tag": "a",
+    "text": "Discord",
+    "href": "https://discord.com/invite/namada",
+    "classes": "",
+    "rect": {
+      "x": 338.75,
+      "y": 10536.8125,
+      "width": 123.78125,
+      "height": 39,
+      "top": 10536.8125,
+      "right": 462.53125,
+      "bottom": 10575.8125,
+      "left": 338.75
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 62,
+    "tag": "a",
+    "text": "Forums",
+    "href": "https://forum.namada.net/",
+    "classes": "",
+    "rect": {
+      "x": 338.75,
+      "y": 10588.8125,
+      "width": 119.3125,
+      "height": 39,
+      "top": 10588.8125,
+      "right": 458.0625,
+      "bottom": 10627.8125,
+      "left": 338.75
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 63,
+    "tag": "a",
+    "text": "Visual Identity",
+    "href": "https://namada.net/visual-identity",
+    "classes": "",
+    "rect": {
+      "x": 338.75,
+      "y": 10640.8125,
+      "width": 231,
+      "height": 39,
+      "top": 10640.8125,
+      "right": 569.75,
+      "bottom": 10679.8125,
+      "left": 338.75
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 64,
+    "tag": "a",
+    "text": "Testnets",
+    "href": "https://namada.net/testnets",
+    "classes": "",
+    "rect": {
+      "x": 640.5,
+      "y": 10484.8125,
+      "width": 141.96875,
+      "height": 39,
+      "top": 10484.8125,
+      "right": 782.46875,
+      "bottom": 10523.8125,
+      "left": 640.5
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 65,
+    "tag": "a",
+    "text": "Validators",
+    "href": "https://namada.net/validators",
+    "classes": "",
+    "rect": {
+      "x": 640.5,
+      "y": 10536.8125,
+      "width": 169.953125,
+      "height": 39,
+      "top": 10536.8125,
+      "right": 810.453125,
+      "bottom": 10575.8125,
+      "left": 640.5
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 66,
+    "tag": "a",
+    "text": "Docs",
+    "href": "https://docs.namada.net/",
+    "classes": "",
+    "rect": {
+      "x": 640.5,
+      "y": 10588.8125,
+      "width": 77.625,
+      "height": 39,
+      "top": 10588.8125,
+      "right": 718.125,
+      "bottom": 10627.8125,
+      "left": 640.5
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 67,
+    "tag": "a",
+    "text": "Specs",
+    "href": "https://specs.namada.net/",
+    "classes": "",
+    "rect": {
+      "x": 640.5,
+      "y": 10640.8125,
+      "width": 90.984375,
+      "height": 39,
+      "top": 10640.8125,
+      "right": 731.484375,
+      "bottom": 10679.8125,
+      "left": 640.5
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 68,
+    "tag": "a",
+    "text": "Github",
+    "href": "https://github.com/namada-net/namada",
+    "classes": "",
+    "rect": {
+      "x": 640.5,
+      "y": 10692.8125,
+      "width": 104.265625,
+      "height": 39,
+      "top": 10692.8125,
+      "right": 744.765625,
+      "bottom": 10731.8125,
+      "left": 640.5
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 69,
+    "tag": "a",
+    "text": "Blog",
+    "href": "https://namada.net/blog",
+    "classes": "",
+    "rect": {
+      "x": 942.25,
+      "y": 10484.8125,
+      "width": 75.484375,
+      "height": 39,
+      "top": 10484.8125,
+      "right": 1017.734375,
+      "bottom": 10523.8125,
+      "left": 942.25
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 70,
+    "tag": "a",
+    "text": "YouTube",
+    "href": "https://www.youtube.com/@namada-net",
+    "classes": "",
+    "rect": {
+      "x": 942.25,
+      "y": 10536.8125,
+      "width": 131.90625,
+      "height": 39,
+      "top": 10536.8125,
+      "right": 1074.15625,
+      "bottom": 10575.8125,
+      "left": 942.25
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 71,
+    "tag": "a",
+    "text": "Roadmap",
+    "href": "https://namada.net/roadmap",
+    "classes": "",
+    "rect": {
+      "x": 942.25,
+      "y": 10588.8125,
+      "width": 140.390625,
+      "height": 39,
+      "top": 10588.8125,
+      "right": 1082.640625,
+      "bottom": 10627.8125,
+      "left": 942.25
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 72,
+    "tag": "a",
+    "text": "",
+    "href": "https://namada.net/",
+    "classes": "max-w-[120px] lg:w-[177px] lg:max-w-none ml-6 block",
+    "rect": {
+      "x": 1247,
+      "y": 10422.8125,
+      "width": 177,
+      "height": 177,
+      "top": 10422.8125,
+      "right": 1424,
+      "bottom": 10599.8125,
+      "left": 1247
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  },
+  {
+    "index": 73,
+    "tag": "a",
+    "text": "Impressum",
+    "href": "https://namada.net/impressum",
+    "classes": "underline",
+    "rect": {
+      "x": 67.5,
+      "y": 10795.8125,
+      "width": 73.140625,
+      "height": 18,
+      "top": 10795.8125,
+      "right": 140.640625,
+      "bottom": 10813.8125,
+      "left": 67.5
+    },
+    "id": "",
+    "ariaLabel": "",
+    "type": ""
+  }
+]

@@ -1,0 +1,498 @@
+{
+  "images": [
+    {
+      "src": "https://namada.net/_next/static/media/namada-black.2c62e553.gif",
+      "alt": "Namada",
+      "width": 600,
+      "height": 156,
+      "parentClasses": "hidden md:block",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/_next/static/media/staking.dde79d84.png",
+      "alt": "",
+      "width": 277,
+      "height": 224,
+      "parentClasses": "block w-[70px] h-[70px]",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/_next/static/media/staking.dde79d84.png",
+      "alt": "",
+      "width": 277,
+      "height": 224,
+      "parentClasses": "block w-[70px] h-[70px]",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/_next/static/media/governance.972e9857.png",
+      "alt": "",
+      "width": 293,
+      "height": 216,
+      "parentClasses": "block w-[70px] h-[70px]",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/_next/static/media/governance.972e9857.png",
+      "alt": "",
+      "width": 293,
+      "height": 216,
+      "parentClasses": "block w-[70px] h-[70px]",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/_next/static/media/scroll-to-explore.4dd94753.svg",
+      "alt": "",
+      "width": 20,
+      "height": 20,
+      "parentClasses": "fixed bottom-0 flex justify-center w-full pb-8 z-50 uppercase gap-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/_next/static/media/scroll-to-explore.4dd94753.svg",
+      "alt": "",
+      "width": 20,
+      "height": 20,
+      "parentClasses": "fixed bottom-0 flex justify-center w-full pb-8 z-50 uppercase gap-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/ATOM.png",
+      "alt": "ATOM",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/NTRN.png",
+      "alt": "NTRN",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/NYM.png",
+      "alt": "NYM",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/OSMO.png",
+      "alt": "OSMO",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/TIA.png",
+      "alt": "TIA",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/UM.png",
+      "alt": "UM",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/USDC.png",
+      "alt": "USDC",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/stATOM.png",
+      "alt": "stATOM",
+      "width": 144,
+      "height": 168,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/stOSMO.png",
+      "alt": "stOSMO",
+      "width": 144,
+      "height": 168,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/stTIA.png",
+      "alt": "stTIA",
+      "width": 144,
+      "height": 168,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/ATOM.png",
+      "alt": "ATOM",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/NTRN.png",
+      "alt": "NTRN",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/NYM.png",
+      "alt": "NYM",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/OSMO.png",
+      "alt": "OSMO",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/TIA.png",
+      "alt": "TIA",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/UM.png",
+      "alt": "UM",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/USDC.png",
+      "alt": "USDC",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/stATOM.png",
+      "alt": "stATOM",
+      "width": 144,
+      "height": 168,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/stOSMO.png",
+      "alt": "stOSMO",
+      "width": 144,
+      "height": 168,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/stTIA.png",
+      "alt": "stTIA",
+      "width": 144,
+      "height": 168,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/ATOM.png",
+      "alt": "ATOM",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/NTRN.png",
+      "alt": "NTRN",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/NYM.png",
+      "alt": "NYM",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/OSMO.png",
+      "alt": "OSMO",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/TIA.png",
+      "alt": "TIA",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/UM.png",
+      "alt": "UM",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/USDC.png",
+      "alt": "USDC",
+      "width": 144,
+      "height": 144,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/stATOM.png",
+      "alt": "stATOM",
+      "width": 144,
+      "height": 168,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/stOSMO.png",
+      "alt": "stOSMO",
+      "width": 144,
+      "height": 168,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/content/start/assets/images/stTIA.png",
+      "alt": "stTIA",
+      "width": 144,
+      "height": 168,
+      "parentClasses": "h-[84px] w-[72px] mx-5",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/_next/static/media/about-arrow.73b05514.svg",
+      "alt": "",
+      "width": 139,
+      "height": 123,
+      "parentClasses": "absolute flex flex-col items-center top-0 left-0 w-full h-full",
+      "position": "absolute",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/_next/static/media/about-arrow.73b05514.svg",
+      "alt": "",
+      "width": 139,
+      "height": 123,
+      "parentClasses": "absolute flex flex-col items-center top-0 left-0 w-full h-full",
+      "position": "absolute",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/_next/static/media/shield-assets.3f5d14f6.png",
+      "alt": "",
+      "width": 400,
+      "height": 400,
+      "parentClasses": "h-full flex flex-col rounded-2xl p-8 bg-yellow bg-dots-pattern bg-dots-size text-black",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/_next/static/media/stake-nam.530ebc61.png",
+      "alt": "",
+      "width": 460,
+      "height": 400,
+      "parentClasses": "h-full flex flex-col rounded-2xl p-8 bg-cyan text-black lg:translate-y-20",
+      "position": "static",
+      "zIndex": "auto"
+    },
+    {
+      "src": "https://namada.net/_next/static/media/govern.10234282.png",
+      "alt": "",
+      "width": 400,
+      "height": 400,
+      "parentClasses": "h-full flex flex-col rounded-2xl p-8 bg-black text-yellow border border-yellow lg:translate-y-40",
+      "position": "static",
+      "zIndex": "auto"
+    }
+  ],
+  "videos": [],
+  "backgroundImages": [
+    {
+      "url": "url(\"https://namada.net/assets/bg-dots.svg\")",
+      "element": "DIV.absolute.bg-dots-pattern"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/01.16ff591b.svg\")",
+      "element": "I.absolute.bg-no-repeat"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/01.16ff591b.svg\")",
+      "element": "I.absolute.bg-no-repeat"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/01.16ff591b.svg\")",
+      "element": "I.absolute.bg-no-repeat"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/01.16ff591b.svg\")",
+      "element": "I.absolute.bg-no-repeat"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/01.16ff591b.svg\")",
+      "element": "I.absolute.bg-no-repeat"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/01.16ff591b.svg\")",
+      "element": "I.absolute.bg-no-repeat"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/01.16ff591b.svg\")",
+      "element": "I.absolute.bg-no-repeat"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/01.16ff591b.svg\")",
+      "element": "I.absolute.bg-no-repeat"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/01.16ff591b.svg\")",
+      "element": "I.absolute.bg-no-repeat"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/01.16ff591b.svg\")",
+      "element": "I.absolute.bg-no-repeat"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/01.16ff591b.svg\")",
+      "element": "I.absolute.bg-no-repeat"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/01.16ff591b.svg\")",
+      "element": "I.absolute.bg-no-repeat"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/01.16ff591b.svg\")",
+      "element": "I.absolute.bg-no-repeat"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/01.7ab2b8b3.svg\")",
+      "element": "I.absolute.w-24"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/02.aba28c35.svg\")",
+      "element": "I.absolute.w-24"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/01.5f246987.svg\")",
+      "element": "I.block.absolute"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/02.c18ac064.svg\")",
+      "element": "I.block.absolute"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/03.2fb472cf.svg\")",
+      "element": "I.block.absolute"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/04.c83cccfe.svg\")",
+      "element": "I.block.absolute"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/05.1c2614d4.svg\")",
+      "element": "I.block.absolute"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/06.e278713a.svg\")",
+      "element": "I.block.absolute"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/07.b4a15b23.svg\")",
+      "element": "I.block.absolute"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/08.b4bafdb7.svg\")",
+      "element": "I.block.absolute"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/09.1745f638.svg\")",
+      "element": "I.block.absolute"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/10.08290816.svg\")",
+      "element": "I.block.absolute"
+    },
+    {
+      "url": "url(\"https://namada.net/_next/static/media/11.4cc2339e.svg\")",
+      "element": "I.block.absolute"
+    },
+    {
+      "url": "url(\"https://namada.net/assets/bg-dots.svg\")",
+      "element": "DIV.h-full.flex"
+    }
+  ],
+  "svgCount": 59
+}

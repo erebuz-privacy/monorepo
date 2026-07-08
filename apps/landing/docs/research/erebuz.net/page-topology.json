@@ -1,0 +1,308 @@
+[
+  {
+    "index": 0,
+    "tag": "div",
+    "id": "__next",
+    "classes": "",
+    "rect": {
+      "top": 0,
+      "width": 1440,
+      "height": 10862.8125
+    },
+    "display": "block",
+    "position": "static",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "Mainnet LiveShields Up!Mainnet LiveShields Up!Mainnet LiveShields Up!Mainnet LiveShields Up!Mainnet LiveShields Up!Mainnet LiveShields Up!Mainnet Live",
+    "childCount": 2
+  },
+  {
+    "index": 1,
+    "tag": "nav",
+    "id": "",
+    "classes": "fixed w-full z-50 top-0 left-0 transition-all ease-out-expo duration-700",
+    "rect": {
+      "top": 0,
+      "width": 1440,
+      "height": 140
+    },
+    "display": "block",
+    "position": "fixed",
+    "zIndex": "50",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "Mainnet LiveShields Up!Mainnet LiveShields Up!Mainnet LiveShields Up!Mainnet LiveShields Up!Mainnet LiveShields Up!Mainnet LiveShields Up!Mainnet Live",
+    "childCount": 2
+  },
+  {
+    "index": 48,
+    "tag": "footer",
+    "id": "",
+    "classes": "flex items-end mt-auto justify-between",
+    "rect": {
+      "top": 440,
+      "width": 256.5,
+      "height": 108
+    },
+    "display": "flex",
+    "position": "static",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "Set Up a Local Network",
+    "childCount": 2
+  },
+  {
+    "index": 53,
+    "tag": "div",
+    "id": "",
+    "classes": "leading-snug font-light content",
+    "rect": {
+      "top": 288,
+      "width": 256.5,
+      "height": 88
+    },
+    "display": "block",
+    "position": "static",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "Immerse yourself in cutting-edge insights on the convergence of data rights and blockchain technology.",
+    "childCount": 1
+  },
+  {
+    "index": 62,
+    "tag": "section",
+    "id": "interchain-privacy",
+    "classes": "relative w-full flex items-end h-screen py-10 pt-36 md:pt-0 md:pb-0 z-20",
+    "rect": {
+      "top": 0,
+      "width": 1440,
+      "height": 900
+    },
+    "display": "flex",
+    "position": "relative",
+    "zIndex": "20",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "Your Gateway to the  Shielded MultichainScroll to Explore",
+    "childCount": 3
+  },
+  {
+    "index": 63,
+    "tag": "header",
+    "id": "",
+    "classes": "w-full left-0 top-0 xl:container relative py-12 md:py-20",
+    "rect": {
+      "top": 270,
+      "width": 1440,
+      "height": 360
+    },
+    "display": "block",
+    "position": "relative",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "Your Gateway to the  Shielded Multichain",
+    "childCount": 1
+  },
+  {
+    "index": 64,
+    "tag": "header",
+    "id": "",
+    "classes": "text-yellow leading-[1.2em] uppercase font-normal w-full text-[80px] mb-8",
+    "rect": {
+      "top": 1675,
+      "width": 1312,
+      "height": 205.796875
+    },
+    "display": "block",
+    "position": "static",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "A New Era of ShieldedMultichain Interactions",
+    "childCount": 1
+  },
+  {
+    "index": 65,
+    "tag": "section",
+    "id": "composable-privacy-layer",
+    "classes": "text-yellow py-24 md:py-40 lg:py-55",
+    "rect": {
+      "top": 2138.796875,
+      "width": 1312,
+      "height": 1633.90625
+    },
+    "display": "block",
+    "position": "static",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "Namada delivers a plug-and-play privacy layer for Web3, enabling users to protect their personal data when using their favorite assets, decentralized ",
+    "childCount": 3
+  },
+  {
+    "index": 67,
+    "tag": "article",
+    "id": "unified-shielded-set",
+    "classes": "relative flex text-yellow mb-32 pt-14 lg:py-32",
+    "rect": {
+      "top": 4137.203125,
+      "width": 1152,
+      "height": 511.5
+    },
+    "display": "flex",
+    "position": "relative",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "01Unified Shielded SetConsolidate assets fragmented across different blockchains into a single shielded asset hub. Namada’s unified shielded set is ca",
+    "childCount": 2
+  },
+  {
+    "index": 70,
+    "tag": "section",
+    "id": "get-rewards",
+    "classes": "flex flex-col relative pt-20 lg:py-24 xl:flex-row xl:gap-12",
+    "rect": {
+      "top": 4776.703125,
+      "width": 1152,
+      "height": 513.5
+    },
+    "display": "flex",
+    "position": "relative",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "02Get Rewards for Shielding your AssetsNamada rewards you for helping protect the multichain ecosystem. By keeping your assets in the shielded set, yo",
+    "childCount": 2
+  },
+  {
+    "index": 73,
+    "tag": "section",
+    "id": "shielded-actions",
+    "classes": "relative w-full grid items-center gap-2 pt-20 lg:py-24 lg:gap-20 xl:grid-cols-[auto_300px]",
+    "rect": {
+      "top": 5290.203125,
+      "width": 1152,
+      "height": 545
+    },
+    "display": "grid",
+    "position": "relative",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "03Shielded Actions for Cross-Chain DeFiNamada's Shielded Actions enable you to engage in cross-chain decentralized finance while shielding your person",
+    "childCount": 2
+  },
+  {
+    "index": 76,
+    "tag": "section",
+    "id": "ibc-interoperability",
+    "classes": "flex flex-col relative text-yellow justify-between pt-20 lg:py-24 gap-8 lg:gap-20 xl:flex-row xl:items-center",
+    "rect": {
+      "top": 5835.203125,
+      "width": 1152,
+      "height": 513.5
+    },
+    "display": "flex",
+    "position": "relative",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "04IBC Interoper­abilityNamada's integration with the IBC protocol ensures a seamless connection across Cosmos blockchains and beyond. Support for addi",
+    "childCount": 2
+  },
+  {
+    "index": 79,
+    "tag": "section",
+    "id": "use-namada",
+    "classes": "pt-24 md:pt-40 lg:pt-55 pb-20 xl:pb-0",
+    "rect": {
+      "top": 6396.703125,
+      "width": 1312,
+      "height": 1014.5
+    },
+    "display": "block",
+    "position": "static",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "Shield AssetsGain privacy for your assets and get rewards. Hit the shield button, connect your external wallet, choose the asset and amount and hit sh",
+    "childCount": 2
+  },
+  {
+    "index": 80,
+    "tag": "section",
+    "id": "get-involved",
+    "classes": "",
+    "rect": {
+      "top": 8581.8125,
+      "width": 1440,
+      "height": 1644
+    },
+    "display": "block",
+    "position": "static",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "Get InvolvedJoin the CommunityGet the latest updates and news by following Namada on X.X.comParticipate in the coordination of the Namada network by j",
+    "childCount": 1
+  },
+  {
+    "index": 81,
+    "tag": "header",
+    "id": "",
+    "classes": "mb-8",
+    "rect": {
+      "top": 8631.8125,
+      "width": 1292,
+      "height": 100
+    },
+    "display": "block",
+    "position": "static",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "Get Involved",
+    "childCount": 1
+  },
+  {
+    "index": 98,
+    "tag": "footer",
+    "id": "",
+    "classes": "flex items-end mt-auto justify-between",
+    "rect": {
+      "top": 9815.8125,
+      "width": 259,
+      "height": 108
+    },
+    "display": "flex",
+    "position": "static",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "Setup a Local Network",
+    "childCount": 2
+  },
+  {
+    "index": 101,
+    "tag": "footer",
+    "id": "",
+    "classes": "container",
+    "rect": {
+      "top": 10273.8125,
+      "width": 1440,
+      "height": 589
+    },
+    "display": "block",
+    "position": "static",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "Namada Mainnet is hereNamadaHomePressTrusted SetupSecurityCommunityXDiscordForumsVisual IdentityDevelopersTestnetsValidatorsDocsSpecsGithubLearnBlogYo",
+    "childCount": 2
+  },
+  {
+    "index": 103,
+    "tag": "nav",
+    "id": "",
+    "classes": "container uppercase px-0 [&_h4]:font-light [&_h4]:mb-6 [&_li]:max-w-full [&_li]:overflow-hidden [&_li]:text-xl md:[&_li]:text-3xl [&_a]:whitespace-nowrap [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-3 md:[&",
+    "rect": {
+      "top": 10373.8125,
+      "width": 1408,
+      "height": 489
+    },
+    "display": "block",
+    "position": "static",
+    "zIndex": "auto",
+    "bgColor": "rgba(0, 0, 0, 0)",
+    "textContent": "NamadaHomePressTrusted SetupSecurityCommunityXDiscordForumsVisual IdentityDevelopersTestnetsValidatorsDocsSpecsGithubLearnBlogYouTubeRoadmap© 2026 Imp",
+    "childCount": 2
+  }
+]

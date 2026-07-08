@@ -1,0 +1,23 @@
+{
+  "desktop": {
+    "viewportWidth": 1440,
+    "viewportHeight": 900,
+    "bodyDisplay": "block",
+    "bodyFlexDirection": "row",
+    "scrollbarWidth": 0
+  },
+  "tablet": {
+    "viewportWidth": 768,
+    "viewportHeight": 900,
+    "bodyDisplay": "block",
+    "bodyFlexDirection": "row",
+    "scrollbarWidth": 0
+  },
+  "mobile": {
+    "viewportWidth": 390,
+    "viewportHeight": 900,
+    "bodyDisplay": "block",
+    "bodyFlexDirection": "row",
+    "scrollbarWidth": 0
+  }
+}
