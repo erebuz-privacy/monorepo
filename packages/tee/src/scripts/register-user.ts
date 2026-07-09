@@ -21,6 +21,7 @@ import type { Address, Hex } from 'viem';
 import { extractViewingPrivateKeyNode, generateEphemeralPrivateKey } from '@fluidkey/stealth-account-kit';
 import { secp256k1 } from 'ethereum-cryptography/secp256k1';
 import { bytesToHex } from 'ethereum-cryptography/utils';
+import { buildRegistrationMessage } from '../config/global-config';
 
 // TEE endpoint
 const TEE_ENDPOINT = process.env.TEE_ENDPOINT || 'https://tee.assura.network';
@@ -142,11 +143,15 @@ export async function registerUser(options: RegistrationOptions): Promise<Regist
     const account = privateKeyToAccount(privateKey);
     const eoaAddress = account.address;
 
-    // Create message to sign
-    const message = JSON.stringify({
+    // Calculate expiration (1 year from now)
+    const expiration = Math.floor(Date.now() / 1000) + 86400 * 365;
+
+    // Create canonical message to sign. This MUST match what the server
+    // reconstructs in UserService.registerUser so the signature verifies.
+    const message = buildRegistrationMessage({
       ensUsername: username,
       eoaAddress,
-      timestamp: Date.now(),
+      expiration,
     });
 
     // Sign the message
@@ -155,9 +160,6 @@ export async function registerUser(options: RegistrationOptions): Promise<Regist
       privateKey,
       message,
     });
-
-    // Calculate expiration (1 year from now)
-    const expiration = Math.floor(Date.now() / 1000) + 86400 * 365;
 
     // Build registration request (privacy is always enabled)
     const registrationData = {
