@@ -6,7 +6,7 @@ import { StealthAddressModel } from '../../database/models/stealth-address';
 import type { PaginationOptions, PaginatedResult, RegisterRequest, RegisterResponse } from '../../types';
 import { logger } from '../../managers/log';
 import { verifyMessage, zeroAddress, type Address, type Hex } from 'viem';
-import { DEFAULT_CHAIN_ID, STEALTH_ADDRESS_GENERATION_MESSAGE, ENS_DOMAIN } from '../../config/global-config';
+import { DEFAULT_CHAIN_ID, STEALTH_ADDRESS_GENERATION_MESSAGE, ENS_DOMAIN, buildRegistrationMessage } from '../../config/global-config';
 import { chainManager } from '../../managers/chain';
 import { computeStealthAddresses, StealthGenerationError } from '../../utils/stealth-address';
 import { computeSmartAccountForENS } from '../../utils/smart-account';
@@ -146,6 +146,40 @@ export class UserService {
       UserService.validateRegisterRequest(request);
 
       logger.info('Validated register request', 'UserService');
+
+      // SECURITY: Verify the request was actually signed by the claimed EOA.
+      // Without this, anyone could register an ENS name bound to an address they
+      // do not control, with attacker-chosen stealth/zcash keys, and hijack the
+      // ENS resolution + stealth-address derivation for that name.
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      if (request.signature.expiration < nowSeconds) {
+        logger.warn(`Expired registration signature for ${request.ensData.eoaAddress}`, 'UserService');
+        throw new Error('Signature expired');
+      }
+
+      const signedMessage = buildRegistrationMessage({
+        ensUsername: request.ensData.ensUsername,
+        eoaAddress: request.ensData.eoaAddress,
+        expiration: request.signature.expiration,
+      });
+      // verifyMessage throws on a malformed signature; treat that as invalid
+      // rather than leaking the internal crypto error to the caller.
+      let isValidSignature = false;
+      try {
+        isValidSignature = await verifyMessage({
+          address: request.ensData.eoaAddress as Address,
+          message: signedMessage,
+          signature: request.signature.signature,
+        });
+      } catch {
+        isValidSignature = false;
+      }
+      if (!isValidSignature) {
+        logger.warn(`Invalid registration signature for ${request.ensData.eoaAddress}`, 'UserService');
+        throw new Error('Invalid signature: signer does not match eoaAddress');
+      }
+
+      logger.info('Registration signature verified', 'UserService');
 
       // Check if user already exists (check all users, not just active)
       const existingUserByEoa = await StealthUserModel.findByEoaAddress(request.ensData.eoaAddress.toLowerCase());

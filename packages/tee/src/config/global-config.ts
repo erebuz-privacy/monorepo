@@ -52,3 +52,25 @@ export const DEPOSIT_MONITOR_ENABLED = process.env.DEPOSIT_MONITOR_ENABLED !== '
  */
 export const ENS_DOMAIN = 'assuranet.eth';
 
+/**
+ * Build the canonical registration message that the user's EOA must sign.
+ *
+ * SECURITY: The client (scripts/register-user.ts) and the server
+ * (UserService.registerUser) MUST construct this string identically so the
+ * signature can be verified server-side. It is derived only from fields that
+ * are transmitted in the request (ensUsername, eoaAddress, expiration) so the
+ * server can reconstruct exactly what was signed. eoaAddress is lower-cased to
+ * avoid checksum-casing mismatches between signing and verification.
+ */
+export function buildRegistrationMessage(params: {
+  ensUsername: string;
+  eoaAddress: string;
+  expiration: number;
+}): string {
+  return JSON.stringify({
+    ensUsername: params.ensUsername,
+    eoaAddress: params.eoaAddress.toLowerCase(),
+    expiration: params.expiration,
+  });
+}
+
