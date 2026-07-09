@@ -1,0 +1,90 @@
+{
+  "id": 10,
+  "address": "0x0000000000000000000000000000000000000000",
+  "name": "Optimism",
+  "url": "",
+  "tokens": [
+    {
+      "address": "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+      "symbol": "USDC",
+      "decimals": 6,
+      "name": "USD Coin"
+    },
+    {
+      "address": "0x4200000000000000000000000000000000000006",
+      "symbol": "WETH",
+      "decimals": 18,
+      "name": "Wrapped Ether"
+    },
+    {
+      "address": "0x4200000000000000000000000000000000000042",
+      "symbol": "OP",
+      "decimals": 18,
+      "name": "Optimism"
+    }
+  ],
+  "modules": [
+    {
+      "name": "nearIntentBridgeModule",
+      "address": "0xa106ea5825Cc71B7Ed9cD00FF0b8581188CDE38f",
+      "transactionHash": "0x5d4f25098a958d969d5eac9684c14810dd86bf0ba90b601109b0315e27844955",
+      "blockNumber": 144456295,
+      "verified": true,
+      "explorerLink": "https://optimistic.etherscan.io/address/0xa106ea5825Cc71B7Ed9cD00FF0b8581188CDE38f",
+      "configHash": "0",
+      "configuration": {
+        "teeSigner": "0xacdF4b172e3cF6DCeb432fAAF8FC74a4bCDd4E93"
+      }
+    }
+  ],
+  "contracts": [
+    {
+      "name": "nexusImplementation",
+      "address": "0x00000000383e8cBe298514674Ea60Ee1d1de50ac",
+      "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "blockNumber": 0,
+      "verified": true,
+      "explorerLink": "https://optimistic.etherscan.io/address/0x00000000383e8cBe298514674Ea60Ee1d1de50ac"
+    },
+    {
+      "name": "nexusAccountFactory",
+      "address": "0x0000006648ED9B2B842552BE63Af870bC74af837",
+      "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "blockNumber": 0,
+      "verified": true,
+      "explorerLink": "https://optimistic.etherscan.io/address/0x0000006648ED9B2B842552BE63Af870bC74af837"
+    },
+    {
+      "name": "biconomyMetaFactory",
+      "address": "0x00000000000000447e69651d841bD8D104Bed493",
+      "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "blockNumber": 0,
+      "verified": true,
+      "explorerLink": "https://optimistic.etherscan.io/address/0x00000000000000447e69651d841bD8D104Bed493"
+    },
+    {
+      "name": "k1Validator",
+      "address": "0x0000000031ef4155C978d48a8A7d4EDba03b04fE",
+      "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "blockNumber": 0,
+      "verified": true,
+      "explorerLink": "https://optimistic.etherscan.io/address/0x0000000031ef4155C978d48a8A7d4EDba03b04fE"
+    },
+    {
+      "name": "nexusBootstrap",
+      "address": "0x0000003eDf18913c01cBc482C978bBD3D6E8ffA3",
+      "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "blockNumber": 0,
+      "verified": true,
+      "explorerLink": "https://optimistic.etherscan.io/address/0x0000003eDf18913c01cBc482C978bBD3D6E8ffA3"
+    },
+    {
+      "name": "mockRegistry",
+      "address": "0x000000000069E2a187AEFFb852bF3cCdC95151B2",
+      "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "blockNumber": 0,
+      "verified": true,
+      "explorerLink": "https://optimistic.etherscan.io/address/0x000000000069E2a187AEFFb852bF3cCdC95151B2"
+    }
+  ]
+}
