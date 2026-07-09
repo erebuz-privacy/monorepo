@@ -1,10 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Clock, Send, Settings } from "lucide-react";
 
 import { cn } from "@erebuz/ui/lib/utils";
+
+import { GradientAvatar } from "@/components/crypto-icon";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { useApp } from "@/lib/store";
 
 const NAV = [
   // Home is temporarily disabled — send is the landing screen for now.
@@ -16,36 +21,73 @@ const NAV = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user } = useApp();
+  const firstName = user?.name?.split(" ")[0];
 
   return (
-    <div className="bg-muted/40 flex min-h-dvh justify-center">
-      <div className="bg-background relative flex min-h-dvh w-full max-w-md flex-col border-border sm:border-x">
-        <main className="flex-1 pb-20">{children}</main>
+    <div className="bg-background stage-grid flex min-h-dvh flex-col">
+      {/* top nav */}
+      <header className="border-border/60 flex h-16 shrink-0 items-center justify-between gap-3 border-b px-4 sm:px-6">
+        <Link href="/send" className="flex items-center gap-2">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-neutral-950">
+            <Image
+              src="/wall8-logo.svg"
+              alt="wall8"
+              width={18}
+              height={18}
+              priority
+              unoptimized
+            />
+          </span>
+          <span className="hidden text-lg font-semibold tracking-tight sm:inline">
+            wall8
+          </span>
+        </Link>
 
-        <nav className="bg-background/90 border-border sticky bottom-0 z-10 border-t backdrop-blur">
-          <div className="mx-auto flex max-w-md items-stretch justify-around">
-            {NAV.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href || pathname.startsWith(`${href}/`);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "flex flex-1 flex-col items-center gap-1 py-3 text-xs font-medium transition-colors",
-                    active
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <Icon className={cn("size-5", active && "text-primary")} />
-                  {label}
-                </Link>
-              );
-            })}
-          </div>
+        <nav className="bg-muted/60 flex items-center gap-1 rounded-full p-1">
+          {NAV.map(({ href, label, icon: Icon }) => {
+            const active =
+              pathname === href || pathname.startsWith(`${href}/`);
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                  active
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Icon className="size-4" />
+                <span className="hidden sm:inline">{label}</span>
+              </Link>
+            );
+          })}
         </nav>
-      </div>
+
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <Link href="/settings" className="flex items-center gap-2 pl-1">
+            {firstName ? (
+              <span className="text-muted-foreground hidden text-sm font-medium sm:inline">
+                {firstName}
+              </span>
+            ) : null}
+            <GradientAvatar seed={user?.email ?? "wall8"} size={32} />
+          </Link>
+        </div>
+      </header>
+
+      {/* centered widget stage */}
+      <main className="flex flex-1 items-center justify-center px-4 py-8 sm:py-12">
+        <div className="w-full max-w-md">
+          <div className="border-border bg-card overflow-hidden rounded-2xl border shadow-sm">
+            {children}
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

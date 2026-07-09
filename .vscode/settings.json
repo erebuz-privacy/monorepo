@@ -1,0 +1,32 @@
+{
+  "//": "Perf: stop the editor from watching/indexing the huge monorepo trees. Biggest cause of laptop lag on big JS monorepos.",
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.next/**": true,
+    "**/.turbo/**": true,
+    "**/dist/**": true,
+    "**/.git/objects/**": true,
+    "**/apps/*/.next/**": true,
+    "**/apps/landing/public/**": true,
+    "**/contracts/artifacts/**": true,
+    "**/contracts/cache/**": true,
+    "**/contracts/typechain-types/**": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/dist": true,
+    "**/pnpm-lock.yaml": true,
+    "**/apps/landing/docs/research/**": true,
+    "**/apps/landing/package-lock.json": true
+  },
+  "files.exclude": {
+    "**/.turbo": true
+  },
+  "typescript.tsserver.watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents"
+  },
+  "typescript.tsserver.maxTsServerMemory": 3072,
+  "typescript.disableAutomaticTypeAcquisition": true
+}

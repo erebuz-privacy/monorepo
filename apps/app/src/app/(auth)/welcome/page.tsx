@@ -3,10 +3,11 @@
 import { useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowRight, KeyRound } from "lucide-react";
+import { KeyRound, ShieldCheck } from "lucide-react";
 
-import { Button } from "@erebuz/ui/components/button";
+import { Badge } from "@erebuz/ui/components/badge";
 
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useApp, type Custody } from "@/lib/store";
 
 export default function Welcome() {
@@ -24,43 +25,80 @@ export default function Welcome() {
   };
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-between px-6 py-16">
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
-        <div className="mb-6 flex size-16 items-center justify-center rounded-2xl bg-neutral-950">
-          <Image
-            src="/wall8-logo.svg"
-            alt="wall8"
-            width={38}
-            height={38}
-            priority
-            unoptimized
-          />
-        </div>
-        <h1 className="text-3xl font-semibold tracking-tight">wall8</h1>
-        <p className="text-muted-foreground mt-3 max-w-xs text-balance text-lg leading-relaxed">
-          Send money privately, across any chain.
-        </p>
+    <div className="relative flex min-h-dvh items-center justify-center px-6 py-12">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
       </div>
+      <div className="w-full max-w-sm">
+        {/* brand */}
+        <div className="mb-8 flex items-center gap-2.5">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-neutral-950">
+            <Image
+              src="/wall8-logo.svg"
+              alt="wall8"
+              width={18}
+              height={18}
+              priority
+              unoptimized
+            />
+          </span>
+          <span className="text-xl font-semibold tracking-tight">wall8</span>
+        </div>
 
-      <div className="w-full max-w-sm space-y-3">
-        <Button
-          size="lg"
-          className="h-12 w-full text-base"
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Sign in or create an account
+        </h1>
+        <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+          Choose how your funds are secured. Managed is the easiest, or bring
+          your own keys.
+        </p>
+
+        {/* Managed — prominent */}
+        <button
+          type="button"
           onClick={() => start("managed")}
+          className="group border-border bg-card hover:border-primary/60 hover:bg-accent/40 mt-6 w-full rounded-xl border p-4 text-left transition-colors"
         >
-          Get started
-          <ArrowRight className="size-5" />
-        </Button>
-        <Button
-          size="lg"
-          variant="outline"
-          className="h-12 w-full text-base"
+          <div className="flex items-start gap-3">
+            <span className="bg-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-lg">
+              <ShieldCheck className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">Managed</span>
+                <Badge variant="success">Recommended</Badge>
+              </div>
+              <p className="text-muted-foreground mt-0.5 text-sm leading-relaxed">
+                Secured in a protected enclave. Gasless, recoverable, easiest.
+              </p>
+            </div>
+          </div>
+        </button>
+
+        <div className="text-muted-foreground my-4 text-center text-xs uppercase tracking-wide">
+          Or bring your own keys
+        </div>
+
+        {/* Self-custody */}
+        <button
+          type="button"
           onClick={() => start("self")}
+          className="group border-border bg-card hover:border-primary/60 hover:bg-accent/40 w-full rounded-xl border p-4 text-left transition-colors"
         >
-          <KeyRound className="size-5" />
-          Use self-custody
-        </Button>
-        <p className="text-muted-foreground pt-1 text-center text-xs leading-relaxed">
+          <div className="flex items-start gap-3">
+            <span className="bg-muted text-foreground flex size-10 shrink-0 items-center justify-center rounded-lg">
+              <KeyRound className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="font-medium">Self-custody</div>
+              <p className="text-muted-foreground mt-0.5 text-sm leading-relaxed">
+                You hold the keys, via Google (Privy).
+              </p>
+            </div>
+          </div>
+        </button>
+
+        <p className="text-muted-foreground mt-8 text-center text-xs leading-relaxed">
           Private and compliant by design. We never see who you are or what you
           send.
         </p>

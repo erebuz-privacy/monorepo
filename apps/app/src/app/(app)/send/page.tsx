@@ -288,31 +288,40 @@ export default function SendPage() {
   );
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex flex-col">
       {step !== "success" ? (
-        <header className="flex items-center gap-3 px-4 py-4">
-          {canBack ? (
-            <button
-              type="button"
-              onClick={back}
-              className="hover:bg-accent -ml-2 rounded-lg p-2"
-              aria-label="Back"
-            >
-              <ArrowLeft className="size-5" />
-            </button>
-          ) : (
-            <span className="w-1" />
-          )}
-          <h1 className="flex-1 text-base font-semibold">{TITLES[step]}</h1>
+        <div className="border-border/60 border-b">
+          <header className="flex items-center gap-3 px-4 pb-3 pt-4">
+            {canBack ? (
+              <button
+                type="button"
+                onClick={back}
+                className="hover:bg-accent -ml-2 rounded-lg p-2"
+                aria-label="Back"
+              >
+                <ArrowLeft className="size-5" />
+              </button>
+            ) : (
+              <span className="w-1" />
+            )}
+            <h1 className="flex-1 text-base font-semibold">{TITLES[step]}</h1>
+          </header>
           {showIndex ? (
-            <span className="text-muted-foreground text-xs tabular-nums">
-              {stepIndex}/3
-            </span>
+            <div className="flex gap-1.5 px-4 pb-4">
+              {[1, 2, 3].map((n) => (
+                <span
+                  key={n}
+                  className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
+                    n <= stepIndex ? "bg-foreground" : "bg-muted"
+                  }`}
+                />
+              ))}
+            </div>
           ) : null}
-        </header>
+        </div>
       ) : null}
 
-      <div className="flex-1 px-5 pb-6">
+      <div key={step} className="animate-step-in flex-1 px-5 pb-6 pt-6">
         {step === "from" ? (
           <div className="space-y-4">
             <div className="border-border rounded-xl border p-4">
@@ -636,7 +645,7 @@ export default function SendPage() {
         ) : null}
 
         {step === "checking" ? (
-          <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+          <div className="flex min-h-[360px] flex-col items-center justify-center text-center">
             <Loader2 className="text-primary size-10 animate-spin" />
             <p className="mt-6 text-base font-medium">
               Checking for your deposit…
@@ -649,7 +658,7 @@ export default function SendPage() {
         ) : null}
 
         {step === "compliance" ? (
-          <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+          <div className="flex min-h-[360px] flex-col items-center justify-center text-center">
             <div className="relative flex items-center justify-center">
               <Loader2 className="text-primary size-10 animate-spin" />
               <BadgeCheck className="text-primary absolute size-4" />
@@ -706,8 +715,8 @@ export default function SendPage() {
         ) : null}
 
         {step === "success" && receipt ? (
-          <div className="flex min-h-dvh flex-col items-center justify-center px-1 text-center">
-            <div className="flex size-16 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
+          <div className="flex min-h-[440px] flex-col items-center justify-center px-1 py-8 text-center">
+            <div className="bg-brand/12 text-brand flex size-16 items-center justify-center rounded-full">
               <Check className="size-8" />
             </div>
             <h1 className="mt-5 text-xl font-semibold">Sent privately</h1>
