@@ -58,19 +58,31 @@ export const ENS_DOMAIN = 'assuranet.eth';
  * SECURITY: The client (scripts/register-user.ts) and the server
  * (UserService.registerUser) MUST construct this string identically so the
  * signature can be verified server-side. It is derived only from fields that
- * are transmitted in the request (ensUsername, eoaAddress, expiration) so the
- * server can reconstruct exactly what was signed. eoaAddress is lower-cased to
- * avoid checksum-casing mismatches between signing and verification.
+ * are transmitted in the request so the server can reconstruct exactly what
+ * was signed. eoaAddress is lower-cased to avoid checksum-casing mismatches
+ * between signing and verification.
+ *
+ * Every security-relevant field is included so the signature binds them: not
+ * just identity (ensUsername, eoaAddress, expiration) but also the stealth and
+ * zcash key material (spendingPublicKey, viewingPrivateKey, zcashAddress).
+ * Otherwise a tampering client/proxy could keep a valid signature while
+ * swapping in attacker-controlled keys, hijacking where funds are routed.
  */
 export function buildRegistrationMessage(params: {
   ensUsername: string;
   eoaAddress: string;
   expiration: number;
+  spendingPublicKey: string;
+  viewingPrivateKey: string;
+  zcashAddress: string;
 }): string {
   return JSON.stringify({
     ensUsername: params.ensUsername,
     eoaAddress: params.eoaAddress.toLowerCase(),
     expiration: params.expiration,
+    spendingPublicKey: params.spendingPublicKey,
+    viewingPrivateKey: params.viewingPrivateKey,
+    zcashAddress: params.zcashAddress,
   });
 }
 
