@@ -2,41 +2,24 @@
 
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
 import { cn } from "@erebuz/ui/lib/utils";
 
-type Theme = "dark" | "light";
-
 export function ThemeToggle({ className }: { className?: string }) {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    // Reflect the persisted theme after mount (client only) — hydration-safe.
-    /* eslint-disable react-hooks/set-state-in-effect */
-    const saved = (localStorage.getItem("wall8:theme") as Theme) || "dark";
-    setMounted(true);
-    setTheme(saved);
-    /* eslint-enable react-hooks/set-state-in-effect */
-  }, []);
+  // Avoid a hydration mismatch — the resolved theme is only known on the client.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => setMounted(true), []);
 
-  const toggle = () => {
-    const next: Theme = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    try {
-      localStorage.setItem("wall8:theme", next);
-    } catch {
-      // ignore
-    }
-    const d = document.documentElement;
-    d.classList.toggle("dark", next === "dark");
-    d.style.colorScheme = next;
-  };
+  const isDark = resolvedTheme === "dark";
 
   return (
     <button
       type="button"
-      onClick={toggle}
+      onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label="Toggle theme"
       className={cn(
         "text-muted-foreground hover:text-foreground hover:bg-accent flex size-9 items-center justify-center rounded-full transition-colors",
@@ -44,7 +27,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       )}
     >
       {mounted ? (
-        theme === "dark" ? (
+        isDark ? (
           <Sun className="size-4" />
         ) : (
           <Moon className="size-4" />
