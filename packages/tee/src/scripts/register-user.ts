@@ -152,6 +152,9 @@ export async function registerUser(options: RegistrationOptions): Promise<Regist
       ensUsername: username,
       eoaAddress,
       expiration,
+      spendingPublicKey,
+      viewingPrivateKey,
+      zcashAddress,
     });
 
     // Sign the message

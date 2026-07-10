@@ -161,6 +161,9 @@ export class UserService {
         ensUsername: request.ensData.ensUsername,
         eoaAddress: request.ensData.eoaAddress,
         expiration: request.signature.expiration,
+        spendingPublicKey: request.spendingPublicKey,
+        viewingPrivateKey: request.viewingPrivateKey,
+        zcashAddress: request.zcashAddress,
       });
       // verifyMessage throws on a malformed signature; treat that as invalid
       // rather than leaking the internal crypto error to the caller.
