@@ -182,7 +182,7 @@ export const SEED_ACTIVITY: Activity[] = [
     receiveAmount: 49.71,
     feeUsd: 0.29,
     status: "confirmed",
-    route: ["Polygon", "Railgun pool", "Ethereum"],
+    route: ["Polygon", "STRK20 pool", "Ethereum"],
   },
 ];
 

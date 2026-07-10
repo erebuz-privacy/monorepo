@@ -1,18 +1,14 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import {
-  ArrowDown,
   ArrowLeft,
-  ArrowRight,
   BadgeCheck,
   Check,
   ChevronDown,
-  ChevronUp,
   Copy,
-  Fuel,
   Loader2,
   Lock,
   Plus,
@@ -20,56 +16,47 @@ import {
   Wallet,
 } from "lucide-react";
 
-import { Badge } from "@erebuz/ui/components/badge";
 import { Button } from "@erebuz/ui/components/button";
-import { Separator } from "@erebuz/ui/components/separator";
-import { Skeleton } from "@erebuz/ui/components/skeleton";
+import { cn } from "@erebuz/ui/lib/utils";
 
 import { AssetPicker } from "@/components/asset-picker";
 import {
   GradientAvatar,
   InitialCircle,
   NetworkGlyph,
+  RouteTrail,
   TokenGlyph,
+  TokenOnChainGlyph,
 } from "@/components/crypto-icon";
 import {
   DestinationDialog,
   type Destination,
 } from "@/components/destination-dialog";
 import { ImportTokenDialog } from "@/components/import-token-dialog";
-import { SelectorRow } from "@/components/selector-row";
 import { formatAmount, formatUsd, shortenAddress } from "@/lib/format";
-import { CHAINS, HOLDINGS, chainById } from "@/lib/mock-data";
 import {
+  CHAINS,
+  HOLDINGS,
+  chainById,
+  type Chain,
+  type Token,
+} from "@/lib/mock-data";
+import {
+  computeQuote,
   createDepositAccount,
   executeSend,
-  quoteRoute,
-  type Quote,
   type Receipt,
 } from "@/lib/mock-sdk";
 import { useApp } from "@/lib/store";
 
 type Step =
-  | "from"
-  | "to"
-  | "review"
+  | "compose"
   | "deposit"
   | "checking"
   | "compliance"
   | "sign"
   | "success";
-type PickerKind = "fromChain" | "fromToken" | "toChain" | "toToken";
-
-const TITLES: Record<Step, string> = {
-  from: "You send",
-  to: "Recipient",
-  review: "Review",
-  deposit: "Deposit",
-  checking: "Checking deposit",
-  compliance: "Compliance check",
-  sign: "Approve",
-  success: "",
-};
+type PickerKind = "from" | "to";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -80,12 +67,51 @@ function holdingAmount(chainId: string, tokenId: string): number {
   );
 }
 
+/** Combined token-on-chain selector (Relay/Jumper-style). */
+function AssetSelect({
+  token,
+  chain,
+  onClick,
+  locked,
+}: {
+  token: Token;
+  chain: Chain;
+  onClick?: () => void;
+  locked?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={locked ? undefined : onClick}
+      className={cn(
+        "border-border bg-card flex shrink-0 items-center gap-2.5 rounded-full border py-1.5 pl-1.5 pr-3 transition-colors",
+        locked ? "cursor-default" : "hover:bg-accent"
+      )}
+    >
+      <TokenOnChainGlyph token={token} chain={chain} size={30} />
+      <span className="text-left">
+        <span className="block text-sm font-semibold leading-tight">
+          {token.symbol}
+        </span>
+        <span className="text-muted-foreground block text-[11px] leading-tight">
+          {chain.name}
+        </span>
+      </span>
+      {locked ? (
+        <Lock className="text-muted-foreground size-3.5" />
+      ) : (
+        <ChevronDown className="text-muted-foreground size-4" />
+      )}
+    </button>
+  );
+}
+
 export default function SendPage() {
   const router = useRouter();
   const { recordSend, tokenById, tokensForChain, cards, contacts, custody } =
     useApp();
 
-  const [step, setStep] = useState<Step>("from");
+  const [step, setStep] = useState<Step>("compose");
 
   const [fromChainId, setFromChainId] = useState("base");
   const [fromTokenId, setFromTokenId] = useState("usdc");
@@ -100,8 +126,6 @@ export default function SendPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [importFor, setImportFor] = useState<"from" | "to">("from");
 
-  const [quote, setQuote] = useState<Quote | null>(null);
-  const [showRoute, setShowRoute] = useState(false);
   const [creating, setCreating] = useState(false);
   const [depositAddress, setDepositAddress] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -120,31 +144,50 @@ export default function SendPage() {
   const fromValid = amountNum > 0;
   const toValid = Boolean(dest && toChainId && toTokenId);
 
-  const recipientView = (
-    d: Destination
-  ): { label: string; sublabel: string; icon: React.ReactNode } => {
-    if (d.kind === "card") {
-      const c = cards.find((x) => x.id === d.id);
-      return {
-        label: c?.name ?? "Card",
-        sublabel: shortenAddress(c?.address ?? ""),
-        icon: <InitialCircle label={c?.name ?? "?"} color={c?.color ?? "#999"} />,
-      };
-    }
-    if (d.kind === "contact") {
-      const c = contacts.find((x) => x.id === d.id);
-      return {
-        label: c?.name ?? "Contact",
-        sublabel: c?.handle ?? shortenAddress(c?.address ?? ""),
-        icon: <GradientAvatar seed={c?.address ?? d.id} />,
-      };
-    }
-    return {
-      label: shortenAddress(d.address),
-      sublabel: "Wallet address",
-      icon: <GradientAvatar seed={d.address} />,
-    };
-  };
+  // Live quote — recomputed every keystroke/selection.
+  const quote =
+    fromValid && toValid && toChainId && toTokenId
+      ? computeQuote({
+          fromChainId,
+          fromTokenId,
+          amount: amountNum,
+          toChainId,
+          toTokenId,
+        })
+      : null;
+
+  const sendUsd = amountNum * (fromToken?.usd ?? 1);
+  const receiveUsd = quote ? quote.receiveAmount * (toToken?.usd ?? 1) : 0;
+
+  const recipient = dest
+    ? dest.kind === "card"
+      ? (() => {
+          const c = cards.find((x) => x.id === dest.id);
+          return {
+            label: c?.name ?? "Card",
+            sublabel: shortenAddress(c?.address ?? ""),
+            icon: (
+              <InitialCircle label={c?.name ?? "?"} color={c?.color ?? "#999"} />
+            ),
+          };
+        })()
+      : dest.kind === "contact"
+        ? (() => {
+            const c = contacts.find((x) => x.id === dest.id);
+            return {
+              label: c?.name ?? "Contact",
+              sublabel: c?.handle ?? shortenAddress(c?.address ?? ""),
+              icon: (
+                <GradientAvatar seed={c?.address ?? dest.id} label={c?.name} />
+              ),
+            };
+          })()
+        : {
+            label: shortenAddress(dest.address),
+            sublabel: "Wallet address",
+            icon: <GradientAvatar seed={dest.address} />,
+          }
+    : null;
 
   const pickFromChain = (id: string) => {
     setFromChainId(id);
@@ -181,25 +224,7 @@ export default function SendPage() {
     }
   };
 
-  const loadQuote = useCallback(async () => {
-    if (!toChainId || !toTokenId) return;
-    setQuote(null);
-    const q = await quoteRoute({
-      fromChainId,
-      fromTokenId,
-      amount: amountNum,
-      toChainId,
-      toTokenId,
-    });
-    setQuote(q);
-  }, [fromChainId, fromTokenId, amountNum, toChainId, toTokenId]);
-
-  const goReview = () => {
-    setStep("review");
-    void loadQuote();
-  };
-
-  // Confirm the quote -> backend provisions a deposit account for the user.
+  // Confirm -> backend provisions a deposit account to fund.
   const confirmQuote = async () => {
     if (!quote) return;
     setCreating(true);
@@ -210,7 +235,7 @@ export default function SendPage() {
   };
 
   const finalize = async () => {
-    if (!quote || !dest || !toChainId || !toTokenId) return;
+    if (!quote || !dest || !toChainId || !toTokenId || !recipient) return;
     const r = await executeSend(quote);
     setReceipt(r);
     recordSend({
@@ -218,7 +243,7 @@ export default function SendPage() {
       date: r.date,
       fromChainId,
       fromTokenId,
-      toLabel: recipientView(dest).label,
+      toLabel: recipient.label,
       toChainId,
       toTokenId,
       sendAmount: amountNum,
@@ -230,8 +255,6 @@ export default function SendPage() {
     setStep("success");
   };
 
-  // User indicates they've funded the deposit address -> detect it, then screen
-  // the deposited funds for compliance before routing.
   const startChecking = async () => {
     setStep("checking");
     await sleep(2200);
@@ -241,7 +264,6 @@ export default function SendPage() {
     else await finalize();
   };
 
-  // Self-custody only: sign for the intermediary accounts, then settle.
   const signAndFinish = async () => {
     setSigning(true);
     await sleep(1600);
@@ -260,18 +282,6 @@ export default function SendPage() {
     }
   };
 
-  const canBack = step === "to" || step === "review" || step === "deposit";
-  const back = () => {
-    if (step === "to") setStep("from");
-    else if (step === "review") {
-      setQuote(null);
-      setStep("to");
-    } else if (step === "deposit") setStep("review");
-  };
-
-  const stepIndex = step === "from" ? 1 : step === "to" ? 2 : 3;
-  const showIndex = step === "from" || step === "to" || step === "review";
-
   const importFooter = (side: "from" | "to") => (
     <Button
       variant="outline"
@@ -287,51 +297,55 @@ export default function SendPage() {
     </Button>
   );
 
+  const composeCta = creating
+    ? "Preparing transfer…"
+    : !fromValid
+      ? "Enter an amount"
+      : !dest
+        ? "Choose a recipient"
+        : "Continue";
+
   return (
-    <div className="flex flex-col">
-      {step !== "success" ? (
-        <div className="border-border/60 border-b">
-          <header className="flex items-center gap-3 px-4 pb-3 pt-4">
-            {canBack ? (
-              <button
-                type="button"
-                onClick={back}
-                className="hover:bg-accent -ml-2 rounded-lg p-2"
-                aria-label="Back"
-              >
-                <ArrowLeft className="size-5" />
-              </button>
-            ) : (
-              <span className="w-1" />
-            )}
-            <h1 className="flex-1 text-base font-semibold">{TITLES[step]}</h1>
-          </header>
-          {showIndex ? (
-            <div className="flex gap-1.5 px-4 pb-4">
-              {[1, 2, 3].map((n) => (
-                <span
-                  key={n}
-                  className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-                    n <= stepIndex ? "bg-foreground" : "bg-muted"
-                  }`}
-                />
-              ))}
-            </div>
+    <div className="flex min-h-[calc(100dvh-4rem)] items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-md">
+        <div className="border-border bg-card overflow-hidden rounded-2xl border shadow-sm">
+          {step === "deposit" || step === "sign" ? (
+            <header className="border-border/60 flex items-center gap-3 border-b px-4 py-4">
+          {step === "deposit" ? (
+            <button
+              type="button"
+              onClick={() => setStep("compose")}
+              className="hover:bg-accent -ml-2 rounded-lg p-2"
+              aria-label="Back"
+            >
+              <ArrowLeft className="size-5" />
+            </button>
           ) : null}
-        </div>
+          <h1 className="flex-1 text-base font-semibold">
+            {step === "deposit" ? "Deposit" : "Approve transfer"}
+          </h1>
+        </header>
       ) : null}
 
-      <div key={step} className="animate-step-in flex-1 px-5 pb-6 pt-6">
-        {step === "from" ? (
-          <div className="space-y-4">
-            <div className="border-border rounded-xl border p-4">
-              <div className="flex items-baseline justify-between">
-                <label className="text-muted-foreground text-xs">Amount</label>
-                <span className="text-muted-foreground text-xs">
-                  Balance: {formatAmount(balance, fromToken.symbol)}
-                </span>
+      {/* ───────── compose (send + receive on one screen) ───────── */}
+      {step === "compose" ? (
+        <div className="animate-step-in space-y-1 p-4">
+          {/* one connected bridge panel — the two fields share a seam, no gap */}
+          <div className="border-border bg-muted/30 relative rounded-2xl border">
+            {/* you send */}
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-sm">You send</span>
+                <button
+                  type="button"
+                  onClick={() => setAmount(String(balance))}
+                  className="text-muted-foreground text-xs"
+                >
+                  Balance {formatAmount(balance)}{" "}
+                  <span className="text-primary font-semibold">MAX</span>
+                </button>
               </div>
-              <div className="mt-1 flex items-center gap-2">
+              <div className="mt-2 flex items-center gap-3">
                 <input
                   inputMode="decimal"
                   autoFocus
@@ -340,440 +354,336 @@ export default function SendPage() {
                     setAmount(e.target.value.replace(/[^0-9.]/g, ""))
                   }
                   placeholder="0"
-                  className="placeholder:text-muted-foreground/40 w-full bg-transparent text-4xl font-semibold tracking-tight tabular-nums outline-none"
+                  className="placeholder:text-muted-foreground/40 w-full min-w-0 bg-transparent text-3xl font-semibold tracking-tight tabular-nums outline-none"
                 />
-                <button
-                  type="button"
-                  onClick={() => setAmount(String(balance))}
-                  className="text-primary shrink-0 text-xs font-semibold"
-                >
-                  MAX
-                </button>
+                <AssetSelect
+                  token={fromToken}
+                  chain={fromChain}
+                  onClick={() => setPicker("from")}
+                />
               </div>
-            </div>
-
-            <SelectorRow
-              label="Token"
-              value={fromToken.symbol}
-              sublabel={fromToken.name}
-              icon={<TokenGlyph token={fromToken} />}
-              onClick={() => setPicker("fromToken")}
-            />
-            <SelectorRow
-              label="From chain"
-              value={fromChain.name}
-              icon={<NetworkGlyph chain={fromChain} />}
-              onClick={() => setPicker("fromChain")}
-            />
-
-            <Button
-              size="lg"
-              className="h-12 w-full text-base"
-              disabled={!fromValid}
-              onClick={() => setStep("to")}
-            >
-              Continue
-              <ArrowRight className="size-5" />
-            </Button>
-          </div>
-        ) : null}
-
-        {step === "to" ? (
-          <div className="space-y-4">
-            <SelectorRow
-              label="Send to"
-              value={dest ? recipientView(dest).label : undefined}
-              sublabel={dest ? recipientView(dest).sublabel : undefined}
-              icon={dest ? recipientView(dest).icon : undefined}
-              placeholder="Choose recipient"
-              onClick={() => setDestOpen(true)}
-            />
-
-            {dest ? (
-              <div className="space-y-4">
-                <p className="text-muted-foreground px-1 text-xs">
-                  They receive
-                </p>
-                {destCard && toToken && toChain ? (
-                  <div className="border-border flex items-center gap-3 rounded-xl border p-3">
-                    <TokenGlyph token={toToken} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">
-                        {toToken.symbol} on {toChain.name}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        Set by the card
-                      </p>
-                    </div>
-                    <Lock className="text-muted-foreground size-4" />
-                  </div>
-                ) : (
-                  <>
-                    <SelectorRow
-                      label="Receive token"
-                      value={toToken?.symbol}
-                      sublabel={toToken?.name}
-                      icon={toToken ? <TokenGlyph token={toToken} /> : undefined}
-                      onClick={() => setPicker("toToken")}
-                    />
-                    <SelectorRow
-                      label="Receive on chain"
-                      value={toChain?.name}
-                      icon={toChain ? <NetworkGlyph chain={toChain} /> : undefined}
-                      onClick={() => setPicker("toChain")}
-                    />
-                  </>
-                )}
-              </div>
-            ) : null}
-
-            <Button
-              size="lg"
-              className="h-12 w-full text-base"
-              disabled={!toValid}
-              onClick={goReview}
-            >
-              Review
-              <ArrowRight className="size-5" />
-            </Button>
-          </div>
-        ) : null}
-
-        {step === "review" ? (
-          <div className="space-y-5">
-            <div className="border-border rounded-xl border p-4">
-              <div className="flex items-center gap-3">
-                <TokenGlyph token={fromToken} />
-                <div className="flex-1">
-                  <p className="text-muted-foreground text-xs">You send</p>
-                  <p className="text-lg font-semibold tabular-nums">
-                    {formatAmount(amountNum, fromToken.symbol)}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    on {fromChain.name}
-                  </p>
-                </div>
-              </div>
-
-              <div className="my-2 flex justify-center">
-                <span className="bg-muted flex size-7 items-center justify-center rounded-full">
-                  <ArrowDown className="text-muted-foreground size-4" />
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                {toToken ? <TokenGlyph token={toToken} /> : null}
-                <div className="flex-1">
-                  <p className="text-muted-foreground text-xs">
-                    {dest ? recipientView(dest).label : ""} receives
-                  </p>
-                  {quote ? (
-                    <p className="text-lg font-semibold tabular-nums">
-                      ≈ {formatAmount(quote.receiveAmount, toToken?.symbol)}
-                    </p>
-                  ) : (
-                    <Skeleton className="mt-1 h-6 w-32" />
-                  )}
-                  <p className="text-muted-foreground text-xs">
-                    on {toChain?.name}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3 text-sm">
-              <Row label="Fee">
-                {quote ? (
-                  formatUsd(quote.feeUsd)
-                ) : (
-                  <Skeleton className="h-4 w-14" />
-                )}
-              </Row>
-              <Row
-                label={
-                  <span className="flex items-center gap-1.5">
-                    <Fuel className="text-muted-foreground size-4" /> Network gas
-                  </span>
-                }
-              >
-                <Badge variant="success">Covered</Badge>
-              </Row>
-              <Row
-                label={
-                  <span className="flex items-center gap-1.5">
-                    <ShieldCheck className="text-muted-foreground size-4" />{" "}
-                    Privacy
-                  </span>
-                }
-              >
-                <Badge variant="success">Confidential</Badge>
-              </Row>
-              <Row
-                label={
-                  <span className="flex items-center gap-1.5">
-                    <BadgeCheck className="text-muted-foreground size-4" />
-                    Recipient screened
-                  </span>
-                }
-              >
-                {quote ? (
-                  <Badge variant="success">
-                    Passed · {quote.complianceScore}/100
-                  </Badge>
-                ) : (
-                  <Skeleton className="h-4 w-24" />
-                )}
-              </Row>
-
-              <Separator />
-
-              <button
-                type="button"
-                onClick={() => setShowRoute((s) => !s)}
-                className="text-muted-foreground hover:text-foreground flex w-full items-center justify-between text-xs"
-              >
-                <span>Show routing details</span>
-                {showRoute ? (
-                  <ChevronUp className="size-4" />
-                ) : (
-                  <ChevronDown className="size-4" />
-                )}
-              </button>
-              {showRoute && quote ? (
-                <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
-                  {quote.route.map((hop, i) => (
-                    <span key={hop} className="flex items-center gap-1.5">
-                      <span className="bg-muted rounded px-1.5 py-0.5">
-                        {hop}
-                      </span>
-                      {i < quote.route.length - 1 ? (
-                        <ArrowRight className="size-3" />
-                      ) : null}
-                    </span>
-                  ))}
+              {sendUsd > 0 ? (
+                <div className="text-muted-foreground mt-1.5 text-sm">
+                  ≈ {formatUsd(sendUsd)}
                 </div>
               ) : null}
             </div>
 
-            <Button
-              size="lg"
-              className="h-12 w-full text-base"
-              disabled={!quote || creating}
-              onClick={confirmQuote}
-            >
-              {creating
-                ? "Creating deposit account…"
-                : quote
-                  ? "Confirm"
-                  : "Getting best route…"}
-            </Button>
-          </div>
-        ) : null}
-
-        {step === "deposit" ? (
-          <div className="space-y-5">
-            <div className="border-border space-y-1 rounded-xl border p-4">
-              <p className="text-muted-foreground text-sm">Deposit to complete</p>
-              <p className="text-sm leading-relaxed">
-                Send{" "}
-                <span className="font-medium">
-                  {formatAmount(amountNum, fromToken.symbol)}
-                </span>{" "}
-                on {fromChain.name} to the address below. We&apos;ll route it
-                privately to {dest ? recipientView(dest).label : "the recipient"}.
-              </p>
+            {/* seam + swap indicator */}
+            <div className="border-border relative border-t">
+              <span className="bg-card border-border text-muted-foreground absolute left-1/2 top-0 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border">
+                <ArrowLeft className="size-3.5 -rotate-90" />
+              </span>
             </div>
 
-            {depositAddress ? (
-              <div className="flex justify-center">
-                <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/5">
-                  <QRCodeSVG
-                    value={depositAddress}
-                    size={168}
-                    bgColor="#ffffff"
-                    fgColor="#0a0a0a"
-                    marginSize={0}
-                    level="M"
-                  />
-                </div>
-              </div>
-            ) : null}
-
-            <div className="border-border rounded-xl border p-4">
+            {/* they receive */}
+            <div className="p-4">
               <div className="flex items-center justify-between">
-                <p className="text-muted-foreground text-xs">
-                  Deposit address · {fromChain.name}
-                </p>
-                <button
-                  type="button"
-                  onClick={copyAddress}
-                  className="text-primary flex items-center gap-1 text-xs font-medium"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="size-3.5" /> Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="size-3.5" /> Copy
-                    </>
-                  )}
-                </button>
-              </div>
-              <p className="mt-2 break-all text-sm">{depositAddress}</p>
-            </div>
-
-            <div className="space-y-3">
-              <Button
-                size="lg"
-                className="h-12 w-full text-base"
-                onClick={startChecking}
-              >
-                <Wallet className="size-5" />
-                Connect wallet & deposit
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="h-12 w-full text-base"
-                onClick={startChecking}
-              >
-                I&apos;ve deposited
-              </Button>
-            </div>
-          </div>
-        ) : null}
-
-        {step === "checking" ? (
-          <div className="flex min-h-[360px] flex-col items-center justify-center text-center">
-            <Loader2 className="text-primary size-10 animate-spin" />
-            <p className="mt-6 text-base font-medium">
-              Checking for your deposit…
-            </p>
-            <p className="text-muted-foreground mt-1 max-w-xs text-sm">
-              This can take a moment after your transfer confirms. Keep this
-              screen open.
-            </p>
-          </div>
-        ) : null}
-
-        {step === "compliance" ? (
-          <div className="flex min-h-[360px] flex-col items-center justify-center text-center">
-            <div className="relative flex items-center justify-center">
-              <Loader2 className="text-primary size-10 animate-spin" />
-              <BadgeCheck className="text-primary absolute size-4" />
-            </div>
-            <p className="mt-6 text-base font-medium">
-              Running compliance check…
-            </p>
-            <p className="text-muted-foreground mt-1 max-w-xs text-sm">
-              Screening your deposit for sanctions and risk before we route it
-              privately.
-            </p>
-          </div>
-        ) : null}
-
-        {step === "sign" ? (
-          <div className="space-y-5">
-            <div className="border-border rounded-xl border bg-emerald-500/5 p-4">
-              <p className="text-sm leading-relaxed">
-                <span className="font-medium">Deposit received.</span> Approve
-                the intermediary accounts we created to route your transfer —
-                nothing moves without your signature.
-              </p>
-            </div>
-
-            <div className="border-border divide-border divide-y rounded-xl border">
-              {["Authorize route account", "Authorize settlement account"].map(
-                (label) => (
-                  <div key={label} className="flex items-center gap-3 p-4">
-                    <span className="bg-muted text-foreground flex size-9 items-center justify-center rounded-lg">
-                      <ShieldCheck className="size-4" />
-                    </span>
-                    <p className="flex-1 text-sm font-medium">{label}</p>
-                    {signing ? (
-                      <Loader2 className="text-muted-foreground size-4 animate-spin" />
-                    ) : (
-                      <span className="text-muted-foreground text-xs">
-                        Pending
-                      </span>
-                    )}
-                  </div>
-                )
-              )}
-            </div>
-
-            <Button
-              size="lg"
-              className="h-12 w-full text-base"
-              disabled={signing}
-              onClick={signAndFinish}
-            >
-              {signing ? "Signing…" : "Sign 2 requests"}
-            </Button>
-          </div>
-        ) : null}
-
-        {step === "success" && receipt ? (
-          <div className="flex min-h-[440px] flex-col items-center justify-center px-1 py-8 text-center">
-            <div className="bg-brand/12 text-brand flex size-16 items-center justify-center rounded-full">
-              <Check className="size-8" />
-            </div>
-            <h1 className="mt-5 text-xl font-semibold">Sent privately</h1>
-            <p className="text-muted-foreground mt-1 text-sm">
-              {dest ? recipientView(dest).label : ""} receives ≈{" "}
-              {formatAmount(quote?.receiveAmount ?? 0, toToken?.symbol)}
-            </p>
-
-            <div className="border-border mt-6 w-full space-y-3 rounded-xl border p-4 text-left text-sm">
-              <Row label="Status">
-                <Badge variant="success">Confirmed</Badge>
-              </Row>
-              <Row label="Time">
-                <span className="text-muted-foreground">{receipt.time}</span>
-              </Row>
-              <Row label="Fee">
-                <span className="text-muted-foreground">
-                  {formatUsd(receipt.feeUsd)}
+                <span className="text-muted-foreground text-sm">
+                  They receive
                 </span>
+                {receiveUsd > 0 ? (
+                  <span className="text-muted-foreground text-xs">
+                    ≈ {formatUsd(receiveUsd)}
+                  </span>
+                ) : null}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setDestOpen(true)}
+                className="hover:bg-accent/60 -mx-1.5 mt-2 flex w-[calc(100%+0.75rem)] items-center gap-2.5 rounded-xl px-1.5 py-2 text-left transition-colors"
+              >
+                {recipient ? (
+                  recipient.icon
+                ) : (
+                  <span className="bg-muted flex size-8 items-center justify-center rounded-full">
+                    <Plus className="text-muted-foreground size-4" />
+                  </span>
+                )}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">
+                    {recipient ? recipient.label : "Choose recipient"}
+                  </span>
+                  {recipient ? (
+                    <span className="text-muted-foreground block truncate text-xs">
+                      {recipient.sublabel}
+                    </span>
+                  ) : null}
+                </span>
+                <ChevronDown className="text-muted-foreground size-4 shrink-0" />
+              </button>
+
+              <div className="mt-2 flex items-center gap-3">
+                <span
+                  className={cn(
+                    "w-full min-w-0 text-3xl font-semibold tracking-tight tabular-nums",
+                    quote ? "" : "text-muted-foreground/40"
+                  )}
+                >
+                  {quote ? formatAmount(quote.receiveAmount) : "0"}
+                </span>
+                {toToken && toChain ? (
+                  <AssetSelect
+                    token={toToken}
+                    chain={toChain}
+                    onClick={() => setPicker("to")}
+                    locked={destCard}
+                  />
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          {/* live route + fees — revealed once amount + recipient are set */}
+          {quote ? (
+            <div className="animate-step-in border-border mt-1 space-y-2.5 rounded-2xl border px-4 py-3.5 text-sm">
+              <Row label="Route">
+                <RouteTrail route={quote.route} className="justify-end" />
+              </Row>
+              <Row label="Fee">{formatUsd(quote.feeUsd)}</Row>
+              <Row label="Network gas">
+                <span className="text-brand font-medium">Covered</span>
               </Row>
               <Row label="Privacy">
-                <Badge variant="success">Confidential</Badge>
+                <span className="text-brand font-medium">Confidential</span>
               </Row>
-              <Row label="Reference">
-                <span className="text-muted-foreground text-xs">
-                  {receipt.id}
+              <Row label="Recipient">
+                <span className="text-muted-foreground">
+                  Screened · {quote.complianceScore}/100
                 </span>
               </Row>
             </div>
+          ) : null}
 
+          <Button
+            size="lg"
+            className="mt-3 h-12 w-full text-base"
+            disabled={!quote || creating}
+            onClick={confirmQuote}
+          >
+            {composeCta}
+          </Button>
+        </div>
+      ) : null}
+
+      {/* ───────── deposit ───────── */}
+      {step === "deposit" ? (
+        <div className="space-y-5 p-4">
+          <div className="border-border bg-muted/30 space-y-1 rounded-2xl border p-4">
+            <p className="text-muted-foreground text-sm">Deposit to complete</p>
+            <p className="text-sm leading-relaxed">
+              Send{" "}
+              <span className="font-medium">
+                {formatAmount(amountNum, fromToken.symbol)}
+              </span>{" "}
+              on {fromChain.name} to the address below. We&apos;ll route it
+              privately to {recipient ? recipient.label : "the recipient"}.
+            </p>
+          </div>
+
+          {depositAddress ? (
+            <div className="flex justify-center">
+              <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/5">
+                <QRCodeSVG
+                  value={depositAddress}
+                  size={168}
+                  bgColor="#ffffff"
+                  fgColor="#0a0a0a"
+                  marginSize={0}
+                  level="M"
+                />
+              </div>
+            </div>
+          ) : null}
+
+          <div className="border-border rounded-2xl border p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-muted-foreground text-xs">
+                Deposit address · {fromChain.name}
+              </p>
+              <button
+                type="button"
+                onClick={copyAddress}
+                className="text-primary flex items-center gap-1 text-xs font-medium"
+              >
+                {copied ? (
+                  <>
+                    <Check className="size-3.5" /> Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="size-3.5" /> Copy
+                  </>
+                )}
+              </button>
+            </div>
+            <p className="mt-2 break-all text-sm">{depositAddress}</p>
+          </div>
+
+          <div className="space-y-3">
             <Button
               size="lg"
-              className="mt-6 h-12 w-full text-base"
-              onClick={() => router.push("/activity")}
+              className="h-12 w-full text-base"
+              onClick={startChecking}
             >
-              Done
+              <Wallet className="size-5" />
+              Connect wallet &amp; deposit
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="h-12 w-full text-base"
+              onClick={startChecking}
+            >
+              I&apos;ve deposited
             </Button>
           </div>
-        ) : null}
+        </div>
+      ) : null}
+
+      {/* ───────── checking ───────── */}
+      {step === "checking" ? (
+        <div className="flex min-h-[380px] flex-col items-center justify-center p-6 text-center">
+          <Loader2 className="text-primary size-10 animate-spin" />
+          <p className="mt-6 text-base font-medium">Checking for your deposit…</p>
+          <p className="text-muted-foreground mt-1 max-w-xs text-sm">
+            This can take a moment after your transfer confirms. Keep this screen
+            open.
+          </p>
+        </div>
+      ) : null}
+
+      {/* ───────── compliance ───────── */}
+      {step === "compliance" ? (
+        <div className="flex min-h-[380px] flex-col items-center justify-center p-6 text-center">
+          <div className="relative flex items-center justify-center">
+            <Loader2 className="text-primary size-10 animate-spin" />
+            <BadgeCheck className="text-primary absolute size-4" />
+          </div>
+          <p className="mt-6 text-base font-medium">Running compliance check…</p>
+          <p className="text-muted-foreground mt-1 max-w-xs text-sm">
+            Screening your deposit for sanctions and risk before we route it
+            privately.
+          </p>
+        </div>
+      ) : null}
+
+      {/* ───────── sign (self-custody) ───────── */}
+      {step === "sign" ? (
+        <div className="space-y-5 p-4">
+          <div className="border-brand/30 bg-brand/5 rounded-2xl border p-4">
+            <p className="text-sm leading-relaxed">
+              <span className="font-medium">Deposit received.</span> Approve the
+              intermediary accounts we created to route your transfer — nothing
+              moves without your signature.
+            </p>
+          </div>
+
+          <div className="border-border divide-border divide-y rounded-2xl border">
+            {["Authorize route account", "Authorize settlement account"].map(
+              (label) => (
+                <div key={label} className="flex items-center gap-3 p-4">
+                  <span className="bg-muted text-foreground flex size-9 items-center justify-center rounded-lg">
+                    <ShieldCheck className="size-4" />
+                  </span>
+                  <p className="flex-1 text-sm font-medium">{label}</p>
+                  {signing ? (
+                    <Loader2 className="text-muted-foreground size-4 animate-spin" />
+                  ) : (
+                    <span className="text-muted-foreground text-xs">Pending</span>
+                  )}
+                </div>
+              )
+            )}
+          </div>
+
+          <Button
+            size="lg"
+            className="h-12 w-full text-base"
+            disabled={signing}
+            onClick={signAndFinish}
+          >
+            {signing ? "Signing…" : "Sign 2 requests"}
+          </Button>
+        </div>
+      ) : null}
+
+      {/* ───────── success ───────── */}
+      {step === "success" && receipt ? (
+        <div className="animate-step-in flex min-h-[440px] flex-col items-center p-6">
+          <div className="bg-brand/12 text-brand mt-3 flex size-14 items-center justify-center rounded-full">
+            <Check className="size-7" />
+          </div>
+          <h1 className="mt-4 text-xl font-semibold">Sent privately</h1>
+          <p className="text-muted-foreground mt-1 font-mono text-xs">
+            {receipt.id}
+          </p>
+
+          {/* receipt */}
+          <div className="border-border mt-6 w-full overflow-hidden rounded-2xl border text-left text-sm">
+            <div className="bg-muted/40 flex items-center gap-3 p-4">
+              {toToken && toChain ? (
+                <TokenOnChainGlyph token={toToken} chain={toChain} size={38} />
+              ) : null}
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium">
+                  {recipient ? recipient.label : "Recipient"}
+                </p>
+                <p className="text-muted-foreground truncate text-xs">
+                  received on {toChain?.name}
+                </p>
+              </div>
+              <p className="shrink-0 text-right font-semibold tabular-nums">
+                +{formatAmount(quote?.receiveAmount ?? 0, toToken?.symbol)}
+              </p>
+            </div>
+
+            <div className="divide-border divide-y">
+              <div className="flex items-center justify-between gap-3 px-4 py-3">
+                <span className="text-muted-foreground">Route</span>
+                <RouteTrail route={receipt.route} className="justify-end" />
+              </div>
+              <div className="flex items-center justify-between gap-3 px-4 py-3">
+                <span className="text-muted-foreground">Settled in</span>
+                <span className="font-medium">{receipt.time}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3 px-4 py-3">
+                <span className="text-muted-foreground">Network fee</span>
+                <span className="font-medium">{formatUsd(receipt.feeUsd)}</span>
+              </div>
+              <div className="flex items-center justify-between gap-3 px-4 py-3">
+                <span className="text-muted-foreground">Privacy</span>
+                <span className="text-brand font-medium">Confidential</span>
+              </div>
+            </div>
+          </div>
+
+          <Button
+            size="lg"
+            className="mt-6 h-12 w-full text-base"
+            onClick={() => router.push("/activity")}
+          >
+            Done
+          </Button>
+        </div>
+      ) : null}
+        </div>
       </div>
 
-      {/* pickers */}
+      {/* pickers — one combined token+chain sheet per side */}
       <AssetPicker
-        open={picker === "fromChain"}
+        open={picker === "from"}
         onOpenChange={(o) => !o && setPicker(null)}
-        title="From chain"
-        items={CHAINS.map((c) => ({
+        title="You send"
+        searchPlaceholder="Search token"
+        chains={CHAINS.map((c) => ({
           id: c.id,
-          label: c.name,
-          icon: <NetworkGlyph chain={c} size={28} />,
+          label: c.short,
+          icon: <NetworkGlyph chain={c} size={16} />,
         }))}
-        onSelect={pickFromChain}
-      />
-      <AssetPicker
-        open={picker === "fromToken"}
-        onOpenChange={(o) => !o && setPicker(null)}
-        title="Token"
+        activeChainId={fromChainId}
+        onChainSelect={pickFromChain}
         items={tokensForChain(fromChainId).map((t) => ({
           id: t.id,
           label: t.symbol,
@@ -785,20 +695,17 @@ export default function SendPage() {
         footer={importFooter("from")}
       />
       <AssetPicker
-        open={picker === "toChain"}
+        open={picker === "to"}
         onOpenChange={(o) => !o && setPicker(null)}
-        title="Receive on chain"
-        items={CHAINS.map((c) => ({
+        title="They receive"
+        searchPlaceholder="Search token"
+        chains={CHAINS.map((c) => ({
           id: c.id,
-          label: c.name,
-          icon: <NetworkGlyph chain={c} size={28} />,
+          label: c.short,
+          icon: <NetworkGlyph chain={c} size={16} />,
         }))}
-        onSelect={pickToChain}
-      />
-      <AssetPicker
-        open={picker === "toToken"}
-        onOpenChange={(o) => !o && setPicker(null)}
-        title="Receive token"
+        activeChainId={toChainId ?? undefined}
+        onChainSelect={pickToChain}
         items={tokensForChain(toChainId ?? "ethereum").map((t) => ({
           id: t.id,
           label: t.symbol,

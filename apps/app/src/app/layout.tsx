@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
 import "@erebuz/ui/globals.css";
 
 import { AppProvider } from "@/lib/store";
 
-const geistSans = Geist({
+const geistSans = Hanken_Grotesk({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
+const geistMono = JetBrains_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
@@ -36,7 +36,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="bg-background text-foreground min-h-dvh font-sans">
+      <body className="bg-background text-foreground min-h-dvh font-sans" suppressHydrationWarning>
         <AppProvider>{children}</AppProvider>
       </body>
     </html>

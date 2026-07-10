@@ -75,19 +75,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {firstName}
               </span>
             ) : null}
-            <GradientAvatar seed={user?.email ?? "wall8"} size={32} />
+            <GradientAvatar
+              seed={user?.email ?? "wall8"}
+              label={user?.name}
+              size={32}
+            />
           </Link>
         </div>
       </header>
 
-      {/* centered widget stage */}
-      <main className="flex flex-1 items-center justify-center px-4 py-8 sm:py-12">
-        <div className="w-full max-w-md">
-          <div className="border-border bg-card overflow-hidden rounded-2xl border shadow-sm">
-            {children}
-          </div>
-        </div>
-      </main>
+      {/* pages own their own width + framing */}
+      <main className="flex-1">{children}</main>
     </div>
   );
 }

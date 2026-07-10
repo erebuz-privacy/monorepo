@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { KeyRound, ShieldCheck } from "lucide-react";
 
-import { Badge } from "@erebuz/ui/components/badge";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useApp, type Custody } from "@/lib/store";
@@ -66,7 +65,7 @@ export default function Welcome() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-medium">Managed</span>
-                <Badge variant="success">Recommended</Badge>
+                <span className="text-brand text-xs font-medium">Recommended</span>
               </div>
               <p className="text-muted-foreground mt-0.5 text-sm leading-relaxed">
                 Secured in a protected enclave. Gasless, recoverable, easiest.

@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@erebuz/ui/components/dialog";
 import { Input } from "@erebuz/ui/components/input";
+import { cn } from "@erebuz/ui/lib/utils";
 
 export type PickerItem = {
   id: string;
@@ -19,6 +20,8 @@ export type PickerItem = {
   right?: string;
   icon?: React.ReactNode;
 };
+
+export type ChainChip = { id: string; label: string; icon?: React.ReactNode };
 
 export function AssetPicker({
   open,
@@ -29,6 +32,9 @@ export function AssetPicker({
   onSelect,
   searchPlaceholder = "Search…",
   footer,
+  chains,
+  activeChainId,
+  onChainSelect,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -38,6 +44,9 @@ export function AssetPicker({
   onSelect: (id: string) => void;
   searchPlaceholder?: string;
   footer?: React.ReactNode;
+  chains?: ChainChip[];
+  activeChainId?: string;
+  onChainSelect?: (id: string) => void;
 }) {
   const [query, setQuery] = useState("");
 
@@ -58,15 +67,41 @@ export function AssetPicker({
         if (!o) setQuery("");
       }}
     >
-      <DialogContent className="gap-0 p-0 sm:max-w-md">
-        <DialogHeader className="p-4 pb-3">
-          <DialogTitle>{title}</DialogTitle>
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-md">
+        <DialogHeader className="border-border border-b px-5 py-4 text-left">
+          <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
           {description ? (
             <DialogDescription>{description}</DialogDescription>
           ) : null}
         </DialogHeader>
 
-        <div className="px-4 pb-3">
+        {chains && chains.length ? (
+          <div className="px-5 pt-4">
+            <p className="text-muted-foreground mb-2 text-[11px] font-medium uppercase tracking-wide">
+              Network
+            </p>
+            <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+              {chains.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => onChainSelect?.(c.id)}
+                  className={cn(
+                    "flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs font-medium transition-colors",
+                    c.id === activeChainId
+                      ? "border-transparent bg-foreground text-background"
+                      : "border-border text-muted-foreground hover:bg-accent hover:text-foreground"
+                  )}
+                >
+                  {c.icon}
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        <div className="px-5 py-4">
           <div className="relative">
             <Search className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2" />
             <Input
@@ -79,7 +114,7 @@ export function AssetPicker({
           </div>
         </div>
 
-        <div className="border-border max-h-[50vh] overflow-y-auto border-t">
+        <div className="border-border max-h-[46vh] overflow-y-auto border-t">
           {filtered.length === 0 ? (
             <p className="text-muted-foreground p-6 text-center text-sm">
               No matches

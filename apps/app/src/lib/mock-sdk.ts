@@ -58,18 +58,15 @@ export async function createDepositAccount(input: {
   return { address: randomAddress(), chainId: input.fromChainId };
 }
 
-/** Pick the "best" hidden privacy pool for the route (cosmetic in the mock). */
+/** Route hops: source chain → the STRK20 privacy pool → destination chain. */
 function pickRoute(fromChainId: string, toChainId: string): string[] {
   const from = chainById(fromChainId)?.name ?? fromChainId;
   const to = chainById(toChainId)?.name ?? toChainId;
-  const pool = fromChainId === "starknet" || toChainId === "starknet"
-    ? "STRK20 pool"
-    : "Railgun pool";
-  return [from, pool, to];
+  return [from, "STRK20 pool", to];
 }
 
-export async function quoteRoute(input: QuoteInput): Promise<Quote> {
-  await wait(700);
+/** Synchronous quote for a live, as-you-type readout on the compose screen. */
+export function computeQuote(input: QuoteInput): Quote {
   const sendUsd = input.amount * tokenUsd(input.fromTokenId);
   const feeUsd = Math.max(0.02, sendUsd * 0.004);
   const receiveUsd = Math.max(0, sendUsd - feeUsd);
@@ -86,6 +83,11 @@ export async function quoteRoute(input: QuoteInput): Promise<Quote> {
     complianceScore: 98,
     etaSeconds: 2,
   };
+}
+
+export async function quoteRoute(input: QuoteInput): Promise<Quote> {
+  await wait(700);
+  return computeQuote(input);
 }
 
 export async function executeSend(quote: Quote): Promise<Receipt> {

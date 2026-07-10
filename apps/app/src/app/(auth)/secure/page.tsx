@@ -21,7 +21,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, KeyRound, ShieldCheck } from "lucide-react";
 
-import { Badge } from "@erebuz/ui/components/badge";
 import { cn } from "@erebuz/ui/lib/utils";
 
 import { useApp, type Custody } from "@/lib/store";
@@ -101,7 +100,9 @@ export default function Secure() {
                     <span className="flex items-center justify-between gap-2">
                       <span className="font-semibold">{opt.title}</span>
                       {opt.recommended ? (
-                        <Badge variant="success">Recommended</Badge>
+                        <span className="text-brand text-xs font-medium">
+                          Recommended
+                        </span>
                       ) : null}
                     </span>
                     <span className="text-muted-foreground mt-1 block text-sm leading-relaxed">

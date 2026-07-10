@@ -32,7 +32,7 @@ export function DestinationDialog({
   onOpenChange: (open: boolean) => void;
   onSelect: (dest: Destination) => void;
 }) {
-  const { cards, contacts, tokenById } = useApp();
+  const { contacts, cards, tokenById } = useApp();
   const [address, setAddress] = useState("");
   const validAddress = /^0x[a-fA-F0-9]{6,}$/.test(address.trim());
 
@@ -107,7 +107,7 @@ export function DestinationDialog({
                         onClick={() => choose({ kind: "contact", id: c.id })}
                         className="hover:bg-accent flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors"
                       >
-                        <GradientAvatar seed={c.address} />
+                        <GradientAvatar seed={c.address} label={c.name} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-medium">
                             {c.name}

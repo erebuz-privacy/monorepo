@@ -4,9 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, LogOut, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
 
-import { Badge } from "@erebuz/ui/components/badge";
 import { Button } from "@erebuz/ui/components/button";
-import { Separator } from "@erebuz/ui/components/separator";
+import { cn } from "@erebuz/ui/lib/utils";
 
 import {
   CardFormDialog,
@@ -97,15 +96,22 @@ export default function SettingsPage() {
     : undefined;
 
   return (
-    <div className="px-5 pb-6">
-      <header className="pb-4 pt-6">
-        <h1 className="text-xl font-semibold">Settings</h1>
+    <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
+      <header className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Account, security, cards and contacts
+        </p>
       </header>
 
       {/* account */}
       <section className="border-border rounded-xl border p-4">
         <div className="flex items-center gap-3">
-          <GradientAvatar seed={user?.email ?? "wall8"} size={44} />
+          <GradientAvatar
+            seed={user?.email ?? "wall8"}
+            label={user?.name}
+            size={44}
+          />
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{user?.name}</p>
             <p className="text-muted-foreground truncate text-xs">
@@ -119,37 +125,44 @@ export default function SettingsPage() {
       <h2 className="text-muted-foreground px-1 pb-2 pt-6 text-xs font-medium uppercase tracking-wide">
         Security
       </h2>
-      <section className="border-border space-y-3 rounded-xl border p-4">
-        <div className="flex items-center gap-3">
-          <span className="bg-muted text-foreground flex size-9 items-center justify-center rounded-lg">
+      <section className="border-border rounded-xl border p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
             {custody === "self" ? (
-              <KeyRound className="size-4" />
+              <KeyRound className="text-muted-foreground size-4" />
             ) : (
-              <ShieldCheck className="size-4" />
+              <ShieldCheck className="text-brand size-4" />
             )}
-          </span>
-          <div className="flex-1">
-            <p className="text-sm font-medium">
-              {custody === "self" ? "Self-custody" : "Managed"}
-            </p>
-            <p className="text-muted-foreground text-xs">
-              {custody === "self"
-                ? "You hold the keys"
-                : "Secured in a protected enclave"}
+            <p className="font-medium">
+              {custody === "self" ? "Self-custody" : "Managed wallet"}
             </p>
           </div>
           {custody === "managed" ? (
-            <Badge variant="success">Gasless</Badge>
+            <span className="text-brand text-xs font-medium">Gasless</span>
           ) : null}
         </div>
-        <Separator />
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => chooseCustody(custody === "self" ? "managed" : "self")}
-        >
-          Switch to {custody === "self" ? "Managed" : "Self-custody"}
-        </Button>
+        <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+          {custody === "self"
+            ? "You hold the private keys and pay your own gas."
+            : "Keys stay inside a TEE enclave and every transfer's gas is sponsored for you."}
+        </p>
+        <div className="bg-muted mt-4 grid grid-cols-2 gap-1 rounded-lg p-1">
+          {(["managed", "self"] as const).map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => chooseCustody(c)}
+              className={cn(
+                "rounded-md py-1.5 text-sm font-medium transition-colors",
+                custody === c
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {c === "managed" ? "Managed" : "Self-custody"}
+            </button>
+          ))}
+        </div>
       </section>
 
       {/* cards */}
@@ -219,7 +232,7 @@ export default function SettingsPage() {
         ) : (
           contacts.map((c) => (
             <div key={c.id} className="flex items-center gap-3 p-4">
-              <GradientAvatar seed={c.address} />
+              <GradientAvatar seed={c.address} label={c.name} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{c.name}</p>
                 <p className="text-muted-foreground truncate text-xs">

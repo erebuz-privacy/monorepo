@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight } from "lucide-react";
 
-import { Badge } from "@erebuz/ui/components/badge";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +11,7 @@ import {
 import { Separator } from "@erebuz/ui/components/separator";
 
 import { ActivityRow } from "@/components/activity-row";
+import { RouteTrail } from "@/components/crypto-icon";
 import { formatAmount, formatUsd } from "@/lib/format";
 import { chainById, type Activity } from "@/lib/mock-data";
 import { useApp } from "@/lib/store";
@@ -27,29 +26,32 @@ export default function ActivityPage() {
   const toChain = selected ? chainById(selected.toChainId) : null;
 
   return (
-    <div>
-      <header className="px-5 pb-2 pt-6">
-        <h1 className="text-xl font-semibold">Activity</h1>
+    <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
+      <header className="mb-6">
+        <h1 className="text-2xl font-semibold tracking-tight">Activity</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Your private transfers
+        </p>
       </header>
 
-      <div className="divide-border divide-y px-5">
-        {activity.length === 0 ? (
-          <p className="text-muted-foreground py-12 text-center text-sm">
-            No transfers yet.
-          </p>
-        ) : (
-          activity.map((item) => (
+      {activity.length === 0 ? (
+        <div className="border-border rounded-2xl border py-16 text-center">
+          <p className="text-muted-foreground text-sm">No transfers yet.</p>
+        </div>
+      ) : (
+        <div className="border-border divide-border overflow-hidden rounded-2xl border divide-y">
+          {activity.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => setSelected(item)}
-              className="hover:bg-accent/40 -mx-2 block w-[calc(100%+1rem)] rounded-lg px-2 text-left transition-colors"
+              className="hover:bg-accent/40 block w-full px-4 text-left transition-colors"
             >
               <ActivityRow item={item} />
             </button>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
         <DialogContent className="sm:max-w-md">
@@ -77,7 +79,7 @@ export default function ActivityPage() {
                 </span>
               </Row>
               <Row label="Privacy">
-                <Badge variant="success">Confidential</Badge>
+                <span className="text-brand font-medium">Confidential</span>
               </Row>
               <Row label="Reference">
                 <span className="text-muted-foreground text-xs">
@@ -87,16 +89,7 @@ export default function ActivityPage() {
 
               <Separator />
               <p className="text-muted-foreground text-xs">Route</p>
-              <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
-                {selected.route.map((hop, i) => (
-                  <span key={hop} className="flex items-center gap-1.5">
-                    <span className="bg-muted rounded px-1.5 py-0.5">{hop}</span>
-                    {i < selected.route.length - 1 ? (
-                      <ArrowRight className="size-3" />
-                    ) : null}
-                  </span>
-                ))}
-              </div>
+              <RouteTrail route={selected.route} />
             </div>
           ) : null}
         </DialogContent>

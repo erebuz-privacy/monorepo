@@ -20,7 +20,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Send, ShieldCheck } from "lucide-react";
 
-import { Badge } from "@erebuz/ui/components/badge";
 import { Button } from "@erebuz/ui/components/button";
 
 import { ActivityRow } from "@/components/activity-row";
@@ -45,16 +44,20 @@ export default function HomePage() {
     <div className="pb-2">
       <header className="flex items-center justify-between px-5 pb-2 pt-6">
         <div className="flex items-center gap-3">
-          <GradientAvatar seed={user?.email ?? "wall8"} size={36} />
+          <GradientAvatar
+            seed={user?.email ?? "wall8"}
+            label={user?.name}
+            size={36}
+          />
           <div>
             <p className="text-muted-foreground text-xs">Welcome back</p>
             <p className="text-sm font-medium">{firstName}</p>
           </div>
         </div>
-        <Badge variant="success">
-          <ShieldCheck />
+        <span className="text-brand flex items-center gap-1 text-xs font-medium">
+          <ShieldCheck className="size-3.5" />
           Private
-        </Badge>
+        </span>
       </header>
 
       <section className="px-5 pt-8">
