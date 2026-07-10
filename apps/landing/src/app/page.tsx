@@ -1,40 +1,31 @@
-import { Navbar } from "@/components/Navbar";
-import { ScrollLine } from "@/components/ScrollLine";
-import { HeroSection } from "@/components/HeroSection";
-import { CoreSection } from "@/components/CoreSection";
-import { PrivacyModel } from "@/components/PrivacyModel";
-import { ComparisonSection } from "@/components/ComparisonSection";
-import { SdkExample } from "@/components/SdkExample";
-import { SupportedChains } from "@/components/SupportedChains";
-import { UseErebuz } from "@/components/UseErebuz";
-import { GetInvolved } from "@/components/GetInvolved";
-import { Footer } from "@/components/Footer";
+import { Nav } from "@/components/Nav";
+import { Hero } from "@/components/Hero";
+import { StatsBar } from "@/components/StatsBar";
+import { HowItWorks } from "@/components/HowItWorks";
+import { Sdk } from "@/components/Sdk";
+import { Chains } from "@/components/Chains";
+import { Comparison } from "@/components/Comparison";
+import { Faq } from "@/components/Faq";
+import { Cta } from "@/components/Cta";
+import { SiteFooter } from "@/components/SiteFooter";
 
 export default function Home() {
   return (
     <>
-      <Navbar />
-      <ScrollLine />
-      <main>
-        <HeroSection />
-        <div className="xl:container mx-auto px-4">
-          <CoreSection />
-
-            <div id="features-heading" className="mb-0">
-            <span className="bg-yellow text-black uppercase px-2 inline-flex text-sm tracking-widest">
-              FEATURES
-            </span>
-          </div>
-
-          <PrivacyModel />
-          <ComparisonSection />
-          <SdkExample />
-          <SupportedChains />
-          <UseErebuz />
-        </div>
-        <GetInvolved />
-        <Footer />
-      </main>
+      <Nav />
+      <div className="mx-auto max-w-[1400px] border-x border-white/10">
+        <main>
+          <Hero />
+          <StatsBar />
+          <HowItWorks />
+          <Sdk />
+          <Chains />
+          <Comparison />
+          <Faq />
+          <Cta />
+        </main>
+        <SiteFooter />
+      </div>
     </>
   );
 }

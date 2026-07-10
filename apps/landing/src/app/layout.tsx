@@ -1,31 +1,24 @@
 import type { Metadata } from "next";
-import { Space_Grotesk } from "next/font/google";
+import { Archivo } from "next/font/google";
 import "./globals.css";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+import { SmoothScroll } from "@/components/motion/SmoothScroll";
+
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://erebuz.dev"),
-  title: "Erebuz - Your Privacy Router for Every Chain",
+  title: "Erebuz, the privacy router for every chain",
   description:
-    "Erebuz is the privacy middleware SDK that sits between any app and the blockchain. Private, compliant, and ready in days.",
-  twitter: {
-    site: "@erebuz",
-    card: "summary_large_image",
-    title: "Erebuz - Your Privacy Router for Every Chain",
-    description:
-      "Erebuz is the privacy middleware SDK that sits between any app and the blockchain. Private, compliant, and ready in days.",
-    images: ["/seo/opengraph.jpg"],
-  },
+    "Erebuz is the privacy middleware between any app and the blockchain. One call handles routing, privacy, compliance and gas. No custom crypto.",
   openGraph: {
-    title: "Erebuz - Your Privacy Router for Every Chain",
+    title: "Erebuz, the privacy router for every chain",
     description:
-      "Erebuz is the privacy middleware SDK that sits between any app and the blockchain. Private, compliant, and ready in days.",
-    images: ["/seo/opengraph.jpg"],
+      "Private, compliant transactions on every chain. One SDK call, no custom crypto.",
     type: "website",
     url: "https://erebuz.dev/",
   },
@@ -33,18 +26,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html
-      lang="en"
-      className={`${spaceGrotesk.variable} antialiased`}
-    >
-      <head>
-        <meta name="theme-color" content="#FFFF00" />
-      </head>
-      <body className="bg-background text-foreground font-sans overflow-x-hidden">{children}</body>
+    <html lang="en" className={`${archivo.variable} antialiased`}>
+      <body>
+        <SmoothScroll>{children}</SmoothScroll>
+      </body>
     </html>
   );
 }
