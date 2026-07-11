@@ -1,6 +1,6 @@
 ---
 title: Routing
-description: How Erebuz picks a lane — one call, three lanes, settled on-chain.
+description: How Erebuz picks a lane, one call, three lanes, settled on-chain.
 ---
 
 When your app calls `findRoute()`, Erebuz evaluates the available privacy lanes between the source and destination and picks the one with the best combination of anonymity set, cost and settlement time.
@@ -9,9 +9,9 @@ When your app calls `findRoute()`, Erebuz evaluates the available privacy lanes 
 
 Every transfer moves through three stages:
 
-1. **Shield** — value enters a shared privacy pool on the source chain. Because the pool is shared across all Erebuz integrations, the anonymity set is large — your users are not fingerprintable as "users of your app".
-2. **Screen** — before anything moves, the transfer is screened for compliance. Non-compliant value never enters the pool. See [Compliance](/docs/concepts/compliance).
-3. **Settle** — the value exits the pool on the destination chain to the recipient, typically in seconds.
+1. **Shield**: value enters a shared privacy pool on the source chain. Because the pool is shared across all Erebuz integrations, the anonymity set is large, your users are not fingerprintable as "users of your app".
+2. **Screen**: before anything moves, the transfer is screened for compliance. Non-compliant value never enters the pool. See [Compliance](/docs/concepts/compliance).
+3. **Settle**: the value exits the pool on the destination chain to the recipient, typically in seconds.
 
 ## What a route quote contains
 
@@ -26,8 +26,8 @@ const route = await erebuz.findRoute({
 | Field | Example | Meaning |
 | --- | --- | --- |
 | `receives` | `99.58` | Amount delivered after fees |
-| `fee` | `$0.42, covered` | Network fee — Erebuz covers gas on the destination |
-| `compliance` | `98` | Compliance score for this route (0–100) |
+| `fee` | `$0.42, covered` | Network fee, Erebuz covers gas on the destination |
+| `compliance` | `98` | Compliance score for this route (0-100) |
 | `settlesIn` | `2s` | Expected settlement time |
 
 ## Gas handling

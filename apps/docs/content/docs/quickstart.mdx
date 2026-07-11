@@ -5,7 +5,7 @@ description: Install the SDK and send your first private, compliant transfer in 
 
 <Callout type="warn" title="Coming soon">
   The SDK is not yet publicly available. The steps below preview the
-  integration flow — [join the waitlist](https://www.erebuz.com) for access.
+  integration flow, [join the waitlist](https://www.erebuz.com) for access.
 </Callout>
 
 <Steps>
@@ -13,7 +13,7 @@ description: Install the SDK and send your first private, compliant transfer in 
 
 ## Install the SDK
 
-<Tabs items={["npm", "pnpm", "bun"]}>
+<Tabs items={["npm", "pnpm", "yarn", "bun"]}>
   <Tab value="npm">
 
 ```bash
@@ -25,6 +25,13 @@ npm install @erebuz/sdk
 
 ```bash
 pnpm add @erebuz/sdk
+```
+
+  </Tab>
+  <Tab value="yarn">
+
+```bash
+yarn add @erebuz/sdk
 ```
 
   </Tab>
@@ -42,7 +49,7 @@ bun add @erebuz/sdk
 
 ## Initialize with one master seed
 
-One master seed derives everything — per-chain accounts, shielded notes, and session keys. It never leaves your enclave.
+One master seed derives everything, per-chain accounts, shielded notes, and session keys. It never leaves your enclave.
 
 ```ts title="erebuz.ts"
 import { Erebuz } from "@erebuz/sdk";
@@ -86,7 +93,7 @@ const receipt = await erebuz.send(route);
 console.log(receipt.status); // "settled"
 ```
 
-That's it — no custom crypto, no bridge UI, no gas juggling.
+That's it, no custom crypto, no bridge UI, no gas juggling.
 
 </Step>
 </Steps>

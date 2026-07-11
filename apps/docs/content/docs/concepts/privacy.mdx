@@ -7,11 +7,11 @@ Erebuz gives users transactional privacy without your app having to run any cryp
 
 ## What observers see
 
-On-chain observers see value entering and leaving a shared pool — they cannot link a specific deposit to a specific withdrawal, or a sender to a recipient. Because the pool is shared across every app built on Erebuz, the anonymity set is far larger than anything a single app could build on its own.
+On-chain observers see value entering and leaving a shared pool, they cannot link a specific deposit to a specific withdrawal, or a sender to a recipient. Because the pool is shared across every app built on Erebuz, the anonymity set is far larger than anything a single app could build on its own.
 
 ## What your app sees
 
-Your app sees its own users' transfers — you called `send()`, so you know the sender, recipient and amount. Erebuz adds privacy against the outside world, not against you.
+Your app sees its own users' transfers, you called `send()`, so you know the sender, recipient and amount. Erebuz adds privacy against the outside world, not against you.
 
 ## Where keys live
 
@@ -23,4 +23,4 @@ Your app runs its own secure enclave (TEE). The master seed and every derived ke
 
 ## How this differs from privacy tools
 
-Tools like Railgun or Zcash give you a privacy primitive on one chain. Erebuz is a router on top of primitives like these: it picks the right tool for each transfer, runs compliance, routes across chains, and handles gas — so neither you nor your users ever interact with the underlying protocol.
+Tools like Railgun or Zcash give you a privacy primitive on one chain. Erebuz is a router on top of primitives like these: it picks the right tool for each transfer, runs compliance, routes across chains, and handles gas, so neither you nor your users ever interact with the underlying protocol.
