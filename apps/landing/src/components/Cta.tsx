@@ -1,4 +1,6 @@
 import { DotMountain } from "./DotMountain";
+import { SoonButton } from "./SoonButton";
+import { WaitlistButton } from "./Waitlist";
 
 export function Cta() {
   return (
@@ -12,19 +14,11 @@ export function Cta() {
           Erebuz is launching soon. Get early access to the SDK and ship private,
           compliant transactions in days.
         </p>
-        <div className="mt-9 flex flex-wrap justify-center gap-3">
-          <a
-            href="#"
-            className="rounded-none bg-white px-8 py-4 text-[15px] font-semibold text-black transition-transform hover:scale-[1.02]"
-          >
+        <div className="mx-auto mt-9 flex w-full max-w-sm flex-col justify-center gap-3 sm:w-auto sm:max-w-none sm:flex-row">
+          <WaitlistButton className="inline-flex items-center justify-center rounded-none bg-white px-8 py-4 text-[15px] font-semibold text-black transition-transform hover:scale-[1.02]">
             Get access
-          </a>
-          <a
-            href="#"
-            className="rounded-none border border-white/20 px-8 py-4 text-[15px] font-semibold text-white transition-colors hover:border-white/45"
-          >
-            Read the docs
-          </a>
+          </WaitlistButton>
+          <SoonButton className="px-8 py-4">Read the docs</SoonButton>
         </div>
       </div>
     </section>
