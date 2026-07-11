@@ -37,6 +37,26 @@ export function ScrollVideo({
     offset: ["start start", "end end"],
   });
 
+  // Lazy-load: don't fetch the clip until the section nears the viewport, so
+  // visitors who never scroll this far download 0 bytes of video. The 800px
+  // rootMargin starts the fetch early enough that it's usually ready on arrival.
+  useEffect(() => {
+    const v = vid.current;
+    const w = wrap.current;
+    if (!v || !w) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          v.load();
+          io.disconnect();
+        }
+      },
+      { rootMargin: "800px 0px" },
+    );
+    io.observe(w);
+    return () => io.disconnect();
+  }, []);
+
   useEffect(() => {
     const v = vid.current;
     if (!v) return;
@@ -76,7 +96,7 @@ export function ScrollVideo({
             ref={vid}
             muted
             playsInline
-            preload="auto"
+            preload="none"
             aria-label="Erebuz routing flow"
             onLoadedData={() => setReady(true)}
             onCanPlay={() => setReady(true)}
