@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { RootProvider } from "fumadocs-ui/provider/next";
 import type { ReactNode } from "react";
+import { Topbar } from "@/components/topbar";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -32,7 +33,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       suppressHydrationWarning
     >
       <body className="flex min-h-screen flex-col font-sans">
-        <RootProvider theme={{ defaultTheme: "dark" }}>{children}</RootProvider>
+        <RootProvider theme={{ defaultTheme: "dark" }}>
+          <Topbar />
+          {children}
+        </RootProvider>
       </body>
     </html>
   );
