@@ -30,7 +30,7 @@
   --scrollbar-thumb: var(--border);
   --scrollbar-thumb-hover: var(--ring);
   --scrollbar-track: transparent;
-  --radius: 0.2rem;
+  --radius: 0rem;
   --landing-topbar-height: 48px;
   --fd-nav-height: 56px;
   --fd-banner-height: 0px;
@@ -96,10 +96,27 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* strict borders: every radius step is square */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+}
+
+/* strict borders: flatten anything fumadocs rounds internally */
+#nd-page,
+#nd-toc,
+.docs-layout,
+[role="dialog"] {
+  *,
+  &::before,
+  &::after {
+    border-radius: 0 !important;
+  }
 }
 
 ::selection {

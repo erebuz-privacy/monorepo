@@ -1,6 +1,6 @@
 ---
 title: Compliance
-description: Every transaction is screened before it moves — full privacy for users, a clean audit trail for regulators.
+description: Every transaction is screened before it moves, full privacy for users, a clean audit trail for regulators.
 ---
 
 Privacy and compliance are usually presented as opposites. Erebuz treats them as two halves of the same design: users get privacy from the public, regulators get a verifiable audit trail.
@@ -10,8 +10,8 @@ Privacy and compliance are usually presented as opposites. Erebuz treats them as
 Every transfer is screened **before** it enters the privacy pool:
 
 - Source funds are checked against sanctions lists and known-illicit flows.
-- Each route gets a compliance score (0–100), returned in the `findRoute()` quote.
-- Value that fails screening never enters the pool — the shared anonymity set stays clean, which protects every other user in it.
+- Each route gets a compliance score (0-100), returned in the `findRoute()` quote.
+- Value that fails screening never enters the pool, the shared anonymity set stays clean, which protects every other user in it.
 
 ## The audit trail
 
@@ -19,7 +19,7 @@ Screening produces an attestation for each transfer that can be disclosed to aud
 
 - Your app can prove that every routed transfer passed screening.
 - A regulator with the right disclosures can trace a specific flow.
-- The public — and other users — still see nothing.
+- The public and other users still see nothing.
 
 ## What this means for your app
 

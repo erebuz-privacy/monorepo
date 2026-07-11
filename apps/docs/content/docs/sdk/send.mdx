@@ -1,10 +1,10 @@
 ---
 title: send()
-description: Execute a quoted route — one call handles routing, privacy, compliance and gas.
+description: Execute a quoted route, one call handles routing, privacy, compliance and gas.
 ---
 
 <Callout type="warn" title="Coming soon">
-  The SDK is not yet publicly available — signatures below may change before
+  The SDK is not yet publicly available, signatures below may change before
   launch.
 </Callout>
 
@@ -32,6 +32,6 @@ A `Receipt` object:
 
 ## Behaviour
 
-- **Idempotent** — resubmitting the same route while a transfer is pending returns the existing receipt instead of double-sending.
-- **Gas** — the sender needs no gas on the destination chain; fees come out of the transferred amount.
-- **Expiry** — quotes expire; sending an expired route throws `ROUTE_EXPIRED` and you should call `findRoute()` again.
+- **Idempotent**: resubmitting the same route while a transfer is pending returns the existing receipt instead of double-sending.
+- **Gas**: the sender needs no gas on the destination chain; fees come out of the transferred amount.
+- **Expiry**: quotes expire; sending an expired route throws `ROUTE_EXPIRED` and you should call `findRoute()` again.
