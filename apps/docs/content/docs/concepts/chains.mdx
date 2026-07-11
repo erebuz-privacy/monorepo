@@ -7,13 +7,32 @@ Erebuz routes across every supported chain from a single shared privacy pool, a 
 
 ## Currently supported
 
-| | | |
-| --- | --- | --- |
-| Ethereum | Arbitrum | Base |
-| Polygon | StarkNet | Optimism |
-| Linea | Mantle | Gnosis |
-| Fuel | Manta | Hyperliquid |
-| MegaETH | Unichain | World |
+<div className="not-prose grid grid-cols-2 gap-px border border-fd-border bg-fd-border sm:grid-cols-3">
+  {[
+    "Ethereum",
+    "Arbitrum",
+    "Base",
+    "Polygon",
+    "StarkNet",
+    "Optimism",
+    "Linea",
+    "Mantle",
+    "Gnosis",
+    "Fuel",
+    "Manta",
+    "Hyperliquid",
+    "MegaETH",
+    "Unichain",
+    "World",
+  ].map((chain) => (
+    <div
+      key={chain}
+      className="bg-fd-background px-4 py-3 text-sm text-fd-foreground/80"
+    >
+      {chain}
+    </div>
+  ))}
+</div>
 
 Chain identifiers in the SDK are lowercase names, e.g. `"base"`, `"arbitrum"`, `"starknet"`.
 
