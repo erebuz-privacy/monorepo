@@ -1,15 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useScroll } from "motion/react";
 import { cn } from "@/lib/utils";
+import { useGatedVideo } from "./VideoGate";
 
 /**
  * Pinned, scroll-scrubbed video. Two things make it smooth:
- *  1. the mp4 is re-encoded to all-keyframes (every frame seekable), so
+ *  1. the clip is re-encoded to all-keyframes (every frame seekable), so
  *     currentTime seeks are instant;
  *  2. currentTime is eased toward the scroll target inside a rAF loop rather
  *     than set directly on scroll events, so motion is buttery both ways.
+ *
+ * The bytes are pre-downloaded by VideoGate and handed here as a blob URL, so
+ * the <video> is fully buffered before the section is ever reached. If the gate
+ * isn't present (blob null) it falls back to streaming the static files.
  *
  * Cropping is two plain percentages of the video's height:
  *   cropTop={12}    -> trims 12% off the top
@@ -31,31 +36,17 @@ export function ScrollVideo({
 }) {
   const wrap = useRef<HTMLDivElement>(null);
   const vid = useRef<HTMLVideoElement>(null);
-  const [ready, setReady] = useState(false);
+  const gated = useGatedVideo();
   const { scrollYProgress } = useScroll({
     target: wrap,
     offset: ["start start", "end end"],
   });
 
-  // Lazy-load: don't fetch the clip until the section nears the viewport, so
-  // visitors who never scroll this far download 0 bytes of video. The 800px
-  // rootMargin starts the fetch early enough that it's usually ready on arrival.
+  // when the gate hands over the downloaded blob, point the element at it
   useEffect(() => {
     const v = vid.current;
-    const w = wrap.current;
-    if (!v || !w) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          v.load();
-          io.disconnect();
-        }
-      },
-      { rootMargin: "800px 0px" },
-    );
-    io.observe(w);
-    return () => io.disconnect();
-  }, []);
+    if (v && gated.src) v.load();
+  }, [gated.src]);
 
   useEffect(() => {
     const v = vid.current;
@@ -94,45 +85,25 @@ export function ScrollVideo({
         <div className="relative w-full overflow-hidden" style={{ aspectRatio: aspect }}>
           <video
             ref={vid}
+            {...(gated.src ? { src: gated.src } : {})}
             muted
             playsInline
-            preload="none"
+            // While the gate is fetching, download nothing here (it already is).
+            // Off the gate, stream the static files directly.
+            preload={gated.active && !gated.src ? "none" : "auto"}
             aria-label="Erebuz routing flow"
-            onLoadedData={() => setReady(true)}
-            onCanPlay={() => setReady(true)}
             style={{ objectPosition: `center ${posY}%` }}
-            className={cn(
-              "h-full w-full object-cover transition-opacity duration-700",
-              ready ? "opacity-100" : "opacity-0",
-            )}
+            className="h-full w-full object-cover"
           >
-            {/* WebM has a real alpha channel (transparent bg); mp4 is the
-                color-matched fallback for browsers without VP9 alpha. */}
-            <source src={src.replace(/\.mp4$/, ".webm")} type="video/webm" />
-            <source src={src} type="video/mp4" />
+            {/* Fallback only when no gate is present. WebM carries a real alpha
+                channel (transparent bg); mp4 is the Safari fallback. */}
+            {!gated.active && (
+              <>
+                <source src={src.replace(/\.mp4$/, ".webm")} type="video/webm" />
+                <source src={src} type="video/mp4" />
+              </>
+            )}
           </video>
-
-          {/* Loader while the clip downloads. Pulsing squares echo the grid
-              motif; sits on the transparent frame so the page shows through. */}
-          {!ready && (
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-4"
-            >
-              <div className="flex gap-2">
-                {[0, 1, 2].map((i) => (
-                  <span
-                    key={i}
-                    className="size-2 animate-pulse bg-white/40"
-                    style={{ animationDelay: `${i * 200}ms` }}
-                  />
-                ))}
-              </div>
-              <span className="text-xs tracking-wide text-neutral-500">
-                Loading routing flow
-              </span>
-            </div>
-          )}
         </div>
       </div>
     </div>

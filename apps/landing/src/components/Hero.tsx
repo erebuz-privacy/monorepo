@@ -12,12 +12,12 @@ export function Hero() {
   return (
     <section
       id="top"
-      className="relative flex min-h-svh flex-col justify-center overflow-hidden px-6 pb-24 pt-36 lg:px-12"
+      className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden px-6 pb-24 pt-36 text-center lg:px-12"
     >
-      <DotMountain className="pointer-events-none absolute inset-0 -z-10 h-full w-full mask-[linear-gradient(to_top,transparent,black_16%,black)]" />
+      <DotMountain className="pointer-events-none absolute inset-0 -z-10 h-full w-full opacity-55 mask-[linear-gradient(to_top,transparent,black_16%,black)]" />
 
       <p className="text-sm text-neutral-500">
-        The privacy router for every chain
+        The privacy router for every payment
       </p>
       <h1 className="mt-7 max-w-[14ch] text-[clamp(3rem,9vw,7rem)] font-bold leading-[0.92] tracking-[-0.045em]">
         Private, everywhere.
@@ -26,7 +26,7 @@ export function Hero() {
         Private, compliant transfers on every chain. One SDK call, no custom
         crypto.
       </p>
-      <div className="mt-9 flex flex-wrap gap-3">
+      <div className="mt-9 flex flex-wrap justify-center gap-3">
         <a
           href="#"
           className="inline-flex items-center gap-2 rounded-none bg-white px-6 py-3.5 text-[15px] font-semibold text-black transition-transform hover:scale-[1.02]"

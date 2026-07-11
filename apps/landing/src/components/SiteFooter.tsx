@@ -1,4 +1,9 @@
-import { DiscordIcon, GithubIcon, XIcon } from "@/components/icons";
+import { GithubIcon, XIcon } from "@/components/icons";
+
+const SOCIAL_URLS: Record<string, string> = {
+  X: "https://x.com/0xerebuz",
+  GitHub: "https://github.com/erebuz-privacy",
+};
 
 const LOGO_MASK = {
   maskImage: "url(/images/erebuz-logo.svg)",
@@ -15,13 +20,12 @@ const COLUMNS = {
   Erebuz: ["Home", "Whitepaper", "Roadmap", "Security"],
   Developers: ["Docs", "SDK", "API reference", "TEE runtime"],
   Learn: ["Privacy model", "Comparison", "Use cases", "FAQ"],
-  Community: ["X", "Discord", "GitHub", "Blog"],
+  Community: ["X", "GitHub", "Blog"],
 };
 
 const SOCIALS = [
-  { Icon: XIcon, label: "X" },
-  { Icon: DiscordIcon, label: "Discord" },
-  { Icon: GithubIcon, label: "GitHub" },
+  { Icon: XIcon, label: "X", href: SOCIAL_URLS.X },
+  { Icon: GithubIcon, label: "GitHub", href: SOCIAL_URLS.GitHub },
 ];
 
 /** A link that isn't live yet; reveals "Coming soon" on hover. */
@@ -50,19 +54,21 @@ export function SiteFooter() {
               <span className="text-[19px] font-bold tracking-tight">Erebuz</span>
             </div>
             <p className="mt-5 text-sm leading-relaxed text-neutral-500">
-              The privacy router for every chain. Private, compliant,
+              The privacy router for every payment. Private, compliant,
               multi-chain, from one SDK call.
             </p>
             <div className="mt-6 flex gap-3">
-              {SOCIALS.map(({ Icon, label }) => (
-                <span
+              {SOCIALS.map(({ Icon, label, href }) => (
+                <a
                   key={label}
-                  title="Coming soon"
-                  aria-label={`${label}, coming soon`}
-                  className="flex size-9 cursor-default items-center justify-center border border-white/10 text-neutral-400 transition-colors hover:border-white/40 hover:text-white"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="flex size-9 items-center justify-center border border-white/10 text-neutral-400 transition-colors hover:border-white/40 hover:text-white"
                 >
                   <Icon className="size-4" />
-                </span>
+                </a>
               ))}
             </div>
           </div>
@@ -74,11 +80,24 @@ export function SiteFooter() {
                   {title}
                 </h4>
                 <ul className="flex flex-col gap-3">
-                  {links.map((l) => (
-                    <li key={l}>
-                      <SoonLink label={l} />
-                    </li>
-                  ))}
+                  {links.map((l) =>
+                    SOCIAL_URLS[l] ? (
+                      <li key={l}>
+                        <a
+                          href={SOCIAL_URLS[l]}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-neutral-400 transition-colors hover:text-white"
+                        >
+                          {l}
+                        </a>
+                      </li>
+                    ) : (
+                      <li key={l}>
+                        <SoonLink label={l} />
+                      </li>
+                    ),
+                  )}
                 </ul>
               </div>
             ))}

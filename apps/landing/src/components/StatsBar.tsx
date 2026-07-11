@@ -10,7 +10,7 @@ const STATS: { n: ReactNode; k: string }[] = [
         98<span className="text-neutral-600">/100</span>
       </>
     ),
-    k: "Avg compliance",
+    k: "Compliance accuracy",
   },
 ];
 

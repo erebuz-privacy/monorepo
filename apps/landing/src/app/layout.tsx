@@ -12,11 +12,11 @@ const archivo = Archivo({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://erebuz.dev"),
-  title: "Erebuz, the privacy router for every chain",
+  title: "Erebuz | The Privacy Router For Every Payment",
   description:
     "Erebuz is the privacy middleware between any app and the blockchain. One call handles routing, privacy, compliance and gas. No custom crypto.",
   openGraph: {
-    title: "Erebuz, the privacy router for every chain",
+    title: "Erebuz | The Privacy Router For Every Payment",
     description:
       "Private, compliant transactions on every chain. One SDK call, no custom crypto.",
     type: "website",

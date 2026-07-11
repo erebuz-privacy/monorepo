@@ -33,11 +33,23 @@ const rows: Row[] = [
 
 function CellView({ cell, accent }: { cell: Cell; accent?: boolean }) {
   return (
-    <div className="bg-[#0b0b0a] px-5 py-5">
-      <span className={cn("text-[15px] font-semibold", accent ? "text-white" : "text-neutral-200")}>
+    <div className={cn("px-5 py-5", accent ? "bg-[#131211]" : "bg-[#0b0b0a]")}>
+      <span
+        className={cn(
+          "text-[15px] font-semibold",
+          accent ? "text-white" : "text-neutral-500",
+        )}
+      >
         {cell.value}
       </span>
-      <p className="mt-1 text-xs leading-snug text-neutral-500">{cell.note}</p>
+      <p
+        className={cn(
+          "mt-1 text-xs leading-snug",
+          accent ? "text-neutral-300" : "text-neutral-600",
+        )}
+      >
+        {cell.note}
+      </p>
     </div>
   );
 }
@@ -54,13 +66,13 @@ export function Comparison() {
       <div className="overflow-x-auto">
         <div className="grid min-w-[680px] grid-cols-4 gap-px overflow-hidden rounded-none border border-white/10 bg-white/10">
           <div className="bg-[#0b0b0a] px-5 py-4" />
-          <div className="bg-[#0b0b0a] px-5 py-4 text-center text-sm font-medium text-neutral-400">
+          <div className="bg-[#0b0b0a] px-5 py-4 text-center text-sm font-medium text-neutral-600">
             Build yourself
           </div>
-          <div className="bg-[#0b0b0a] px-5 py-4 text-center text-sm font-medium text-neutral-400">
+          <div className="bg-[#0b0b0a] px-5 py-4 text-center text-sm font-medium text-neutral-600">
             Self-hosted
           </div>
-          <div className="bg-[#0b0b0a] px-5 py-4 text-center text-sm font-semibold text-white">
+          <div className="bg-[#131211] px-5 py-4 text-center text-sm font-semibold text-white">
             Erebuz SDK
           </div>
 

@@ -25,7 +25,7 @@ export function Chains() {
       label="Coverage"
       index="03 / 05"
       heading="Routed across every chain."
-      intro="Every major EVM chain and StarkNet, with more added as the pool grows."
+      intro="All chains, from one shared pool, with more added as it grows."
     >
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-none border border-white/10 bg-white/10 sm:grid-cols-3 lg:grid-cols-4">
         {CHAINS.map((c) => (
