@@ -17,7 +17,7 @@ export default function Home() {
       <div className="mx-auto max-w-[1400px] border-x border-white/10">
         <main>
           <Hero />
-          <StatsBar />
+          {/* <StatsBar /> */}
           <HowItWorks />
           <Sdk />
           <Chains />
