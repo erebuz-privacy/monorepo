@@ -16,6 +16,8 @@ contracts/artifacts/
 contracts/cache/
 contracts/typechain-types/
 
+theme-assets/
+
 # env
 .env
 .env.*
