@@ -1,0 +1,22 @@
+---
+title: Supported chains
+description: All chains are routed from one shared pool, with more added as it grows.
+---
+
+Erebuz routes across every supported chain from a single shared privacy pool — a transfer can enter on one chain and settle on any other.
+
+## Currently supported
+
+| | | |
+| --- | --- | --- |
+| Ethereum | Arbitrum | Base |
+| Polygon | StarkNet | Optimism |
+| Linea | Mantle | Gnosis |
+| Fuel | Manta | Hyperliquid |
+| MegaETH | Unichain | World |
+
+Chain identifiers in the SDK are lowercase names, e.g. `"base"`, `"arbitrum"`, `"starknet"`.
+
+## Adding chains
+
+New chains join the same shared pool, so every integration gets them without code changes — a new `chain` value in `findRoute()` is all that changes. Follow [@0xerebuz](https://x.com/0xerebuz) for chain announcements.

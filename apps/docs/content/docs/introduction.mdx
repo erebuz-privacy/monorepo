@@ -1,0 +1,33 @@
+---
+title: Introduction
+description: Erebuz is the privacy router for every payment — private, compliant transfers on every chain, from one SDK call.
+---
+
+Erebuz is privacy middleware that sits between your app and the blockchain. Your app calls one method; Erebuz shields the value, screens it for compliance, routes it across chains, and settles — your users get private transactions and you never touch the underlying cryptography.
+
+## Why Erebuz
+
+Building payment privacy yourself means custom ZK circuits, audits, and a year of engineering. Erebuz removes the custom crypto entirely:
+
+- **One SDK call** — `send()` handles routing, privacy, compliance and gas.
+- **Every chain** — value is routed across a shared privacy pool spanning Ethereum, Base, Arbitrum, StarkNet and more.
+- **Compliant by design** — every transaction is screened before it moves. Full privacy for users, a clean audit trail for regulators.
+- **Self-sovereign keys** — your app runs its own secure enclave. Your users' keys live there, not with us. If Erebuz goes offline, your box keeps running.
+
+## How a transfer works
+
+1. Your app calls `findRoute()` with a source, destination and amount.
+2. Erebuz picks the best privacy lane, runs compliance screening, and quotes fees.
+3. Your app calls `send()` — the value is shielded, routed and settled on the destination chain, typically in seconds.
+
+<Callout title="Early access">
+  The Erebuz SDK is launching soon. [Join the waitlist](https://www.erebuz.com)
+  to get access as soon as it opens.
+</Callout>
+
+## Where to go next
+
+- [Quickstart](/docs/quickstart) — install the SDK and make your first private transfer.
+- [Routing](/docs/concepts/routing) — how Erebuz picks a lane across chains.
+- [Privacy model](/docs/concepts/privacy) — what is hidden, from whom.
+- [Compliance](/docs/concepts/compliance) — screening and the audit trail.

@@ -1,0 +1,10 @@
+{
+  "pages": [
+    "introduction",
+    "quickstart",
+    "---Concepts---",
+    "...concepts",
+    "---SDK reference---",
+    "...sdk"
+  ]
+}

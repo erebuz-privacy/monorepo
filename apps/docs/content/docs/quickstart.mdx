@@ -1,0 +1,92 @@
+---
+title: Quickstart
+description: Install the SDK and send your first private, compliant transfer in minutes.
+---
+
+<Callout type="warn" title="Coming soon">
+  The SDK is not yet publicly available. The steps below preview the
+  integration flow — [join the waitlist](https://www.erebuz.com) for access.
+</Callout>
+
+<Steps>
+<Step>
+
+## Install the SDK
+
+<Tabs items={["npm", "pnpm", "bun"]}>
+  <Tab value="npm">
+
+```bash
+npm install @erebuz/sdk
+```
+
+  </Tab>
+  <Tab value="pnpm">
+
+```bash
+pnpm add @erebuz/sdk
+```
+
+  </Tab>
+  <Tab value="bun">
+
+```bash
+bun add @erebuz/sdk
+```
+
+  </Tab>
+</Tabs>
+
+</Step>
+<Step>
+
+## Initialize with one master seed
+
+One master seed derives everything — per-chain accounts, shielded notes, and session keys. It never leaves your enclave.
+
+```ts title="erebuz.ts"
+import { Erebuz } from "@erebuz/sdk";
+
+export const erebuz = new Erebuz({
+  apiKey: process.env.EREBUZ_API_KEY!,
+  masterSeed: process.env.EREBUZ_MASTER_SEED!,
+});
+```
+
+</Step>
+<Step>
+
+## Find a route
+
+Ask Erebuz for the best private lane between any two chains. The quote includes fees, the compliance score, and expected settlement time.
+
+```ts
+const route = await erebuz.findRoute({
+  from: { chain: "base", token: "USDC" },
+  to: { chain: "arbitrum", address: recipient },
+  amount: "100.00",
+});
+
+// route.receives  -> "99.58"
+// route.fee       -> "$0.42, covered"
+// route.compliance -> 98
+// route.settlesIn -> "2s"
+```
+
+</Step>
+<Step>
+
+## Send
+
+One call handles routing, privacy, compliance and gas.
+
+```ts
+const receipt = await erebuz.send(route);
+
+console.log(receipt.status); // "settled"
+```
+
+That's it — no custom crypto, no bridge UI, no gas juggling.
+
+</Step>
+</Steps>

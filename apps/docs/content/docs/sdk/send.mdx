@@ -1,0 +1,37 @@
+---
+title: send()
+description: Execute a quoted route — one call handles routing, privacy, compliance and gas.
+---
+
+<Callout type="warn" title="Coming soon">
+  The SDK is not yet publicly available — signatures below may change before
+  launch.
+</Callout>
+
+Executes a route returned by [`findRoute()`](/docs/sdk/find-route). The value is shielded into the shared pool, screened, routed and settled on the destination chain.
+
+```ts
+const receipt = await erebuz.send(route);
+```
+
+## Parameters
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `route` | `Route` | A non-expired quote from `findRoute()` |
+
+## Returns
+
+A `Receipt` object:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `id` | `string` | Erebuz transfer id, usable for status lookups |
+| `status` | `"pending" \| "settled" \| "failed"` | Current state of the transfer |
+| `settlementTx` | `string` | Transaction hash on the destination chain, once settled |
+
+## Behaviour
+
+- **Idempotent** — resubmitting the same route while a transfer is pending returns the existing receipt instead of double-sending.
+- **Gas** — the sender needs no gas on the destination chain; fees come out of the transferred amount.
+- **Expiry** — quotes expire; sending an expired route throws `ROUTE_EXPIRED` and you should call `findRoute()` again.
