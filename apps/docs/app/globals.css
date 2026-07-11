@@ -2,23 +2,386 @@
 @import "fumadocs-ui/css/black.css";
 @import "fumadocs-ui/css/preset.css";
 
+@source "../components/**/*.{ts,tsx}";
 @source "../node_modules/fumadocs-ui/dist/**/*.js";
 
-@theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-}
+@custom-variant dark (&:is(.dark *));
 
 :root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.147 0.004 49.25);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.147 0.004 49.25);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.147 0.004 49.25);
+  --primary: oklch(0.216 0.006 56.043);
+  --primary-foreground: oklch(0.985 0.001 106.423);
+  --secondary: oklch(0.97 0.001 106.424);
+  --secondary-foreground: oklch(0.216 0.006 56.043);
+  --muted: oklch(0.97 0.001 106.424);
+  --muted-foreground: oklch(0.553 0.013 58.071);
+  --accent: oklch(0.97 0.001 106.424);
+  --accent-foreground: oklch(0.216 0.006 56.043);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.923 0.003 48.717);
+  --input: oklch(0.923 0.003 48.717);
+  --ring: oklch(0.709 0.01 56.259);
+  --scrollbar-thumb: var(--border);
+  --scrollbar-thumb-hover: var(--ring);
+  --scrollbar-track: transparent;
   --radius: 0.2rem;
+  --landing-topbar-height: 48px;
+  --fd-nav-height: 56px;
+  --fd-banner-height: 0px;
+  --fd-tocnav-height: 0px;
+  --font-sans: var(--font-geist-sans, Geist, sans-serif);
+  --font-serif: Georgia, serif;
+  --font-mono: var(--font-geist-mono, Geist Mono, monospace);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
 }
 
-/* Erebuz brand black (matches the landing page #0b0b0a) */
+@media (min-width: 64rem) {
+  :root {
+    --landing-topbar-height: 44px;
+  }
+}
+
 .dark {
-  --color-fd-background: hsl(60 5% 4%);
+  --background: hsl(0 0% 0%);
+  --foreground: oklch(0.985 0.001 106.423);
+  --card: oklch(0.147 0.004 49.25);
+  --card-foreground: oklch(0.985 0.001 106.423);
+  --popover: oklch(0.147 0.004 49.25);
+  --popover-foreground: oklch(0.985 0.001 106.423);
+  --primary: oklch(0.985 0.001 106.423);
+  --primary-foreground: oklch(0.216 0.006 56.043);
+  --secondary: oklch(0.268 0.007 34.298);
+  --secondary-foreground: oklch(0.985 0.001 106.423);
+  --muted: oklch(0.268 0.007 34.298);
+  --muted-foreground: oklch(0.709 0.01 56.259);
+  --accent: oklch(0.268 0.007 34.298);
+  --accent-foreground: oklch(0.985 0.001 106.423);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.268 0.007 34.298);
+  --input: oklch(0.268 0.007 34.298);
+  --ring: oklch(0.553 0.013 58.071);
+  --scrollbar-thumb: var(--border);
+  --scrollbar-thumb-hover: var(--ring);
+  --scrollbar-track: transparent;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans, Geist, sans-serif);
+  --font-mono: var(--font-geist-mono, Geist Mono, monospace);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
 ::selection {
-  background: #f3f2ed;
-  color: #0b0b0a;
+  background: var(--foreground);
+  color: var(--background);
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.sidebar-scroll {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.prose code:not(pre code),
+.prose a {
+  overflow-wrap: anywhere;
+}
+
+/* Docs layout: narrow sidebar, wide content */
+.docs-layout {
+  --fd-sidebar-width: 0px;
+  --fd-toc-width: 0px;
+  --fd-layout-width: 100vw;
+  --fd-layout-offset: 0px;
+  --fd-page-width: 900px;
+  --fd-banner-height: var(--landing-topbar-height);
+  --landing-left-pane-width: min(22vw, 300px);
+  padding-top: var(--landing-topbar-height);
+}
+
+@media (min-width: 64rem) {
+  .docs-layout {
+    --fd-layout-width: min(
+      calc(100vw - var(--landing-left-pane-width)),
+      1200px
+    );
+    padding-inline-start: var(--landing-left-pane-width);
+  }
+
+  .docs-layout::before {
+    content: "";
+    position: fixed;
+    inset-block-start: 0;
+    height: var(--landing-topbar-height);
+    inset-inline-start: calc(var(--landing-left-pane-width) - 1px);
+    width: 1px;
+    background: var(--color-border);
+    opacity: 0.55;
+    transition:
+      inset-inline-start 280ms ease-out,
+      opacity 220ms ease-out;
+    pointer-events: none;
+    z-index: 100;
+  }
+}
+
+@media (min-width: 80rem) {
+  .docs-layout {
+    --fd-toc-width: 280px;
+  }
+
+  .docs-layout #nd-toc {
+    padding-inline-start: 2rem;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+}
+
+/* Prevent scroll-chaining and hide scrollbars in TOC areas */
+.docs-layout #nd-toc > div {
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+}
+
+.docs-layout [data-toc-popover],
+.docs-layout [data-toc-popover] * {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Hide fumadocs default sidebar nav title row (empty link when nav.title is not set) */
+.docs-layout #nd-sidebar > div:first-child > .flex:first-child {
+  display: none;
+}
+
+/* Docs footer nav (prev/next) — sharp, minimal, monospaced */
+.docs-layout #nd-page article > div.\@container {
+  gap: 0;
+  border-top: 1px dashed
+    color-mix(in oklch, var(--color-foreground) 8%, transparent);
+  padding-top: 0;
+  padding-bottom: 2rem;
+  margin-top: 3rem;
+}
+
+.docs-layout #nd-page article > div.\@container > a {
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px dashed
+    color-mix(in oklch, var(--color-foreground) 8%, transparent);
+  padding: 1.25rem 1.5rem;
+  font-family: var(--font-mono);
+  background: transparent;
+  transition: all 200ms ease;
+  position: relative;
+}
+
+.docs-layout #nd-page article > div.\@container > a:first-child {
+  border-right: 1px dashed
+    color-mix(in oklch, var(--color-foreground) 8%, transparent);
+}
+
+.docs-layout #nd-page article > div.\@container > a:hover {
+  background: color-mix(in oklch, var(--color-foreground) 3%, transparent);
+  border-color: color-mix(in oklch, var(--color-foreground) 15%, transparent);
+  border-style: solid;
+}
+
+.docs-layout #nd-page article > div.\@container > a div {
+  gap: 0.5rem;
+  font-weight: 400;
+}
+
+.docs-layout #nd-page article > div.\@container > a div p {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+
+.docs-layout #nd-page article > div.\@container > a div svg {
+  width: 12px;
+  height: 12px;
+  opacity: 0.45;
+  transition: opacity 200ms ease;
+}
+
+.docs-layout #nd-page article > div.\@container > a:hover div svg {
+  opacity: 0.8;
+}
+
+.docs-layout #nd-page article > div.\@container > a > p {
+  font-size: 11px;
+  opacity: 0.5;
+  font-family: var(--font-sans);
+  letter-spacing: 0;
+}
+
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration {
+  appearance: none;
+  display: hidden;
+}
+
+/* Code blocks — flat near-black, sharp edges, no gradients */
+.dark .shiki {
+  background-color: #050505 !important;
+  border-color: rgba(255, 255, 255, 0.06);
+  border-radius: 0 !important;
+}
+
+/* Tab/card wrappers containing code blocks */
+.dark .bg-fd-card:has(.shiki),
+.dark [data-slot="tabs"]:has(.shiki),
+.dark div:has(> [role="tablist"]):has(.shiki) {
+  background-color: #050505 !important;
+  border-color: rgba(255, 255, 255, 0.06);
+  border-radius: 0 !important;
+}
+
+/* Override when keepBackground is enabled */
+.dark .bg-\(--shiki-dark-bg\),
+.dark [class*="bg-(--shiki-dark-bg)"] {
+  background-color: #050505 !important;
+}
+
+/* Code block title bar / tab list — flat, no gradient */
+.dark figure.shiki > div:first-child,
+.dark [role="tablist"]:has(+ [role="tabpanel"] .shiki),
+.dark [role="tablist"]:has(+ div .shiki) {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.06);
+  border-radius: 0 !important;
+}
+
+/* Tab content panel background */
+.dark [role="tabpanel"]:has(.shiki) {
+  background-color: #050505 !important;
+  border-radius: 0 !important;
+}
+
+/* Code block inside tabs — match parent, no extra border/shadow */
+.dark [role="tabpanel"] .shiki {
+  background-color: #050505 !important;
+  border: none;
+  box-shadow: none;
+  border-radius: 0 !important;
+}
+
+/* Code block content viewport — force near-black in dark mode */
+.dark .fd-scroll-container,
+.dark figure.shiki .fd-scroll-container,
+.dark figure:has(.shiki) > div:last-child {
+  background-color: #050505 !important;
+}
+
+/* Code block figure bg-fd-secondary / bg-fd-card wrappers */
+.dark figure.shiki,
+.dark figure:has(pre) {
+  background-color: #050505 !important;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* All code block figures — sharp corners (both themes) */
+figure:has(.shiki),
+figure.shiki,
+[data-slot="tabs"]:has(.shiki),
+.bg-fd-card:has(.shiki) {
+  border-radius: 0 !important;
+  overflow: hidden;
+}
+
+figure.shiki > div:first-child,
+[role="tablist"]:has(+ [role="tabpanel"] .shiki),
+[role="tablist"]:has(+ div .shiki) {
+  border-radius: 0 !important;
+}
+
+[role="tabpanel"]:has(.shiki),
+[role="tabpanel"] .shiki {
+  border-radius: 0 !important;
+}
+
+/* Hide TOC scroll indicator dot */
+.docs-layout #nd-toc
+  div.absolute.size-1.bg-fd-primary.rounded-full.transition-transform,
+.docs-layout
+  [data-toc-popover]
+  div.absolute.size-1.bg-fd-primary.rounded-full.transition-transform {
+  display: none !important;
+}
+
+/* Respect prefers-reduced-motion for accessibility (WCAG 2.3.3) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
