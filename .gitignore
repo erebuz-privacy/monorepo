@@ -40,3 +40,4 @@ coverage/
 # claude code local config
 .claude/
 .env*
+.source/

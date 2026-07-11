@@ -1,0 +1,26 @@
+---
+title: Compliance
+description: Every transaction is screened before it moves — full privacy for users, a clean audit trail for regulators.
+---
+
+Privacy and compliance are usually presented as opposites. Erebuz treats them as two halves of the same design: users get privacy from the public, regulators get a verifiable audit trail.
+
+## Screening before movement
+
+Every transfer is screened **before** it enters the privacy pool:
+
+- Source funds are checked against sanctions lists and known-illicit flows.
+- Each route gets a compliance score (0–100), returned in the `findRoute()` quote.
+- Value that fails screening never enters the pool — the shared anonymity set stays clean, which protects every other user in it.
+
+## The audit trail
+
+Screening produces an attestation for each transfer that can be disclosed to auditors and regulators without revealing it to the public. That means:
+
+- Your app can prove that every routed transfer passed screening.
+- A regulator with the right disclosures can trace a specific flow.
+- The public — and other users — still see nothing.
+
+## What this means for your app
+
+You don't integrate a KYT provider, maintain sanctions lists, or build reporting. The compliance lane runs inside the same `send()` call as everything else, and the attestations are available from the API when you need them.

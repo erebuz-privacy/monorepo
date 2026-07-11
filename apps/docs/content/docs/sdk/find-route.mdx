@@ -1,0 +1,49 @@
+---
+title: findRoute()
+description: Quote the best private lane between a source and destination.
+---
+
+<Callout type="warn" title="Coming soon">
+  The SDK is not yet publicly available — signatures below may change before
+  launch.
+</Callout>
+
+Resolves the best privacy route for a transfer and returns a quote. Nothing moves until you pass the route to [`send()`](/docs/sdk/send).
+
+```ts
+const route = await erebuz.findRoute({
+  from: { chain: "base", token: "USDC" },
+  to: { chain: "arbitrum", address: "0xRecipient…" },
+  amount: "100.00",
+});
+```
+
+## Parameters
+
+| Name | Type | Description |
+| --- | --- | --- |
+| `from.chain` | `string` | Source chain id, e.g. `"base"` |
+| `from.token` | `string` | Token symbol or address on the source chain |
+| `to.chain` | `string` | Destination chain id |
+| `to.address` | `string` | Recipient address on the destination chain |
+| `amount` | `string` | Human-readable amount to send |
+
+## Returns
+
+A `Route` object:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `receives` | `string` | Amount the recipient gets after fees |
+| `fee` | `string` | Total network fee (destination gas is covered) |
+| `compliance` | `number` | Compliance score for the route, 0–100 |
+| `settlesIn` | `string` | Expected settlement time |
+| `expiresAt` | `number` | Unix time after which the quote must be re-fetched |
+
+## Errors
+
+| Code | Meaning |
+| --- | --- |
+| `UNSUPPORTED_ROUTE` | No lane exists between the given chains/tokens |
+| `COMPLIANCE_REJECTED` | Source funds failed screening |
+| `AMOUNT_TOO_SMALL` | Amount below the pool minimum for this lane |
