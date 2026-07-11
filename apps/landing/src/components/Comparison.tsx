@@ -31,6 +31,12 @@ const rows: Row[] = [
   },
 ];
 
+const COLS: { key: "build" | "self" | "sdk"; title: string; accent?: boolean }[] = [
+  { key: "build", title: "Build yourself" },
+  { key: "self", title: "Self-hosted" },
+  { key: "sdk", title: "Erebuz SDK", accent: true },
+];
+
 function CellView({ cell, accent }: { cell: Cell; accent?: boolean }) {
   return (
     <div className={cn("px-5 py-5", accent ? "bg-[#131211]" : "bg-[#0b0b0a]")}>
@@ -63,30 +69,78 @@ export function Comparison() {
       heading="Why not build it yourself?"
       intro="Custom privacy costs millions and takes a year. Erebuz removes the custom crypto entirely."
     >
-      <div className="overflow-x-auto">
-        <div className="grid min-w-[680px] grid-cols-4 gap-px overflow-hidden rounded-none border border-white/10 bg-white/10">
-          <div className="bg-[#0b0b0a] px-5 py-4" />
-          <div className="bg-[#0b0b0a] px-5 py-4 text-center text-sm font-medium text-neutral-600">
-            Build yourself
-          </div>
-          <div className="bg-[#0b0b0a] px-5 py-4 text-center text-sm font-medium text-neutral-600">
-            Self-hosted
-          </div>
-          <div className="bg-[#131211] px-5 py-4 text-center text-sm font-semibold text-white">
-            Erebuz SDK
-          </div>
-
-          {rows.map((row) => (
-            <div key={row.label} className="contents">
-              <div className="flex items-center bg-[#0b0b0a] px-5 py-5 text-sm font-medium text-neutral-500">
-                {row.label}
-              </div>
-              <CellView cell={row.build} />
-              <CellView cell={row.self} />
-              <CellView cell={row.sdk} accent />
+      {/* mobile: one stacked card per option */}
+      <div className="flex flex-col gap-4 md:hidden">
+        {COLS.map(({ key, title, accent }) => (
+          <div
+            key={key}
+            className={cn(
+              "border border-white/10",
+              accent ? "bg-[#131211]" : "bg-[#0b0b0a]",
+            )}
+          >
+            <div
+              className={cn(
+                "border-b border-white/10 px-5 py-4 text-sm",
+                accent ? "font-semibold text-white" : "font-medium text-neutral-500",
+              )}
+            >
+              {title}
             </div>
-          ))}
+            <div className="divide-y divide-white/10">
+              {rows.map((row) => (
+                <div key={row.label} className="px-5 py-4">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <span className="shrink-0 text-xs text-neutral-500">
+                      {row.label}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-right text-[15px] font-semibold",
+                        accent ? "text-white" : "text-neutral-400",
+                      )}
+                    >
+                      {row[key].value}
+                    </span>
+                  </div>
+                  <p
+                    className={cn(
+                      "mt-1 text-right text-xs leading-snug",
+                      accent ? "text-neutral-300" : "text-neutral-600",
+                    )}
+                  >
+                    {row[key].note}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* desktop: 4-column grid */}
+      <div className="hidden grid-cols-4 gap-px overflow-hidden rounded-none border border-white/10 bg-white/10 md:grid">
+        <div className="bg-[#0b0b0a] px-5 py-4" />
+        <div className="bg-[#0b0b0a] px-5 py-4 text-center text-sm font-medium text-neutral-600">
+          Build yourself
         </div>
+        <div className="bg-[#0b0b0a] px-5 py-4 text-center text-sm font-medium text-neutral-600">
+          Self-hosted
+        </div>
+        <div className="bg-[#131211] px-5 py-4 text-center text-sm font-semibold text-white">
+          Erebuz SDK
+        </div>
+
+        {rows.map((row) => (
+          <div key={row.label} className="contents">
+            <div className="flex items-center bg-[#0b0b0a] px-5 py-5 text-sm font-medium text-neutral-500">
+              {row.label}
+            </div>
+            <CellView cell={row.build} />
+            <CellView cell={row.self} />
+            <CellView cell={row.sdk} accent />
+          </div>
+        ))}
       </div>
     </Section>
   );

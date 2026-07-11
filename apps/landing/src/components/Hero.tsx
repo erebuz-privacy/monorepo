@@ -1,4 +1,6 @@
 import { DotMountain } from "./DotMountain";
+import { SoonButton } from "./SoonButton";
+import { WaitlistButton } from "./Waitlist";
 
 function Arrow() {
   return (
@@ -26,23 +28,12 @@ export function Hero() {
         Private, compliant transfers on every chain. One SDK call, no custom
         crypto.
       </p>
-      <div className="mt-9 flex flex-wrap justify-center gap-3">
-        <a
-          href="#"
-          className="inline-flex items-center gap-2 rounded-none bg-white px-6 py-3.5 text-[15px] font-semibold text-black transition-transform hover:scale-[1.02]"
-        >
+      <div className="mt-9 flex w-full max-w-sm flex-col justify-center gap-3 sm:w-auto sm:max-w-none sm:flex-row">
+        <WaitlistButton className="inline-flex items-center justify-center gap-2 rounded-none bg-white px-6 py-3.5 text-[15px] font-semibold text-black transition-transform hover:scale-[1.02]">
           Get access
           <Arrow />
-        </a>
-        <span
-          title="Coming soon"
-          className="group relative inline-flex cursor-default items-center rounded-none border border-white/15 px-6 py-3.5 text-[15px] font-semibold text-neutral-400 transition-colors hover:border-white/30"
-        >
-          Read the docs
-          <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 whitespace-nowrap border border-white/10 bg-[#141311] px-2 py-1 text-[11px] font-normal text-neutral-300 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-            Coming soon
-          </span>
-        </span>
+        </WaitlistButton>
+        <SoonButton className="px-6 py-3.5">Read the docs</SoonButton>
       </div>
     </section>
   );

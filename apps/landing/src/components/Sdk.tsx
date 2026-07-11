@@ -1,4 +1,5 @@
 import { Section } from "./Section";
+import { SoonButton } from "./SoonButton";
 
 function Arrow() {
   return (
@@ -30,18 +31,13 @@ export function Sdk() {
               </div>
             ))}
           </div>
-          <div className="mt-auto p-8">
-            <a
-              href="#"
-              className="inline-flex items-center rounded-none bg-white px-6 py-3.5 text-[15px] font-semibold text-black transition-transform hover:scale-[1.02]"
-            >
-              Read the SDK docs
-            </a>
+          <div className="mt-auto p-6 sm:p-8">
+            <SoonButton className="px-6 py-3.5">Read the SDK docs</SoonButton>
           </div>
         </div>
 
         {/* route card */}
-        <div className="bg-[#0b0b0a] p-6">
+        <div className="bg-[#0b0b0a] p-4 sm:p-6">
           <div className="overflow-hidden rounded-none border border-white/10 bg-[#141311]">
             <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
               <span className="text-sm font-medium">erebuz.findRoute()</span>
@@ -50,8 +46,8 @@ export function Sdk() {
                 Route resolved
               </span>
             </div>
-            <div className="p-5">
-              <div className="flex items-center justify-between gap-3 rounded-none border border-white/10 bg-black/30 p-4">
+            <div className="p-4 sm:p-5">
+              <div className="flex flex-wrap items-center justify-center gap-3 rounded-none border border-white/10 bg-black/30 p-4 sm:justify-between">
                 <span className="flex items-center gap-2 text-sm font-medium">
                   <span className="size-4 rounded-none bg-neutral-300" />
                   Base
