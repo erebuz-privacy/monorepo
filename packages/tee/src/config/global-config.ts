@@ -47,6 +47,14 @@ export const DEPOSIT_MONITOR_INTERVAL_MS = Number(process.env.DEPOSIT_MONITOR_IN
 export const DEPOSIT_MONITOR_ENABLED = process.env.DEPOSIT_MONITOR_ENABLED !== 'false';
 
 /**
+ * Private-route (/private-route) configuration.
+ * The privacy hub chain is where funds are shielded/unshielded via Railgun.
+ */
+export const PRIVACY_HUB_CHAIN_ID = Number(process.env.PRIVACY_HUB_CHAIN_ID) || 42161; // Arbitrum One
+export const PRIVATE_ROUTE_MONITOR_INTERVAL_MS = Number(process.env.PRIVATE_ROUTE_MONITOR_INTERVAL_MS) || 15000;
+export const PRIVATE_ROUTE_MONITOR_ENABLED = process.env.PRIVATE_ROUTE_MONITOR_ENABLED !== 'false';
+
+/**
  * ENS domain configuration
  * All ENS names must be subdomains under this domain
  */
