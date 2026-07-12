@@ -1,0 +1,71 @@
+---
+title: Reference
+description: Endpoints, fields, and the transfer status lifecycle.
+---
+
+Every response is `{ "success": boolean, "data"?: ..., "error"?: string }`. Amounts are strings in the token's smallest units unless noted.
+
+## POST /api/private-route/quote
+
+Preview a transfer. Nothing is persisted and no deposit address is allocated.
+
+Request:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `sourceChainId` | number | Chain the sender deposits from |
+| `destChainId` | number | Chain the recipient is paid on |
+| `amount` | string | Human amount, e.g. `"100"` |
+| `tokenSymbol` | string | Source token, defaults to `USDC` |
+| `destTokenSymbol` | string | Destination token, defaults to the source |
+
+Response `data`:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `symbol`, `destSymbol` | string | Source and destination token |
+| `amount` | string | Input, source token units |
+| `quotedOutputAmount` | string | Delivered output, destination token units |
+| `feeAmount` | string | Fee, destination token units |
+| `amountInUsd`, `quotedOutputUsd`, `feeUsd` | number \| null | USD values when priced |
+| `etaSeconds` | number | Rough end-to-end estimate |
+| `route` | string[] | Display hops |
+
+## POST /api/private-route
+
+Create a transfer. Same request as `quote`, plus `userDestinationAddress` (where the recipient is paid).
+
+Response `data` adds:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `routeId` | string | Track the transfer with this |
+| `depositAddress` | string | Send the input here, on the source chain |
+| `status` | string | Starts at `AWAITING_DEPOSIT` |
+
+## GET /api/private-route/:routeId
+
+Returns the persisted transfer. Read `status` to drive progress and `error` if it failed.
+
+## GET /api/relay/chains
+
+Lists bridgeable chains: `chainId`, `name`, `displayName`, `logoUrl`.
+
+## GET /api/relay/tokens
+
+Lists bridgeable tokens on a chain. Query: `chainId` (required), `search` (optional). Each token has `chainId`, `address`, `symbol`, `name`, `decimals`, `logoUrl`.
+
+## Status lifecycle
+
+| Status | Meaning |
+| --- | --- |
+| `AWAITING_DEPOSIT` | Waiting for the sender to fund the deposit address |
+| `BRIDGING_IN` | Relay is bridging the deposit to the hub |
+| `RECEIVED_ON_HUB` | Funds arrived at the hub; shielding next |
+| `SHIELDED` | Shielded into Railgun; preparing the payout |
+| `UNSHIELD_SENT` | Unshielded to the outbound bridge |
+| `BRIDGING_OUT` | Relay is delivering to the recipient |
+| `COMPLETED` | Delivered on the destination chain |
+| `FAILED` | Terminal failure; deposited funds are refunded to the sender |
+
+Errors return HTTP 400 for a bad request or unsupported pair, 404 for an unknown `routeId`, and 500 otherwise, with the reason in `error`.

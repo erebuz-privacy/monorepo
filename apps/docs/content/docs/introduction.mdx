@@ -1,33 +1,42 @@
 ---
 title: Introduction
-description: Erebuz is the privacy router for every payment, private, compliant transfers on every chain, from one SDK call.
+description: Private cross-chain transfers. Deposit one token on one chain, the recipient receives on another, with no on-chain link between them.
 ---
 
-Erebuz is privacy middleware that sits between your app and the blockchain. Your app calls one method; Erebuz shields the value, screens it for compliance, routes it across chains, and settles, your users get private transactions and you never touch the underlying cryptography.
-
-## Why Erebuz
-
-Building payment privacy yourself means custom ZK circuits, audits, and a year of engineering. Erebuz removes the custom crypto entirely:
-
-- **One SDK call**: `send()` handles routing, privacy, compliance and gas.
-- **Every chain**: value is routed across a shared privacy pool spanning Ethereum, Base, Arbitrum, StarkNet and more.
-- **Compliant by design**: every transaction is screened before it moves. Full privacy for users, a clean audit trail for regulators.
-- **Self-sovereign keys**: your app runs its own secure enclave. Your users' keys live there, not with us. If Erebuz goes offline, your box keeps running.
+Erebuz moves a token from one chain to another privately. The sender deposits on the source chain; the recipient receives on the destination chain, in the same token or a different one. Nothing on-chain links the deposit to the payout.
 
 ## How a transfer works
 
-1. Your app calls `findRoute()` with a source, destination and amount.
-2. Erebuz picks the best privacy lane, runs compliance screening, and quotes fees.
-3. Your app calls `send()`, the value is shielded, routed and settled on the destination chain, typically in seconds.
+A transfer runs in three legs:
 
-<Callout title="Early access">
-  The Erebuz SDK is launching soon. [Join the waitlist](https://www.erebuz.com)
-  to get access as soon as it opens.
-</Callout>
+1. **Bridge in.** The deposit is bridged, and swapped if needed, into USDC on Arbitrum (the privacy hub). Bridging uses [Relay](https://relay.link) deposit addresses, so the sender just sends funds to an address. No wallet connection, no signing.
+2. **Shield and unshield.** The USDC is shielded into a [Railgun](https://railgun.org) pool and unshielded to a fresh address. This is the step that breaks the link between deposit and payout.
+3. **Bridge out.** The result is bridged, and swapped if needed, into the destination token and sent to the recipient.
 
-## Where to go next
+The sender only touches the first leg. Everything after the deposit is handled by the service.
 
-- [Quickstart](/docs/quickstart): install the SDK and make your first private transfer.
-- [Routing](/docs/concepts/routing): how Erebuz picks a lane across chains.
-- [Privacy model](/docs/concepts/privacy): what is hidden, from whom.
-- [Compliance](/docs/concepts/compliance): screening and the audit trail.
+## What is private
+
+An observer sees a deposit into the hub and, separately, a payout out of the Railgun pool. The shielded pool sits between them, so the deposit cannot be tied to the payout, or the sender to the recipient.
+
+The service knows the full route. Privacy is against outside observers, not the operator.
+
+## Fees and the quote
+
+Every transfer is quoted before it runs. The quote is a live estimate refreshed against the market, not a locked rate.
+
+The fee is charged on the token the recipient receives:
+
+- `fee = max($1, 1.5% of the output)`.
+- Deposit 100 USDC and ask for ETH: Relay produces about 0.055 ETH, the fee is 1.5% of that ETH, and the remainder is delivered.
+
+Because prices move while a transfer runs, the delivered amount tracks the quote within the fee buffer rather than being fixed to the last decimal.
+
+## Supported assets
+
+Any token pair that Relay can route to and from USDC on Arbitrum works, across every chain Relay covers. List what is available with `GET /api/relay/chains` and `GET /api/relay/tokens`.
+
+## Next
+
+- [Quickstart](/docs/quickstart): quote a transfer, create it, and track it.
+- [Reference](/docs/reference): endpoints, fields, and statuses.
