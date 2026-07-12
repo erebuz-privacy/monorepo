@@ -2,9 +2,9 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
+import { FullScreenLoader } from "@/components/full-screen-loader";
 import { useApp } from "@/lib/store";
 
 export default function AppLayout({
@@ -20,13 +20,7 @@ export default function AppLayout({
     if (!authed) router.replace("/welcome");
   }, [hydrated, authed, router]);
 
-  if (!hydrated || !authed) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Loader2 className="text-muted-foreground size-6 animate-spin" />
-      </div>
-    );
-  }
+  if (!hydrated || !authed) return <FullScreenLoader />;
 
   return <AppShell>{children}</AppShell>;
 }
