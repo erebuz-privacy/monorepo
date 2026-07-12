@@ -1,24 +1,7 @@
-"use client";
+import { QuotePanel } from "@/components/quote-panel";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
-
-import { useApp } from "@/lib/store";
-
+// Public entry: the swap+bridge quote screen. No login needed to get a quote —
+// authentication happens at the method step after the user confirms.
 export default function Index() {
-  const router = useRouter();
-  const { hydrated, authed } = useApp();
-
-  useEffect(() => {
-    if (!hydrated) return;
-    if (!authed) router.replace("/welcome");
-    else router.replace("/send");
-  }, [hydrated, authed, router]);
-
-  return (
-    <div className="flex min-h-dvh items-center justify-center">
-      <Loader2 className="text-muted-foreground size-6 animate-spin" />
-    </div>
-  );
+  return <QuotePanel />;
 }

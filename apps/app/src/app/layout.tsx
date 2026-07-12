@@ -4,6 +4,7 @@ import "@erebuz/ui/globals.css";
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppProvider } from "@/lib/store";
+import { RouteDraftProvider } from "@/lib/route-draft";
 
 // Keeps the --font-geist-sans var name so globals.css needs no change; the
 // underlying face is Hanken Grotesk — a cleaner, more distinctive grotesk.
@@ -45,7 +46,9 @@ export default function RootLayout({
           storageKey="wall8:theme"
           disableTransitionOnChange
         >
-          <AppProvider>{children}</AppProvider>
+          <AppProvider>
+            <RouteDraftProvider>{children}</RouteDraftProvider>
+          </AppProvider>
         </ThemeProvider>
       </body>
     </html>

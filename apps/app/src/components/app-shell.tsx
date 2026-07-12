@@ -12,9 +12,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useApp } from "@/lib/store";
 
 const NAV = [
-  // Home is temporarily disabled — send is the landing screen for now.
+  // Home is temporarily disabled — the quote screen ("/") is the landing screen.
   // { href: "/home", label: "Home", icon: Home },
-  { href: "/send", label: "Send", icon: Send },
+  { href: "/", label: "Send", icon: Send },
   { href: "/activity", label: "Activity", icon: Clock },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
@@ -28,7 +28,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="bg-background stage-grid flex min-h-dvh flex-col">
       {/* top nav */}
       <header className="border-border/60 flex h-16 shrink-0 items-center justify-between gap-3 border-b px-4 sm:px-6">
-        <Link href="/send" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <span className="flex size-8 items-center justify-center rounded-lg bg-neutral-950">
             <Image
               src="/wall8-logo.svg"

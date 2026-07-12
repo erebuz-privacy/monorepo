@@ -3,13 +3,13 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-// The custody-choice screen is temporarily disabled. Custody is now picked on
-// the welcome screen (Get started = managed, Use self-custody = self), so this
-// route just forwards to /send. The full implementation is preserved below.
+// The custody-choice screen is superseded by the per-transfer method screen
+// ("/method"). This route just forwards to the quote entry. The full original
+// implementation is preserved below.
 export default function Secure() {
   const router = useRouter();
   useEffect(() => {
-    router.replace("/send");
+    router.replace("/");
   }, [router]);
   return null;
 }

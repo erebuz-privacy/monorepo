@@ -1,0 +1,161 @@
+// Real TEE client. The TEE (packages/tee) exposes the private-route quote/create
+// /status endpoints and Relay chain/token discovery. This replaces the old
+// mock-sdk quote path — every value here comes off the wire.
+
+const TEE_URL = (process.env.NEXT_PUBLIC_TEE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+
+type Envelope<T> = { success: boolean; data?: T; error?: string };
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(`${TEE_URL}${path}`, {
+      ...init,
+      headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+    });
+  } catch {
+    throw new Error("Can't reach the service. Check your connection and try again.");
+  }
+  let body: Envelope<T>;
+  try {
+    body = (await res.json()) as Envelope<T>;
+  } catch {
+    throw new Error(`Unexpected response from the service (${res.status}).`);
+  }
+  if (!res.ok || !body.success || body.data === undefined) {
+    throw new Error(body.error || `Request failed (${res.status}).`);
+  }
+  return body.data;
+}
+
+// ---- Discovery (Relay, proxied) --------------------------------------------
+
+export type TeeChain = {
+  chainId: number;
+  name: string;
+  displayName: string;
+  logoUrl?: string;
+};
+
+export type TeeToken = {
+  chainId: number;
+  address: string;
+  symbol: string;
+  name?: string;
+  decimals: number;
+  logoUrl?: string;
+};
+
+// ---- Quote / route ----------------------------------------------------------
+
+export type TeeQuote = {
+  /** Source token (sent). */
+  symbol: string;
+  decimals: number;
+  /** Destination token (received) — may differ from the source. */
+  destSymbol: string;
+  destDecimals: number;
+  sourceChainId: number;
+  destChainId: number;
+  hubChainId: number;
+  /** amount + feeAmount are source-token smallest units; quotedOutputAmount is DEST-token smallest units. */
+  amount: string;
+  feeAmount: string;
+  quotedOutputAmount: string;
+  amountInUsd: number | null;
+  feeUsd: number | null;
+  etaSeconds: number;
+  route: string[];
+};
+
+export type QuoteInput = {
+  sourceChainId: number;
+  destChainId: number;
+  /** Human-readable amount, e.g. "5". */
+  amount: string;
+  /** Source token symbol. */
+  tokenSymbol?: string;
+  /** Destination token symbol; defaults to the source symbol (same-asset route). */
+  destTokenSymbol?: string;
+};
+
+export type CreateRouteInput = QuoteInput & { userDestinationAddress: string };
+
+export type CreatedRoute = {
+  routeId: string;
+  status: string;
+  depositAddress: string;
+  hubAccount: string;
+  hubIsSmartAccount: boolean;
+  requestId: string;
+  sourceChainId: number;
+  destChainId: number;
+  hubChainId: number;
+  tokenSymbol: string;
+  destTokenSymbol: string;
+  amount: string;
+  feeAmount: string;
+  quotedOutputAmount: string;
+};
+
+/** Persisted route as returned by GET /api/private-route/:routeId. */
+export type RouteRecord = {
+  id: string;
+  status: string;
+  sourceChainId: number;
+  destChainId: number;
+  hubChainId: number;
+  tokenSymbol: string;
+  amount: string;
+  feeAmount: string;
+  quotedOutputAmount: string;
+  userDestinationAddress: string;
+  depositAddress?: string | null;
+  leg1DepositAddress?: string | null;
+  error?: string | null;
+  [key: string]: unknown;
+};
+
+export const tee = {
+  baseUrl: TEE_URL,
+
+  getChains(): Promise<TeeChain[]> {
+    return request<TeeChain[]>("/api/relay/chains");
+  },
+
+  getTokens(chainId: number, search?: string): Promise<TeeToken[]> {
+    const qs = new URLSearchParams({ chainId: String(chainId) });
+    if (search) qs.set("search", search);
+    return request<TeeToken[]>(`/api/relay/tokens?${qs.toString()}`);
+  },
+
+  quote(input: QuoteInput): Promise<TeeQuote> {
+    return request<TeeQuote>("/api/private-route/quote", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  createRoute(input: CreateRouteInput): Promise<CreatedRoute> {
+    return request<CreatedRoute>("/api/private-route", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  },
+
+  getRoute(routeId: string): Promise<RouteRecord> {
+    return request<RouteRecord>(`/api/private-route/${encodeURIComponent(routeId)}`);
+  },
+};
+
+// ---- Amount helpers (smallest-unit string <-> human number) ----------------
+
+/** Convert a smallest-unit string to a human number for display. */
+export function fromSmallestUnit(value: string, decimals: number): number {
+  if (!value) return 0;
+  const neg = value.startsWith("-");
+  const digits = (neg ? value.slice(1) : value).padStart(decimals + 1, "0");
+  const whole = digits.slice(0, digits.length - decimals);
+  const frac = decimals > 0 ? `.${digits.slice(digits.length - decimals)}` : "";
+  return Number(`${neg ? "-" : ""}${whole}${frac}`);
+}
