@@ -1,0 +1,146 @@
+{
+  "summary": {
+    "totalTests": 6,
+    "passedTests": 6,
+    "failedTests": 0,
+    "timestamp": "2025-10-23T09:30:51.488Z",
+    "networkResults": {
+      "arbitrumsepolia": {
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "modules": [
+          "AutoEarn",
+          "AutoBridge",
+          "AutoSwap"
+        ]
+      },
+      "basesepolia": {
+        "total": 3,
+        "passed": 3,
+        "failed": 0,
+        "modules": [
+          "AutoEarn",
+          "AutoBridge",
+          "AutoSwap"
+        ]
+      }
+    }
+  },
+  "detailedResults": [
+    {
+      "moduleName": "AutoEarn",
+      "network": "Arbitrum Sepolia",
+      "tests": {
+        "deployment": {
+          "success": true,
+          "message": "AutoEarn module deployed successfully"
+        },
+        "configuration": {
+          "success": true,
+          "message": "Configuration valid"
+        },
+        "functionality": {
+          "success": true,
+          "message": "AutoEarn functionality tested successfully",
+          "txHash": "0x14990efa3a634833e5d7d57693bb61751997287b14f38ce2c68f0e5785f61940"
+        }
+      }
+    },
+    {
+      "moduleName": "AutoBridge",
+      "network": "Arbitrum Sepolia",
+      "tests": {
+        "deployment": {
+          "success": true,
+          "message": "AutoBridge module deployed successfully"
+        },
+        "configuration": {
+          "success": true,
+          "message": "Configuration valid"
+        },
+        "functionality": {
+          "success": true,
+          "message": "AutoBridge functionality tested successfully",
+          "txHash": "0x5e2c5a55fb3235820fc746fbc4f11e4c43715b34fd4c6df0799828e2cf10b5b6"
+        }
+      }
+    },
+    {
+      "moduleName": "AutoSwap",
+      "network": "Arbitrum Sepolia",
+      "tests": {
+        "deployment": {
+          "success": true,
+          "message": "AutoSwap module deployed successfully"
+        },
+        "configuration": {
+          "success": true,
+          "message": "Configuration valid"
+        },
+        "functionality": {
+          "success": true,
+          "message": "AutoSwap functionality tested successfully",
+          "txHash": "0x55afaeefcae5e5a80daab5823bf5f6d5949383343e990c1337f3a969e2b9b535"
+        }
+      }
+    },
+    {
+      "moduleName": "AutoEarn",
+      "network": "Base Sepolia",
+      "tests": {
+        "deployment": {
+          "success": true,
+          "message": "AutoEarn module deployed successfully"
+        },
+        "configuration": {
+          "success": true,
+          "message": "Configuration valid"
+        },
+        "functionality": {
+          "success": true,
+          "message": "AutoEarn functionality tested successfully",
+          "txHash": "0xf9b9e36de5d3434313f0ada63b0f074d5adbe4ef34ff9440487320d8568e1b33"
+        }
+      }
+    },
+    {
+      "moduleName": "AutoBridge",
+      "network": "Base Sepolia",
+      "tests": {
+        "deployment": {
+          "success": true,
+          "message": "AutoBridge module deployed successfully"
+        },
+        "configuration": {
+          "success": true,
+          "message": "Configuration valid"
+        },
+        "functionality": {
+          "success": true,
+          "message": "AutoBridge functionality tested successfully",
+          "txHash": "0xb8b6d5f923ad1bf07314c40d023027002fdf4c368a9227fef73fd84c5dd8481c"
+        }
+      }
+    },
+    {
+      "moduleName": "AutoSwap",
+      "network": "Base Sepolia",
+      "tests": {
+        "deployment": {
+          "success": true,
+          "message": "AutoSwap module deployed successfully"
+        },
+        "configuration": {
+          "success": true,
+          "message": "Configuration valid"
+        },
+        "functionality": {
+          "success": true,
+          "message": "AutoSwap functionality tested successfully",
+          "txHash": "0xa2dc0ac131c62f3ac994157fb68ea2c0e7fc72c07c8bc912e1a39075ca8cb926"
+        }
+      }
+    }
+  ]
+}

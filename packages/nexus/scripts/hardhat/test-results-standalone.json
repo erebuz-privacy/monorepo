@@ -1,0 +1,146 @@
+{
+  "summary": {
+    "totalTests": 6,
+    "passedTests": 2,
+    "failedTests": 4,
+    "timestamp": "2025-10-20T07:29:14.032Z",
+    "networkResults": {
+      "arbitrumsepolia": {
+        "total": 3,
+        "passed": 0,
+        "failed": 3,
+        "modules": [
+          "AutoEarn",
+          "AutoBridge",
+          "AutoSwap"
+        ]
+      },
+      "basesepolia": {
+        "total": 3,
+        "passed": 2,
+        "failed": 1,
+        "modules": [
+          "AutoEarn",
+          "AutoBridge",
+          "AutoSwap"
+        ]
+      }
+    }
+  },
+  "detailedResults": [
+    {
+      "moduleName": "AutoEarn",
+      "network": "Arbitrum Sepolia",
+      "tests": {
+        "deployment": {
+          "success": true,
+          "message": "AutoEarn module deployed successfully"
+        },
+        "configuration": {
+          "success": true,
+          "message": "Configuration valid"
+        },
+        "functionality": {
+          "success": false,
+          "message": "Failed to deploy account with AutoEarn module",
+          "error": "could not decode result data (value=\"0x\", info={ \"method\": \"balanceOf\", \"signature\": \"balanceOf(address)\" }, code=BAD_DATA, version=6.13.4)"
+        }
+      }
+    },
+    {
+      "moduleName": "AutoBridge",
+      "network": "Arbitrum Sepolia",
+      "tests": {
+        "deployment": {
+          "success": true,
+          "message": "AutoBridge module deployed successfully"
+        },
+        "configuration": {
+          "success": true,
+          "message": "Configuration valid"
+        },
+        "functionality": {
+          "success": false,
+          "message": "Failed to deploy account with AutoBridge module",
+          "error": "transaction execution reverted (action=\"sendTransaction\", data=null, reason=null, invocation=null, revert=null, transaction={ \"data\": \"\", \"from\": \"0xAF9fC206261DF20a7f2Be9B379B101FAFd983117\", \"to\": \"0xcA11bde05977b3631167028862bE2a173976CA11\" }, receipt={ \"_type\": \"TransactionReceipt\", \"blobGasPrice\": null, \"blobGasUsed\": null, \"blockHash\": \"0x0c6efda1414f6bfcfc95d8e81d902abd2861ca19caf9db1252b9d03afc4ecd49\", \"blockNumber\": 206530401, \"contractAddress\": null, \"cumulativeGasUsed\": \"417063\", \"from\": \"0xAF9fC206261DF20a7f2Be9B379B101FAFd983117\", \"gasPrice\": \"100000000\", \"gasUsed\": \"225731\", \"hash\": \"0x718b9f03f8560992a756b28d285b82fbc12a3d04de7300d2d563ab371d986cd7\", \"index\": 3, \"logs\": [  ], \"logsBloom\": \"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\", \"root\": null, \"status\": 0, \"to\": \"0xcA11bde05977b3631167028862bE2a173976CA11\" }, code=CALL_EXCEPTION, version=6.13.4)"
+        }
+      }
+    },
+    {
+      "moduleName": "AutoSwap",
+      "network": "Arbitrum Sepolia",
+      "tests": {
+        "deployment": {
+          "success": true,
+          "message": "AutoSwap module deployed successfully"
+        },
+        "configuration": {
+          "success": true,
+          "message": "Configuration valid"
+        },
+        "functionality": {
+          "success": false,
+          "message": "Failed to deploy account with AutoSwap module",
+          "error": "transaction execution reverted (action=\"sendTransaction\", data=null, reason=null, invocation=null, revert=null, transaction={ \"data\": \"\", \"from\": \"0xAF9fC206261DF20a7f2Be9B379B101FAFd983117\", \"to\": \"0xcA11bde05977b3631167028862bE2a173976CA11\" }, receipt={ \"_type\": \"TransactionReceipt\", \"blobGasPrice\": null, \"blobGasUsed\": null, \"blockHash\": \"0xe864db521027505ae33bc58bcde3afe2ed9598400c4335857af7b259b3f912bc\", \"blockNumber\": 206530457, \"contractAddress\": null, \"cumulativeGasUsed\": \"260164\", \"from\": \"0xAF9fC206261DF20a7f2Be9B379B101FAFd983117\", \"gasPrice\": \"100000000\", \"gasUsed\": \"225899\", \"hash\": \"0xe19432e58b5bd7108a3f7aaad9283c3311dc3fe2481e8ac508f54cb09422efe7\", \"index\": 2, \"logs\": [  ], \"logsBloom\": \"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\", \"root\": null, \"status\": 0, \"to\": \"0xcA11bde05977b3631167028862bE2a173976CA11\" }, code=CALL_EXCEPTION, version=6.13.4)"
+        }
+      }
+    },
+    {
+      "moduleName": "AutoEarn",
+      "network": "Base Sepolia",
+      "tests": {
+        "deployment": {
+          "success": true,
+          "message": "AutoEarn module deployed successfully"
+        },
+        "configuration": {
+          "success": true,
+          "message": "Configuration valid"
+        },
+        "functionality": {
+          "success": true,
+          "message": "AutoEarn functionality tested successfully",
+          "txHash": "0x6dd127ef4853c202e23fd12c6bc5409fd5174a8adf6fb17fb654df7489b28345"
+        }
+      }
+    },
+    {
+      "moduleName": "AutoBridge",
+      "network": "Base Sepolia",
+      "tests": {
+        "deployment": {
+          "success": true,
+          "message": "AutoBridge module deployed successfully"
+        },
+        "configuration": {
+          "success": true,
+          "message": "Configuration valid"
+        },
+        "functionality": {
+          "success": true,
+          "message": "AutoBridge functionality tested successfully",
+          "txHash": "0x29a7a6ebce36509c6b3482fad51c8fab27a340102c4ae8ab1b81e0a72047cfc0"
+        }
+      }
+    },
+    {
+      "moduleName": "AutoSwap",
+      "network": "Base Sepolia",
+      "tests": {
+        "deployment": {
+          "success": true,
+          "message": "AutoSwap module deployed successfully"
+        },
+        "configuration": {
+          "success": true,
+          "message": "Configuration valid"
+        },
+        "functionality": {
+          "success": false,
+          "message": "Failed to deploy account with AutoSwap module",
+          "error": "transaction execution reverted (action=\"sendTransaction\", data=null, reason=null, invocation=null, revert=null, transaction={ \"data\": \"\", \"from\": \"0xAF9fC206261DF20a7f2Be9B379B101FAFd983117\", \"to\": \"0xcA11bde05977b3631167028862bE2a173976CA11\" }, receipt={ \"_type\": \"TransactionReceipt\", \"blobGasPrice\": null, \"blobGasUsed\": null, \"blockHash\": \"0xf407fdd28515144c143f32166ca3fe773045d287cb710cefd9ccdba2de20e0b5\", \"blockNumber\": 32588531, \"contractAddress\": null, \"cumulativeGasUsed\": \"1308356\", \"from\": \"0xAF9fC206261DF20a7f2Be9B379B101FAFd983117\", \"gasPrice\": \"1000069\", \"gasUsed\": \"353891\", \"hash\": \"0x3709e5f36159ff28721171c9b558e5f8e2cd76c781398d792acc4816b0fddffb\", \"index\": 13, \"logs\": [  ], \"logsBloom\": \"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\", \"root\": null, \"status\": 0, \"to\": \"0xcA11bde05977b3631167028862bE2a173976CA11\" }, code=CALL_EXCEPTION, version=6.13.4)"
+        }
+      }
+    }
+  ]
+}
