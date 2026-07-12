@@ -1,15 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, Check, Loader2, Search } from "lucide-react";
 
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@erebuz/ui/components/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@erebuz/ui/components/sheet";
 import { Input } from "@erebuz/ui/components/input";
 import { cn } from "@erebuz/ui/lib/utils";
 
@@ -23,18 +23,26 @@ export type PickerItem = {
 
 export type ChainChip = { id: string; label: string; icon?: React.ReactNode };
 
+type Step = "chain" | "token";
+
+/**
+ * Two-step asset picker rendered as a right-side drawer: pick a network first,
+ * then a token on that network. Reduces the 60+ chain set to one clear choice
+ * at a time instead of a crowded chip row.
+ */
 export function AssetPicker({
   open,
   onOpenChange,
   title,
-  description,
   items,
   onSelect,
-  searchPlaceholder = "Search…",
+  searchPlaceholder = "Search tokens…",
   footer,
   chains,
   activeChainId,
   onChainSelect,
+  activeItemId,
+  loading,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -47,10 +55,33 @@ export function AssetPicker({
   chains?: ChainChip[];
   activeChainId?: string;
   onChainSelect?: (id: string) => void;
+  activeItemId?: string;
+  loading?: boolean;
 }) {
+  const [step, setStep] = useState<Step>("chain");
   const [query, setQuery] = useState("");
 
-  const filtered = useMemo(() => {
+  const hasChainStep = Boolean(chains && chains.length && onChainSelect);
+
+  // Reset to the network step each time the drawer opens.
+  useEffect(() => {
+    if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setStep(hasChainStep ? "chain" : "token");
+      setQuery("");
+    }
+  }, [open, hasChainStep]);
+
+  const activeChain = chains?.find((c) => c.id === activeChainId);
+
+  const filteredChains = useMemo(() => {
+    if (!chains) return [];
+    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!terms.length) return chains;
+    return chains.filter((c) => terms.every((t) => c.label.toLowerCase().includes(t)));
+  }, [chains, query]);
+
+  const filteredItems = useMemo(() => {
     const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
     if (!terms.length) return items;
     return items.filter((it) => {
@@ -59,47 +90,54 @@ export function AssetPicker({
     });
   }, [items, query]);
 
+  const onChain = step === "chain" && hasChainStep;
+
+  const goToken = (chainId: string) => {
+    onChainSelect?.(chainId);
+    setStep("token");
+    setQuery("");
+  };
+
   return (
-    <Dialog
+    <Sheet
       open={open}
       onOpenChange={(o) => {
         onOpenChange(o);
         if (!o) setQuery("");
       }}
     >
-      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-md">
-        <DialogHeader className="border-border border-b px-5 py-4 text-left">
-          <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
-          {description ? (
-            <DialogDescription>{description}</DialogDescription>
-          ) : null}
-        </DialogHeader>
-
-        {chains && chains.length ? (
-          <div className="px-5 pt-4">
-            <p className="text-muted-foreground mb-2 text-[11px] font-medium uppercase tracking-wide">
-              Network
-            </p>
-            <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
-              {chains.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => onChainSelect?.(c.id)}
-                  className={cn(
-                    "flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs font-medium transition-colors",
-                    c.id === activeChainId
-                      ? "border-transparent bg-foreground text-background"
-                      : "border-border text-muted-foreground hover:bg-accent hover:text-foreground"
-                  )}
-                >
-                  {c.icon}
-                  {c.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
+      <SheetContent className="gap-0 p-0">
+        <SheetHeader className="pr-12">
+          {onChain ? (
+            <>
+              <SheetTitle className="text-lg">{title}</SheetTitle>
+              <SheetDescription>Choose a network</SheetDescription>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                {hasChainStep ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep("chain");
+                      setQuery("");
+                    }}
+                    className="hover:bg-accent -ml-1 flex items-center gap-1 rounded-lg py-0.5 pl-1 pr-2 text-xs font-medium transition-colors"
+                  >
+                    <ArrowLeft className="size-3.5" /> Networks
+                  </button>
+                ) : null}
+              </div>
+              <SheetTitle className="text-lg">Select token</SheetTitle>
+              {activeChain ? (
+                <SheetDescription className="flex items-center gap-1.5">
+                  on {activeChain.icon} {activeChain.label}
+                </SheetDescription>
+              ) : null}
+            </>
+          )}
+        </SheetHeader>
 
         <div className="px-5 py-4">
           <div className="relative">
@@ -108,57 +146,93 @@ export function AssetPicker({
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={searchPlaceholder}
-              className="pl-9"
+              placeholder={onChain ? "Search networks…" : searchPlaceholder}
+              className="h-11 pl-9"
             />
           </div>
         </div>
 
-        <div className="border-border max-h-[46vh] overflow-y-auto border-t">
-          {filtered.length === 0 ? (
-            <p className="text-muted-foreground p-6 text-center text-sm">
-              No matches
-            </p>
+        <div className="border-border flex-1 overflow-y-auto border-t">
+          {onChain ? (
+            filteredChains.length === 0 ? (
+              <p className="text-muted-foreground p-8 text-center text-sm">No networks</p>
+            ) : (
+              <ul className="p-2">
+                {filteredChains.map((c, i) => (
+                  <li
+                    key={c.id}
+                    className="animate-in fade-in-0 slide-in-from-bottom-1 fill-mode-both"
+                    style={{ animationDelay: `${Math.min(i, 14) * 18}ms`, animationDuration: "200ms" }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => goToken(c.id)}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors",
+                        c.id === activeChainId ? "bg-accent" : "hover:bg-accent/70"
+                      )}
+                    >
+                      {c.icon}
+                      <span className="flex-1 truncate text-sm font-semibold">{c.label}</span>
+                      {c.id === activeChainId ? <Check className="text-brand size-4 shrink-0" /> : null}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )
+          ) : loading ? (
+            <div className="text-muted-foreground flex items-center justify-center gap-2 p-8 text-sm">
+              <Loader2 className="size-4 animate-spin" /> Loading tokens…
+            </div>
+          ) : filteredItems.length === 0 ? (
+            <p className="text-muted-foreground p-8 text-center text-sm">No matches</p>
           ) : (
             <ul className="p-2">
-              {filtered.map((it) => (
-                <li key={it.id}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onSelect(it.id);
-                      onOpenChange(false);
-                      setQuery("");
-                    }}
-                    className="hover:bg-accent flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors"
+              {filteredItems.map((it, i) => {
+                const selected = it.id === activeItemId;
+                return (
+                  <li
+                    key={it.id}
+                    className="animate-in fade-in-0 slide-in-from-bottom-1 fill-mode-both"
+                    style={{ animationDelay: `${Math.min(i, 14) * 22}ms`, animationDuration: "220ms" }}
                   >
-                    {it.icon}
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">
-                        {it.label}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSelect(it.id);
+                        onOpenChange(false);
+                        setQuery("");
+                      }}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors",
+                        selected ? "bg-accent" : "hover:bg-accent/70"
+                      )}
+                    >
+                      {it.icon}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold">{it.label}</span>
+                        {it.sublabel ? (
+                          <span className="text-muted-foreground block truncate text-xs">
+                            {it.sublabel}
+                          </span>
+                        ) : null}
                       </span>
-                      {it.sublabel ? (
-                        <span className="text-muted-foreground block truncate text-xs">
-                          {it.sublabel}
+                      {it.right ? (
+                        <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+                          {it.right}
                         </span>
                       ) : null}
-                    </span>
-                    {it.right ? (
-                      <span className="text-muted-foreground shrink-0 tabular-nums text-xs">
-                        {it.right}
-                      </span>
-                    ) : null}
-                  </button>
-                </li>
-              ))}
+                      {selected ? <Check className="text-brand size-4 shrink-0" /> : null}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
 
-        {footer ? (
-          <div className="border-border border-t p-3">{footer}</div>
-        ) : null}
-      </DialogContent>
-    </Dialog>
+        {footer && !onChain ? <div className="border-border border-t p-3">{footer}</div> : null}
+      </SheetContent>
+    </Sheet>
   );
 }

@@ -3,12 +3,12 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-// Home is temporarily disabled — send is the landing screen for now.
-// This route forwards to /send. The full implementation is preserved below.
+// Home is temporarily disabled — the quote screen ("/") is the landing screen.
+// This route forwards there. The full implementation is preserved below.
 export default function HomePage() {
   const router = useRouter();
   useEffect(() => {
-    router.replace("/send");
+    router.replace("/");
   }, [router]);
   return null;
 }

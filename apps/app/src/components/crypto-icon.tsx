@@ -1,12 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { NetworkIcon, TokenIcon } from "@web3icons/react/dynamic";
 import { ArrowRight } from "lucide-react";
 
 import { cn } from "@erebuz/ui/lib/utils";
 
-import { CHAINS, chainById, type Chain, type Token } from "@/lib/mock-data";
+import {
+  CHAINS,
+  chainById,
+  colorFromString,
+  type Chain,
+  type Token,
+} from "@/lib/mock-data";
 
 function initialsOf(label: string): string {
   const words = label.trim().split(/\s+/);
@@ -41,6 +48,81 @@ export function InitialCircle({
       aria-hidden
     >
       {initialsOf(label)}
+    </span>
+  );
+}
+
+/**
+ * Logo loaded from a remote URL (Relay provides one for every chain and token),
+ * with a colored initials-circle fallback on missing/broken images. Used for the
+ * live, all-chains selectors where we don't have a curated web3icons id.
+ */
+export function RemoteGlyph({
+  src,
+  label,
+  size = 32,
+  color,
+  className,
+}: {
+  src?: string | null;
+  label: string;
+  size?: number;
+  color?: string;
+  className?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) {
+    return (
+      <InitialCircle
+        label={label}
+        color={color ?? colorFromString(label)}
+        size={size}
+        className={className}
+      />
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      width={size}
+      height={size}
+      onError={() => setFailed(true)}
+      className={cn("bg-muted shrink-0 rounded-full object-cover", className)}
+      style={{ width: size, height: size }}
+      aria-hidden
+    />
+  );
+}
+
+/** Remote token logo with a small network badge — the all-chains analog of TokenOnChainGlyph. */
+export function RemoteAssetGlyph({
+  tokenLogo,
+  tokenLabel,
+  chainLogo,
+  chainLabel,
+  size = 40,
+}: {
+  tokenLogo?: string | null;
+  tokenLabel: string;
+  chainLogo?: string | null;
+  chainLabel: string;
+  size?: number;
+}) {
+  const badge = Math.round(size * 0.44);
+  return (
+    <span
+      className="relative inline-block shrink-0"
+      style={{ width: size, height: size }}
+    >
+      <RemoteGlyph src={tokenLogo} label={tokenLabel} size={size} />
+      <span
+        className="ring-background absolute -bottom-0.5 -right-0.5 inline-flex overflow-hidden rounded-full ring-2"
+        style={{ width: badge, height: badge }}
+      >
+        <RemoteGlyph src={chainLogo} label={chainLabel} size={badge} />
+      </span>
     </span>
   );
 }

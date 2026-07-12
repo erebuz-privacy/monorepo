@@ -14,13 +14,13 @@ export default function Welcome() {
   const { hydrated, authed, login } = useApp();
 
   useEffect(() => {
-    if (hydrated && authed) router.replace("/send");
+    if (hydrated && authed) router.replace("/");
   }, [hydrated, authed, router]);
 
   const start = (custody: Custody) => {
     // Mock sign-in — real auth (Privy / Google) wires in here later.
     login({ name: "Alex Rivera", email: "alex@wall8.xyz" }, custody);
-    router.push("/send");
+    router.push("/");
   };
 
   return (
@@ -78,24 +78,28 @@ export default function Welcome() {
           Or bring your own keys
         </div>
 
-        {/* Self-custody */}
-        <button
-          type="button"
-          onClick={() => start("self")}
-          className="group border-border bg-card hover:border-primary/60 hover:bg-accent/40 w-full rounded-xl border p-4 text-left transition-colors"
+        {/* Self-custody — disabled for now */}
+        <div
+          aria-disabled
+          className="border-border/60 bg-card/40 w-full cursor-not-allowed rounded-xl border p-4 text-left opacity-60"
         >
           <div className="flex items-start gap-3">
-            <span className="bg-muted text-foreground flex size-10 shrink-0 items-center justify-center rounded-lg">
+            <span className="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-lg">
               <KeyRound className="size-5" />
             </span>
             <div className="min-w-0 flex-1">
-              <div className="font-medium">Self-custody</div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium">Self-custody</span>
+                <span className="border-border text-muted-foreground rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide">
+                  Coming soon
+                </span>
+              </div>
               <p className="text-muted-foreground mt-0.5 text-sm leading-relaxed">
                 You hold the keys, via Google (Privy).
               </p>
             </div>
           </div>
-        </button>
+        </div>
 
         <p className="text-muted-foreground mt-8 text-center text-xs leading-relaxed">
           Private and compliant by design. We never see who you are or what you
