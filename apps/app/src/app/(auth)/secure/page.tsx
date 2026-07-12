@@ -40,7 +40,7 @@ const OPTIONS: {
     recommended: true,
     icon: ShieldCheck,
     detail:
-      "Your keys live inside a Trusted Execution Environment (TEE) — a sealed box even we can't look inside. You don't pay gas and you can recover access with your Google login. Easiest to use.",
+      "Your keys live inside a Trusted Execution Environment (TEE) - a sealed box even we can't look inside. You don't pay gas and you can recover access with your Google login. Easiest to use.",
   },
   {
     id: "self",
@@ -48,7 +48,7 @@ const OPTIONS: {
     benefit: "You hold the keys · full control",
     icon: KeyRound,
     detail:
-      "An embedded wallet only you control. Maximum sovereignty — but you're responsible for your keys, and you may need to cover gas yourself.",
+      "An embedded wallet only you control. Maximum sovereignty - but you're responsible for your keys, and you may need to cover gas yourself.",
   },
 ];
 

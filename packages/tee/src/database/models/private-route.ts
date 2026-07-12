@@ -26,8 +26,8 @@ export type PrivateRoute = {
   destTokenSymbol: string; // destination token symbol delivered to the user
   destTokenAddress: string | null; // destination token address on the dest chain
   amount: string; // requested input amount, source token smallest unit (bigint-as-string)
-  feeAmount: string; // route fee (spread), source token smallest unit (bigint-as-string)
-  quotedOutputAmount: string; // guaranteed output the user confirmed, DEST token smallest unit
+  feeAmount: string; // route fee, DEST token smallest unit (charged on the output)
+  quotedOutputAmount: string; // output the user confirmed, DEST token smallest unit (gross - fee)
   userDestinationAddress: string;
   hubAccount: string | null; // TEE-owned smart account on the hub chain
   leg1RequestId: string | null;

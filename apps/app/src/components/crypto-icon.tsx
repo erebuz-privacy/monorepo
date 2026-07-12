@@ -21,7 +21,7 @@ function initialsOf(label: string): string {
   return label.slice(0, 2).toUpperCase();
 }
 
-/** Colored circle with initials — used as the fallback for unknown assets. */
+/** Colored circle with initials - used as the fallback for unknown assets. */
 export function InitialCircle({
   label,
   color,
@@ -96,7 +96,7 @@ export function RemoteGlyph({
   );
 }
 
-/** Remote token logo with a small network badge — the all-chains analog of TokenOnChainGlyph. */
+/** Remote token logo with a small network badge - the all-chains analog of TokenOnChainGlyph. */
 export function RemoteAssetGlyph({
   tokenLogo,
   tokenLabel,
@@ -230,7 +230,7 @@ function blockiesRand(seed: string): () => number {
 }
 
 /**
- * Account / contact avatar — a blockies identicon (the Ethereum-standard dapp
+ * Account / contact avatar - a blockies identicon (the Ethereum-standard dapp
  * identicon), deliberately toned to one muted hue so it reads calm, not loud.
  * `label` is accepted for call-site convenience; the pattern derives from `seed`.
  */
@@ -301,7 +301,7 @@ export function GradientAvatar({
 /** The STRK20 privacy-pool wordmark, shown as a hop in a route. */
 const POOL_HOP = "STRK20 pool";
 
-/** STRK20 brand chip — white/red wordmark on a dark plate (legible either theme). */
+/** STRK20 brand chip - white/red wordmark on a dark plate (legible either theme). */
 function Strk20Chip() {
   return (
     <span className="inline-flex items-center rounded-md bg-neutral-900 px-1.5 py-1">

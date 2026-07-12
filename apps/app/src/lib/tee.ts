@@ -1,6 +1,6 @@
 // Real TEE client. The TEE (packages/tee) exposes the private-route quote/create
 // /status endpoints and Relay chain/token discovery. This replaces the old
-// mock-sdk quote path — every value here comes off the wire.
+// mock-sdk quote path - every value here comes off the wire.
 
 const TEE_URL = (process.env.NEXT_PUBLIC_TEE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
@@ -52,17 +52,18 @@ export type TeeQuote = {
   /** Source token (sent). */
   symbol: string;
   decimals: number;
-  /** Destination token (received) — may differ from the source. */
+  /** Destination token (received) - may differ from the source. */
   destSymbol: string;
   destDecimals: number;
   sourceChainId: number;
   destChainId: number;
   hubChainId: number;
-  /** amount + feeAmount are source-token smallest units; quotedOutputAmount is DEST-token smallest units. */
+  /** amount is source-token smallest units; feeAmount + quotedOutputAmount are DEST-token smallest units. */
   amount: string;
   feeAmount: string;
   quotedOutputAmount: string;
   amountInUsd: number | null;
+  quotedOutputUsd: number | null;
   feeUsd: number | null;
   etaSeconds: number;
   route: string[];

@@ -12,7 +12,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useApp } from "@/lib/store";
 
 const NAV = [
-  // Home is temporarily disabled — the quote screen ("/") is the landing screen.
+  // Home is temporarily disabled - the quote screen ("/") is the landing screen.
   // { href: "/home", label: "Home", icon: Home },
   { href: "/", label: "Send", icon: Send },
   { href: "/activity", label: "Activity", icon: Clock },

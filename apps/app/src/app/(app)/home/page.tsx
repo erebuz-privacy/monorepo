@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-// Home is temporarily disabled — the quote screen ("/") is the landing screen.
+// Home is temporarily disabled - the quote screen ("/") is the landing screen.
 // This route forwards there. The full implementation is preserved below.
 export default function HomePage() {
   const router = useRouter();

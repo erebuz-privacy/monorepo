@@ -45,7 +45,7 @@ export default function MethodPage() {
     setError(null);
     setCreating(true);
     try {
-      // Mock sign-in for the managed (TEE-custody) path — real auth wires in later.
+      // Mock sign-in for the managed (TEE-custody) path - real auth wires in later.
       login({ name: "Alex Rivera", email: "alex@wall8.xyz" }, "managed");
       const created = await tee.createRoute({
         sourceChainId: fromChain.chainId,
@@ -96,7 +96,7 @@ export default function MethodPage() {
             {formatAmount(quotedOut, quote.destSymbol)}
           </p>
           <p className="text-muted-foreground text-xs">
-            fee {quote.feeUsd != null ? formatUsd(quote.feeUsd) : "—"}
+            fee {quote.feeUsd != null ? formatUsd(quote.feeUsd) : "-"}
           </p>
         </div>
       </div>
@@ -108,7 +108,7 @@ export default function MethodPage() {
         </p>
       </div>
 
-      {/* Managed — enabled */}
+      {/* Managed - enabled */}
       <button
         type="button"
         onClick={startManaged}
@@ -137,7 +137,7 @@ export default function MethodPage() {
         Or bring your own keys
       </div>
 
-      {/* Self-custody — disabled */}
+      {/* Self-custody - disabled */}
       <div
         aria-disabled
         className="border-border/60 bg-card/40 w-full cursor-not-allowed rounded-xl border p-4 text-left opacity-60"

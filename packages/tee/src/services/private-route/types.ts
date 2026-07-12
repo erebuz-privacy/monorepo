@@ -31,8 +31,8 @@ export interface CreatePrivateRouteResult {
   destTokenSymbol: string;
   /** Amount the user sends, in the source token's smallest unit. */
   amount: string;
-  /** Route fee (spread), in the source token's smallest unit. */
+  /** Route fee, in the DESTINATION token's smallest unit (charged on the output). */
   feeAmount: string;
-  /** Guaranteed output delivered to the user, in the DESTINATION token's smallest unit. */
+  /** Output delivered to the user, in the DESTINATION token's smallest unit (gross - fee). */
   quotedOutputAmount: string;
 }

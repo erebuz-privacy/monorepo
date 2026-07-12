@@ -7,7 +7,7 @@ import { AppProvider } from "@/lib/store";
 import { RouteDraftProvider } from "@/lib/route-draft";
 
 // Keeps the --font-geist-sans var name so globals.css needs no change; the
-// underlying face is Hanken Grotesk — a cleaner, more distinctive grotesk.
+// underlying face is Hanken Grotesk - a cleaner, more distinctive grotesk.
 const geistSans = Hanken_Grotesk({
   variable: "--font-geist-sans",
   subsets: ["latin"],
