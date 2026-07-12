@@ -1,0 +1,474 @@
+{
+  "deploymentSummary": {
+    "totalNetworks": 2,
+    "deploymentDate": "2025-01-25",
+    "deployerAddress": "0xAF9fC206261DF20a7f2Be9B379B101FAFd983117",
+    "ownerAddress": "0xAF9fC206261DF20a7f2Be9B379B101FAFd983117",
+    "authorizedRelayer": "0xAF9fC206261DF20a7f2Be9B379B101FAFd983117",
+    "deploymentMethod": "Private Key",
+    "totalGasUsed": "39,894,418 gas",
+    "totalEthPaid": "0.0039321269 ETH",
+    "gasPriceStrategy": "Dynamic (Auto-fetched from network)",
+    "deploymentStatus": "SUCCESS - All contracts deployed and ready for verification"
+  },
+  "networks": {
+    "arbitrumSepolia": {
+      "networkInfo": {
+        "name": "Arbitrum Sepolia",
+        "chainId": 421614,
+        "blockNumber": 9486892,
+        "timestamp": 1761392417,
+        "deployedAccount": "0xab4f0AE04a7a5a77B02f749F12b385e371cafA6a",
+        "totalGasUsed": "19,559,825 gas",
+        "totalEthPaid": "0.003911965019559825 ETH",
+        "gasPrice": "0.200000001 gwei",
+        "deploymentStatus": "SUCCESS - All contracts deployed"
+      },
+      "coreContracts": {
+        "nexusImplementation": {
+          "address": "0x8F9392aa11C39fC30C54ec92BEe310bf2BBE49De",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "arbiscanLink": "https://sepolia.arbiscan.io/address/0x8f9392aa11c39fc30c54ec92bee310bf2bbe49de"
+        },
+        "nexusAccountFactory": {
+          "address": "0x809Ea53Ff2CFBdE074B2Cd8bA04cb6E27a0E60c4",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "arbiscanLink": "https://sepolia.arbiscan.io/address/0x809ea53ff2cfbde074b2cd8ba04cb6e27a0e60c4"
+        },
+        "biconomyMetaFactory": {
+          "address": "0xbec3e8ABB6A51Dc67B39294107F57106a7B5B94C",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "arbiscanLink": "https://sepolia.arbiscan.io/address/0xbec3e8abb6a51dc67b39294107f57106a7b5b94c"
+        },
+        "k1Validator": {
+          "address": "0xC7C4650000c7223834F746a4297E667Cf26369Fe",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "arbiscanLink": "https://sepolia.arbiscan.io/address/0xc7c4650000c7223834f746a4297e667cf26369fe"
+        },
+        "nexusBootstrap": {
+          "address": "0x19B79CF4688641B8EE02F8b1F65a1E0E2B6D75Eb",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "arbiscanLink": "https://sepolia.arbiscan.io/address/0x19b79cf4688641b8ee02f8b1f65a1e0e2b6d75eb"
+        },
+        "mockRegistry": {
+          "address": "0x0C4a2cE393b8e3780471E8C87a49ba45AD116A3b",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "arbiscanLink": "https://sepolia.arbiscan.io/address/0x0c4a2ce393b8e3780471e8c87a49ba45ad116a3b"
+        }
+      },
+      "modules": {
+        "autoEarnModule": {
+          "address": "0x42CF1b746F96D6cc59e84F87d26Ea64D3fbCa3a0",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "arbiscanLink": "https://sepolia.arbiscan.io/address/0x42cf1b746f96d6cc59e84f87d26ea64d3fbca3a0",
+          "configHash": "54315311789930518908228554962595079451860389263376261365786675639775495199889",
+          "configuration": {
+            "chainId": 421614,
+            "token": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+            "vault": "0xBfC91D59fdAA134A4ED45f7B584cAf96D7792Eff"
+          }
+        },
+        "autoSwapModule": {
+          "address": "0x79f6B95275Fc63B0436baE8AB0D372c9E7EBf3c6",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "arbiscanLink": "https://sepolia.arbiscan.io/address/0x79f6b95275fc63b0436bae8ab0d372c9e7ebf3c6",
+          "configHash": "18721238614616202739566907015653982041224452603693892928636181823113520756843",
+          "configuration": {
+            "chainId": 421614,
+            "outputToken": "0x4200000000000000000000000000000000000006",
+            "poolFee": 3000,
+            "slippage": 10000
+          }
+        },
+        "autoBridgeModule": {
+          "address": "0xECe3e1Cc07c1b837915832117a8bC4C9fF0868c4",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "arbiscanLink": "https://sepolia.arbiscan.io/address/0xece3e1cc07c1b837915832117a8bc4c9ff0868c4",
+          "configHash": "105338933018476618944584764926525745653286536667787055424274496602289804635675",
+          "configuration": {
+            "originChain": 421614,
+            "token": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+            "destinationChain": 84532
+          },
+          "features": {
+            "recievingNexusAccount": true,
+            "crossAccountBridging": true,
+            "selfBridging": true
+          }
+        }
+      },
+      "externalIntegrations": {
+        "usdcToken": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "wethToken": "0x4200000000000000000000000000000000000006",
+        "aavePool": "0xBfC91D59fdAA134A4ED45f7B584cAf96D7792Eff",
+        "aUSDCToken": "0x460b97BD498E1157530AEb3086301d5225b91216",
+        "uniswapFactory": "0x248AB79Bbb9bC29bB72f7Cd42F17e054Fc40188e",
+        "uniswapRouter": "0x101F443B4d1b059569D643917553c771E1b9663E",
+        "uniswapQuoter": "0x2779a0CC1c3e0E44D2542EC3e79e3864Ae93Ef0B",
+        "acrossSpokePool": "0x7E63A5f1a8F0B4d0934B2f2327DAED3F6bb2ee75"
+      }
+    },
+    "baseSepolia": {
+      "networkInfo": {
+        "name": "Base Sepolia",
+        "chainId": 84532,
+        "blockNumber": 9486892,
+        "timestamp": 1761392332,
+        "deployedAccount": "0x26a3589bACEca6D9C016efe7be9ea9FeC1700Ee5",
+        "totalGasUsed": "20,334,593 gas",
+        "totalEthPaid": "0.000020337927873252 ETH",
+        "gasPrice": "0.001000164 gwei",
+        "deploymentStatus": "SUCCESS - All contracts deployed"
+      },
+      "coreContracts": {
+        "nexusImplementation": {
+          "address": "0x2c9E8C40B266F4e776946ec8caC6F2C5B74cD4D6",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "basescanLink": "https://sepolia.basescan.org/address/0x2c9e8c40b266f4e776946ec8cac6f2c5b74cd4d6"
+        },
+        "nexusAccountFactory": {
+          "address": "0x1edaD1eb62B6c1BF8dd3071f25412ceE2aD559a6",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "basescanLink": "https://sepolia.basescan.org/address/0x1edad1eb62b6c1bf8dd3071f25412cee2ad559a6"
+        },
+        "biconomyMetaFactory": {
+          "address": "0xfDAb98B03f68512938f4b43162c7ded0E6e50188",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "basescanLink": "https://sepolia.basescan.org/address/0xfdab98b03f68512938f4b43162c7ded0e6e50188"
+        },
+        "k1Validator": {
+          "address": "0xe98dfff8E98C672C6C83485B76df953aa9e10e6c",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "basescanLink": "https://sepolia.basescan.org/address/0xe98dfff8e98c672c6c83485b76df953aa9e10e6c"
+        },
+        "nexusBootstrap": {
+          "address": "0x819fcB032237d5FaC99Af23Df6B92e5caa1E0853",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "basescanLink": "https://sepolia.basescan.org/address/0x819fcb032237d5fac99af23df6b92e5caa1e0853"
+        },
+        "mockRegistry": {
+          "address": "0xdFE9F41D6ECA9cDB5C5bFbBcf930172416286875",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "basescanLink": "https://sepolia.basescan.org/address/0xdfe9f41d6eca9cdb5c5bfbbcf930172416286875"
+        }
+      },
+      "modules": {
+        "autoEarnModule": {
+          "address": "0xe59f86a7138b64EB4CD5024097576caDBAe0A9eD",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "basescanLink": "https://sepolia.basescan.org/address/0xe59f86a7138b64eb4cd5024097576cadbae0a9ed",
+          "configHash": "28780605526354324632921367486336109362103941039968608897124207778444022457511",
+          "configuration": {
+            "chainId": 84532,
+            "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+            "vault": "0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b"
+          }
+        },
+        "autoSwapModule": {
+          "address": "0xefc19B181F3686c4236dBDAB68c2aB9770a77351",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "basescanLink": "https://sepolia.basescan.org/address/0xefc19b181f3686c4236dbdab68c2ab9770a77351",
+          "configHash": "61642770738345059589242548579257826620381602017084783252430240433189662252333",
+          "configuration": {
+            "chainId": 84532,
+            "outputToken": "0x4200000000000000000000000000000000000006",
+            "poolFee": 3000,
+            "slippage": 10000
+          }
+        },
+        "autoBridgeModule": {
+          "address": "0xCa9100Ef04c514AEaCfAF5E7313cBD7B47E7b8ec",
+          "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "blockNumber": 9486892,
+          "verified": false,
+          "basescanLink": "https://sepolia.basescan.org/address/0xca9100ef04c514aeaaf5e7313cbd7b47e7b8ec",
+          "configHash": "23339550112079225603603908466076854061976857979152500301981842244062342857205",
+          "configuration": {
+            "originChain": 84532,
+            "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+            "destinationChain": 421614
+          },
+          "features": {
+            "recievingNexusAccount": true,
+            "crossAccountBridging": true,
+            "selfBridging": true
+          }
+        },
+        "bondModule": {
+          "address": "0xe0146a494c24775ab07e58107f6e96456ad62dca",
+          "transactionHash": "Latest deployment via Foundry",
+          "blockNumber": "Latest",
+          "verified": false,
+          "basescanLink": "https://sepolia.basescan.org/address/0xe0146a494c24775ab07e58107f6e96456ad62dca",
+          "deploymentDate": "2025-11-12",
+          "features": {
+            "agentMode": true,
+            "percentageBasedLimits": true,
+            "teeAttestation": true,
+            "replayProtection": true,
+            "yieldProtocolIntegration": true,
+            "atomicMulticall3Deployment": true
+          },
+          "demoAccount": {
+            "preComputedAddress": "0x4ddB4535751D5D39eeead7A5444049b1d8150008",
+            "basescanLink": "https://sepolia.basescan.org/address/0x4ddB4535751D5D39eeead7A5444049b1d8150008"
+          },
+          "escrowVaults": {
+            "zyfai": {
+              "address": "0x4064db9a9bab77df20f223e13dac784bb43b4386",
+              "allocation": "30%",
+              "basescanLink": "https://sepolia.basescan.org/address/0x4064db9a9bab77df20f223e13dac784bb43b4386"
+            },
+            "giza": {
+              "address": "0x558eaafb72be735e5e6f5a4280e948a6109c26bc",
+              "allocation": "30%",
+              "basescanLink": "https://sepolia.basescan.org/address/0x558eaafb72be735e5e6f5a4280e948a6109c26bc"
+            },
+            "cod3x": {
+              "address": "0x1ea3939bcc4c1fce86b14ba6dd893a4796c38f59",
+              "allocation": "40%",
+              "basescanLink": "https://sepolia.basescan.org/address/0x1ea3939bcc4c1fce86b14ba6dd893a4796c38f59"
+            }
+          },
+          "mockToken": {
+            "address": "0x24063f25a4b37047e69bdd029efcba5f298700b7",
+            "name": "Test USDC",
+            "symbol": "USDC",
+            "decimals": 6,
+            "basescanLink": "https://sepolia.basescan.org/address/0x24063f25a4b37047e69bdd029efcba5f298700b7"
+          },
+          "coreContracts": {
+            "k1Validator": "0x282605a7ea3892f9a83cf0be621199a6be28ec88",
+            "mockRegistry": "0x33d9cd23ac7045ab2ccd5f573d6546c2d7e2e6b6",
+            "nexusBootstrap": "0x646d0a1573b0cc77e0e818b1e828fc6578d224c5",
+            "nexusImplementation": "0x4ef716f2cd47645b9e37c74a25b8ddcc4b9d3736",
+            "nexusAccountFactory": "0x8eace774786a98dcb84f7322f43d2108973625e7",
+            "biconomyMetaFactory": "0x707c7d8332595014ff814125f10a356685b60a2a"
+          }
+        }
+      },
+      "externalIntegrations": {
+        "usdcToken": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "wethToken": "0x4200000000000000000000000000000000000006",
+        "aavePool": "0x07eA79F68B2B3df564D0A34F8e19D9B1e339814b",
+        "aUSDCToken": "0xf53B60F4006cab2b3C4688ce41fD5362427A2A66",
+        "uniswapFactory": "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24",
+        "uniswapRouter": "0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4",
+        "uniswapQuoter": "0xC5290058841028F1614F3A6F0F5816cAd0df5E27",
+        "acrossSpokePool": "0x82B564983aE7274c86695917BBf8C99ECb6F0F8F"
+      }
+    }
+  },
+  "moduleCapabilities": {
+    "autoEarn": {
+      "description": "Automatically deposits tokens into Aave V3 for yield generation",
+      "supportedTokens": [
+        "USDC"
+      ],
+      "supportedNetworks": [
+        "Arbitrum Sepolia",
+        "Base Sepolia"
+      ],
+      "features": [
+        "Deposit",
+        "Withdraw",
+        "Yield Generation"
+      ]
+    },
+    "autoSwap": {
+      "description": "Automatically swaps tokens using Uniswap V3",
+      "supportedTokens": [
+        "USDC",
+        "WETH"
+      ],
+      "supportedNetworks": [
+        "Arbitrum Sepolia",
+        "Base Sepolia"
+      ],
+      "features": [
+        "Token Swapping",
+        "Slippage Protection",
+        "Multi-hop Swaps"
+      ]
+    },
+    "autoBridge": {
+      "description": "Cross-chain token bridging using Across Protocol with flexible recipient support",
+      "supportedTokens": [
+        "USDC"
+      ],
+      "supportedNetworks": [
+        "Arbitrum Sepolia",
+        "Base Sepolia"
+      ],
+      "features": [
+        "Cross-chain Bridging",
+        "Fast Finality",
+        "Optimistic Security",
+        "Flexible Recipients",
+        "Cross-Account Bridging",
+        "Self-Bridging"
+      ],
+      "newFeatures": {
+        "recievingNexusAccount": "Allows specifying different recipient addresses for cross-chain transfers",
+        "crossAccountBridging": "Bridge tokens to a different account on the destination chain",
+        "selfBridging": "Bridge tokens to the same account on the destination chain"
+      }
+    },
+    "bondModule": {
+      "description": "ERC-7579 compliant Executor module for credit scoring and yield protocol integration via Bond TEE attestations",
+      "supportedTokens": [
+        "All ERC20"
+      ],
+      "supportedNetworks": [
+        "Base Sepolia"
+      ],
+      "features": [
+        "Agent Mode Activation",
+        "Percentage-Based Fund Limits",
+        "TEE Attestation Verification",
+        "Replay Attack Protection",
+        "Before/After Balance Verification",
+        "Multi-Protocol Distribution",
+        "Account Owner Controls"
+      ],
+      "yieldProtocols": [
+        "ZyFAI",
+        "Giza",
+        "Cod3x",
+        "Sail"
+      ],
+      "securityFeatures": {
+        "teeAttestation": "Bond Module TEE signs all operations with ECDSA verification",
+        "replayProtection": "Uses attestation hashes to prevent replay attacks",
+        "percentageLimits": "Enforces percentage-based limits on fund movements",
+        "balanceVerification": "Checks balance before and after execution",
+        "agentMode": "Account owner can enable/disable agent operations anytime",
+        "allowanceCaps": "Token-specific allowance caps for granular control"
+      },
+      "events": {
+        "ModuleInitialized": "Emitted when module is installed with token allowances",
+        "AgentModeActivated": "Emitted when agent mode is enabled with nonce and activator",
+        "AgentModeDisabled": "Emitted when account owner disables agent operations",
+        "AgentModeEnabled": "Emitted when account owner re-enables agent operations",
+        "FundsExecuted": "Emitted with detailed info: amount, percentage, balances, nonce, timestamp",
+        "TokenAllowancesCleared": "Emitted when specific token allowances are removed"
+      }
+    }
+  },
+  "deploymentScripts": {
+    "arbitrumSepolia": "scripts/foundry/DeployArbitrumOnly.s.sol",
+    "baseSepolia": "scripts/foundry/DeployBaseSepoliaOnly.s.sol",
+    "bondModuleEscrow": "scripts/foundry/DeployBondModuleEscrow_BaseSepolia.s.sol",
+    "bothNetworks": "scripts/foundry/deploy_both_networks.sh",
+    "deploymentMethod": "forge script with dynamic gas pricing",
+    "gasPriceStrategy": "Auto-fetched from network using cast gas-price",
+    "verificationStatus": "Contracts deployed, ready for verification on block explorers"
+  },
+  "quickReference": {
+    "deployedAccounts": {
+      "arbitrumSepolia": "0xab4f0AE04a7a5a77B02f749F12b385e371cafA6a",
+      "baseSepolia": "0x26a3589bACEca6D9C016efe7be9ea9FeC1700Ee5"
+    },
+    "keyModules": {
+      "autoEarn": {
+        "arbitrumSepolia": "0x42CF1b746F96D6cc59e84F87d26Ea64D3fbCa3a0",
+        "baseSepolia": "0xe59f86a7138b64EB4CD5024097576caDBAe0A9eD"
+      },
+      "autoSwap": {
+        "arbitrumSepolia": "0x79f6B95275Fc63B0436baE8AB0D372c9E7EBf3c6",
+        "baseSepolia": "0xefc19B181F3686c4236dBDAB68c2aB9770a77351"
+      },
+      "autoBridge": {
+        "arbitrumSepolia": "0xECe3e1Cc07c1b837915832117a8bC4C9fF0868c4",
+        "baseSepolia": "0xCa9100Ef04c514AEaCfAF5E7313cBD7B47E7b8ec"
+      },
+      "bondModule": {
+        "baseSepolia": "0xb684eD9fD4e2172dF7f050f097E5F02cd6699681"
+      }
+    },
+    "gasCosts": {
+      "arbitrumSepolia": "0.003911965019559825 ETH (0.200000001 gwei)",
+      "baseSepolia": "0.000020337927873252 ETH (0.001000164 gwei)"
+    }
+  },
+  "crossChainBridging": {
+    "enabled": true,
+    "supportedChains": [
+      421614,
+      84532
+    ],
+    "bridgeDirection": "bidirectional",
+    "protocol": "Across Protocol",
+    "note": "AutoBridge module supports recievingNexusAccount parameter for flexible recipient addresses",
+    "bridgePaths": {
+      "baseSepoliaToArbitrumSepolia": {
+        "sourceChain": 84532,
+        "destinationChain": 421614,
+        "sourceToken": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "destinationToken": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "sourceSpokePool": "0x82B564983aE7274c86695917BBf8C99ECb6F0F8F",
+        "destinationSpokePool": "0x7E63A5f1a8F0B4d0934B2f2327DAED3F6bb2ee75"
+      },
+      "arbitrumSepoliaToBaseSepolia": {
+        "sourceChain": 421614,
+        "destinationChain": 84532,
+        "sourceToken": "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d",
+        "destinationToken": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+        "sourceSpokePool": "0x7E63A5f1a8F0B4d0934B2f2327DAED3F6bb2ee75",
+        "destinationSpokePool": "0x82B564983aE7274c86695917BBf8C99ECb6F0F8F"
+      }
+    }
+  },
+  "resources": {
+    "documentation": {
+      "biconomyNexus": "https://docs.biconomy.io",
+      "aaveV3": "https://docs.aave.com",
+      "uniswapV3": "https://docs.uniswap.org",
+      "acrossProtocol": "https://docs.across.to"
+    },
+    "blockExplorers": {
+      "arbitrumSepolia": "https://sepolia.arbiscan.io",
+      "baseSepolia": "https://sepolia.basescan.org"
+    },
+    "community": {
+      "biconomyDiscord": "https://discord.gg/biconomy",
+      "aaveDiscord": "https://discord.gg/aave",
+      "uniswapDiscord": "https://discord.gg/uniswap",
+      "acrossDiscord": "https://discord.gg/across"
+    }
+  }
+}
