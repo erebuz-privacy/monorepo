@@ -51,6 +51,11 @@ export const DEPOSIT_MONITOR_ENABLED = process.env.DEPOSIT_MONITOR_ENABLED !== '
  * The privacy hub chain is where funds are shielded/unshielded via Railgun.
  */
 export const PRIVACY_HUB_CHAIN_ID = Number(process.env.PRIVACY_HUB_CHAIN_ID) || 42161; // Arbitrum One
+// Canonical token shielded on the hub. Relay swaps any source token into this on
+// the way in and out of it on the way out, so the source/destination tokens are
+// NOT required to exist on the hub chain — only this one must (USDC on Arbitrum
+// is the most liquid + Railgun-supported).
+export const PRIVACY_HUB_TOKEN_SYMBOL = process.env.PRIVACY_HUB_TOKEN_SYMBOL || 'USDC';
 export const PRIVATE_ROUTE_MONITOR_INTERVAL_MS = Number(process.env.PRIVATE_ROUTE_MONITOR_INTERVAL_MS) || 15000;
 export const PRIVATE_ROUTE_MONITOR_ENABLED = process.env.PRIVATE_ROUTE_MONITOR_ENABLED !== 'false';
 

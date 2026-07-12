@@ -21,13 +21,14 @@ export async function createPrivateRoute(input: CreatePrivateRouteInput): Promis
     throw new Error('Invalid userDestinationAddress');
   }
 
-  // The token must be deposit-address bridgeable on all three chains. Railgun
-  // shields any ERC-20 on the hub, so Relay's currency support is the limiter.
-  const { symbol, destSymbol, hubChainId, amount, source, hub, dest } = await resolveRouteTokens(input);
+  // Source is bridged/swapped into the canonical hub token, shielded, then
+  // swapped/bridged out to the destination token. Relay is the coverage limiter.
+  const { symbol, destSymbol, hubSymbol, hubChainId, amount, source, hub, dest } =
+    await resolveRouteTokens(input);
 
   const routeId = newRouteId();
   logger.info(
-    `Creating private route ${routeId}: ${input.amount} ${symbol} ${input.sourceChainId} -> ${destSymbol} ${input.destChainId} via hub ${hubChainId}`,
+    `Creating private route ${routeId}: ${input.amount} ${symbol} ${input.sourceChainId} -> ${destSymbol} ${input.destChainId} via ${hubSymbol} hub ${hubChainId}`,
     'PrivateRoute'
   );
 
@@ -83,7 +84,7 @@ export async function createPrivateRoute(input: CreatePrivateRouteInput): Promis
     sourceChainId: input.sourceChainId,
     destChainId: input.destChainId,
     hubChainId,
-    tokenSymbol: symbol,
+    tokenSymbol: hubSymbol, // the shielded hub token (matches tokenAddress)
     tokenAddress: hub.address,
     destTokenSymbol: destSymbol,
     destTokenAddress: dest.address,

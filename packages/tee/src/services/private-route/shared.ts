@@ -3,7 +3,7 @@
 
 import { parseUnits } from 'viem';
 import { resolveCurrency, type RelayCurrency } from '../relay';
-import { PRIVACY_HUB_CHAIN_ID } from '../../config/global-config';
+import { PRIVACY_HUB_CHAIN_ID, PRIVACY_HUB_TOKEN_SYMBOL } from '../../config/global-config';
 
 export interface RouteTokensInput {
   sourceChainId: number;
@@ -17,40 +17,44 @@ export interface RouteTokensInput {
 }
 
 export interface ResolvedRoute {
-  /** Source symbol (also the symbol shielded on the hub). */
+  /** Source symbol the user sends. */
   symbol: string;
   /** Destination symbol delivered to the user (may differ from `symbol`). */
   destSymbol: string;
+  /** Canonical token shielded on the hub (e.g. USDC on Arbitrum). */
+  hubSymbol: string;
   hubChainId: number;
   /** Input amount in the source token's smallest unit. */
   amount: bigint;
   source: RelayCurrency;
-  /** Source symbol resolved on the hub chain (what Railgun shields). */
+  /** The canonical hub token resolved on the hub chain (what Railgun shields). */
   hub: RelayCurrency;
-  /** Destination symbol resolved on the destination chain. */
+  /** Destination token resolved on the destination chain. */
   dest: RelayCurrency;
 }
 
 /**
- * Resolve the source token (on the source + hub chains) and the destination
- * token (on the destination chain). All must be deposit-address bridgeable —
- * Railgun shields any ERC-20, so Relay's coverage is the limiter. Parses the
- * amount to the source token's smallest unit. Throws a user-facing message on
- * any unsupported chain/token or invalid amount.
+ * Resolve the source token, the canonical hub token, and the destination token.
+ * Relay swaps the source into the hub token on the way in and the hub token into
+ * the destination on the way out, so the source/destination need NOT exist on
+ * the hub chain — only the canonical hub token must. Parses the amount to the
+ * source token's smallest unit. Throws a user-facing message on any unsupported
+ * chain/token or invalid amount.
  */
 export async function resolveRouteTokens(input: RouteTokensInput): Promise<ResolvedRoute> {
   const symbol = (input.tokenSymbol ?? 'USDC').toUpperCase();
   const destSymbol = (input.destTokenSymbol ?? symbol).toUpperCase();
   const hubChainId = PRIVACY_HUB_CHAIN_ID;
+  const hubTokenSymbol = PRIVACY_HUB_TOKEN_SYMBOL.toUpperCase();
 
   const [source, hub, dest] = await Promise.all([
     resolveCurrency(input.sourceChainId, symbol),
-    resolveCurrency(hubChainId, symbol),
+    resolveCurrency(hubChainId, hubTokenSymbol),
     resolveCurrency(input.destChainId, destSymbol),
   ]);
-  if (!source) throw new Error(`Unsupported token ${symbol} on source chain ${input.sourceChainId}`);
-  if (!hub) throw new Error(`Unsupported token ${symbol} on hub chain ${hubChainId}`);
-  if (!dest) throw new Error(`Unsupported token ${destSymbol} on destination chain ${input.destChainId}`);
+  if (!source) throw new Error(`${symbol} isn't bridgeable from chain ${input.sourceChainId}`);
+  if (!hub) throw new Error(`Hub token ${hubTokenSymbol} is unavailable on the privacy hub`);
+  if (!dest) throw new Error(`${destSymbol} isn't bridgeable to chain ${input.destChainId}`);
 
   let amount: bigint;
   try {
@@ -60,5 +64,5 @@ export async function resolveRouteTokens(input: RouteTokensInput): Promise<Resol
   }
   if (amount <= 0n) throw new Error('Invalid amount: must be greater than 0');
 
-  return { symbol, destSymbol, hubChainId, amount, source, hub, dest };
+  return { symbol, destSymbol, hubSymbol: hub.symbol, hubChainId, amount, source, hub, dest };
 }
