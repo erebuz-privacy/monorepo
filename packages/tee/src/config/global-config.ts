@@ -55,6 +55,16 @@ export const PRIVATE_ROUTE_MONITOR_INTERVAL_MS = Number(process.env.PRIVATE_ROUT
 export const PRIVATE_ROUTE_MONITOR_ENABLED = process.env.PRIVATE_ROUTE_MONITOR_ENABLED !== 'false';
 
 /**
+ * The route fee is the spread between what the user sends and the output we
+ * GUARANTEE to deliver: fee = max(min-USD floor, bps of amount). It's not a
+ * separate skim — it's the buffer that covers the actual costs (Railgun's 0.5%
+ * shield+unshield, Relay's two bridge legs, gas) plus our margin. We quote the
+ * output up front, store what the user confirmed, and must deliver it.
+ */
+export const PRIVATE_ROUTE_FEE_BPS = Number(process.env.PRIVATE_ROUTE_FEE_BPS) || 150; // 1.50%
+export const PRIVATE_ROUTE_FEE_MIN_USD = Number(process.env.PRIVATE_ROUTE_FEE_MIN_USD) || 1;
+
+/**
  * ENS domain configuration
  * All ENS names must be subdomains under this domain
  */
