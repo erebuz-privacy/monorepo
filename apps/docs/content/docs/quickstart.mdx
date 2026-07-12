@@ -1,99 +1,76 @@
 ---
 title: Quickstart
-description: Install the SDK and send your first private, compliant transfer in minutes.
+description: Quote a transfer, create it, and track it to completion.
 ---
 
-<Callout type="warn" title="Coming soon">
-  The SDK is not yet publicly available. The steps below preview the
-  integration flow, [join the waitlist](https://www.erebuz.com) for access.
-</Callout>
+Erebuz is an HTTP API. Set `BASE_URL` to your deployment (locally, `http://localhost:3000`). Every response is JSON of the form `{ "success": boolean, "data": ... }`.
 
 <Steps>
 <Step>
 
-## Install the SDK
+## Quote
 
-<Tabs items={["npm", "pnpm", "yarn", "bun"]}>
-  <Tab value="npm">
-
-```bash
-npm install @erebuz/sdk
-```
-
-  </Tab>
-  <Tab value="pnpm">
+Ask what the recipient receives for a given input. Nothing moves and no address is allocated, so this is safe to call on every keystroke.
 
 ```bash
-pnpm add @erebuz/sdk
+curl -X POST $BASE_URL/api/private-route/quote \
+  -H 'content-type: application/json' \
+  -d '{
+    "sourceChainId": 8453,
+    "destChainId": 137,
+    "amount": "100",
+    "tokenSymbol": "USDC",
+    "destTokenSymbol": "USDT"
+  }'
 ```
 
-  </Tab>
-  <Tab value="yarn">
-
-```bash
-yarn add @erebuz/sdk
-```
-
-  </Tab>
-  <Tab value="bun">
-
-```bash
-bun add @erebuz/sdk
-```
-
-  </Tab>
-</Tabs>
+The `data` holds `quotedOutputAmount` and `feeAmount` (smallest units of the destination token), the USD values, `etaSeconds`, and a `route` for display. Re-quote every 15 to 20 seconds; the price is live.
 
 </Step>
 <Step>
 
-## Initialize with one master seed
+## Create
 
-One master seed derives everything, per-chain accounts, shielded notes, and session keys. It never leaves your enclave.
+Commit the transfer. This allocates the deposit address to fund.
 
-```ts title="erebuz.ts"
-import { Erebuz } from "@erebuz/sdk";
-
-export const erebuz = new Erebuz({
-  apiKey: process.env.EREBUZ_API_KEY!,
-  masterSeed: process.env.EREBUZ_MASTER_SEED!,
-});
+```bash
+curl -X POST $BASE_URL/api/private-route \
+  -H 'content-type: application/json' \
+  -d '{
+    "sourceChainId": 8453,
+    "destChainId": 137,
+    "amount": "100",
+    "tokenSymbol": "USDC",
+    "destTokenSymbol": "USDT",
+    "userDestinationAddress": "0xRecipient"
+  }'
 ```
+
+Send the input amount to `depositAddress` on the source chain. Keep the returned `routeId` to track the transfer.
 
 </Step>
 <Step>
 
-## Find a route
+## Track
 
-Ask Erebuz for the best private lane between any two chains. The quote includes fees, the compliance score, and expected settlement time.
+Poll until the status is terminal.
 
-```ts
-const route = await erebuz.findRoute({
-  from: { chain: "base", token: "USDC" },
-  to: { chain: "arbitrum", address: recipient },
-  amount: "100.00",
-});
-
-// route.receives  -> "99.58"
-// route.fee       -> "$0.42, covered"
-// route.compliance -> 98
-// route.settlesIn -> "2s"
+```bash
+curl $BASE_URL/api/private-route/$ROUTE_ID
 ```
 
-</Step>
-<Step>
-
-## Send
-
-One call handles routing, privacy, compliance and gas.
-
-```ts
-const receipt = await erebuz.send(route);
-
-console.log(receipt.status); // "settled"
-```
-
-That's it, no custom crypto, no bridge UI, no gas juggling.
+Status moves `AWAITING_DEPOSIT` to `COMPLETED` (or `FAILED`). See [Reference](/docs/reference) for the full lifecycle.
 
 </Step>
 </Steps>
+
+## Populate the selectors
+
+To build a token and chain picker, list what Relay can bridge:
+
+```bash
+curl $BASE_URL/api/relay/chains
+curl "$BASE_URL/api/relay/tokens?chainId=42161&search=USDC"
+```
+
+`tokenSymbol` and `destTokenSymbol` can differ, so a transfer can change both chain and token (for example USDC on Base to USDT on Polygon). Omit `destTokenSymbol` to keep the same token.
