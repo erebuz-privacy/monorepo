@@ -71,6 +71,7 @@ function parseRelayQuote(data: any) {
     expectedOutputAmount: data?.details?.currencyOut?.amount as string | undefined,
     requiredInputAmount: data?.details?.currencyIn?.amount as string | undefined,
     amountInUsd: data?.details?.currencyIn?.amountUsd as string | undefined,
+    outputUsd: data?.details?.currencyOut?.amountUsd as string | undefined,
     etaSeconds:
       typeof data?.details?.timeEstimate === 'number' ? (data.details.timeEstimate as number) : undefined,
   };
@@ -157,10 +158,12 @@ export interface RelayPriceQuoteParams {
 export interface RelayPriceQuote {
   /** Expected amount delivered on the destination chain (smallest unit), if provided. */
   expectedOutputAmount?: string;
-  /** Required input (smallest unit) — meaningful for EXACT_OUTPUT quotes. */
+  /** Required input (smallest unit); meaningful for EXACT_OUTPUT quotes. */
   requiredInputAmount?: string;
-  /** USD value of the input amount (drives the fee floor). */
+  /** USD value of the input amount. */
   amountInUsd?: string;
+  /** USD value of the output amount (drives the fee, which is charged on output). */
+  outputUsd?: string;
   /** Relay's time estimate for the fill (seconds), if provided. */
   etaSeconds?: number;
   raw: unknown;
@@ -179,6 +182,7 @@ export async function getRelayQuote(params: RelayPriceQuoteParams): Promise<Rela
       expectedOutputAmount: q.expectedOutputAmount,
       requiredInputAmount: q.requiredInputAmount,
       amountInUsd: q.amountInUsd,
+      outputUsd: q.outputUsd,
       etaSeconds: q.etaSeconds,
       raw: data,
     };

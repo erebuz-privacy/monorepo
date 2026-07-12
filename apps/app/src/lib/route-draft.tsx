@@ -13,7 +13,7 @@ export type RouteDraft = {
   fromChain: TeeChain;
   fromToken: TeeToken;
   toChain: TeeChain;
-  /** Destination token (received) — may differ from fromToken. */
+  /** Destination token (received) - may differ from fromToken. */
   toToken: TeeToken;
   /** Human-readable amount the user entered. */
   amount: string;

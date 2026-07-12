@@ -3,18 +3,12 @@
 // The public entry: a Jumper/1inch-style swap+bridge quote screen. Token + chain
 // selectors are sourced live from the TEE (all Relay-bridgeable chains); the
 // quote (guaranteed output + fee) is a live TEE call. Confirm carries the draft
-// to the method screen — no login needed to get a quote.
+// to the method screen - no login needed to get a quote.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import {
-  ArrowLeft,
-  ChevronDown,
-  Loader2,
-  Plus,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowLeft, ChevronDown, Loader2, Plus } from "lucide-react";
 
 import { Button } from "@erebuz/ui/components/button";
 import { Skeleton } from "@erebuz/ui/components/skeleton";
@@ -106,7 +100,7 @@ export function QuotePanel() {
 
   const { chains, loading: chainsLoading, error: chainsError } = useChains();
 
-  // User selections start null and fall back to derived defaults — deriving
+  // User selections start null and fall back to derived defaults - deriving
   // (rather than syncing via effects) keeps the choice reactive to the async
   // chain/token lists without cascading renders.
   const [fromChainSel, setFromChainId] = useState<number | null>(null);
@@ -183,9 +177,14 @@ export function QuotePanel() {
     };
   }, [dest, cards, contacts]);
 
-  // ---- live quote (debounced) ----
+  // ---- live quote ----
+  // Prices move (especially for volatile pairs), so the quote is refreshed on
+  // every input change AND on a 20s timer. It is a live estimate, not a locked
+  // amount - the user reviews the current number and opts in.
+  const REFRESH_MS = 20_000;
   const [quote, setQuote] = useState<TeeQuote | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const reqIdRef = useRef(0);
 
@@ -194,50 +193,73 @@ export function QuotePanel() {
     fromToken && toToken && fromChainId != null && toChainId != null && amountNum > 0
   );
 
+  const runQuote = useCallback(
+    (silent: boolean, i: {
+      sourceChainId: number;
+      destChainId: number;
+      amount: string;
+      tokenSymbol: string;
+      destTokenSymbol: string;
+    }) => {
+      const id = ++reqIdRef.current;
+      if (silent) setRefreshing(true);
+      else setQuoteLoading(true);
+      setQuoteError(null);
+      tee
+        .quote(i)
+        .then((q) => {
+          if (id !== reqIdRef.current) return;
+          setQuote(q);
+          setQuoteLoading(false);
+          setRefreshing(false);
+        })
+        .catch((e: Error) => {
+          if (id !== reqIdRef.current) return;
+          if (!silent) {
+            setQuote(null);
+            setQuoteError(e.message);
+          }
+          setQuoteLoading(false);
+          setRefreshing(false);
+        });
+    },
+    []
+  );
+
+  // Debounced quote on input change + a silent refresh timer, so the live quote
+  // tracks the market. The interval is captured with the current inputs and
+  // reset whenever they change.
   useEffect(() => {
     const id = ++reqIdRef.current;
     if (!canQuote || !fromToken || !toToken || fromChainId == null || toChainId == null) {
-      // Defer to a microtask so we don't setState synchronously in the effect body.
       queueMicrotask(() => {
         if (id !== reqIdRef.current) return;
         setQuote(null);
         setQuoteError(null);
         setQuoteLoading(false);
+        setRefreshing(false);
       });
       return;
     }
-    const t = setTimeout(() => {
-      setQuoteLoading(true);
-      setQuoteError(null);
-      tee
-        .quote({
-          sourceChainId: fromChainId,
-          destChainId: toChainId,
-          amount,
-          tokenSymbol: fromToken.symbol,
-          destTokenSymbol: toToken.symbol,
-        })
-        .then((q) => {
-          if (id !== reqIdRef.current) return;
-          setQuote(q);
-          setQuoteLoading(false);
-        })
-        .catch((e: Error) => {
-          if (id !== reqIdRef.current) return;
-          setQuote(null);
-          setQuoteError(e.message);
-          setQuoteLoading(false);
-        });
-    }, 450);
-    return () => clearTimeout(t);
-  }, [canQuote, fromToken, toToken, fromChainId, toChainId, amount]);
+    const i = {
+      sourceChainId: fromChainId,
+      destChainId: toChainId,
+      amount,
+      tokenSymbol: fromToken.symbol,
+      destTokenSymbol: toToken.symbol,
+    };
+    const t = setTimeout(() => runQuote(false, i), 450);
+    const iv = setInterval(() => runQuote(true, i), REFRESH_MS);
+    return () => {
+      clearTimeout(t);
+      clearInterval(iv);
+    };
+  }, [canQuote, fromToken, toToken, fromChainId, toChainId, amount, runQuote]);
 
   const quotedOut = quote ? fromSmallestUnit(quote.quotedOutputAmount, quote.destDecimals) : 0;
+  const feeToken = quote ? fromSmallestUnit(quote.feeAmount, quote.destDecimals) : 0;
   const sendUsd = quote?.amountInUsd ?? null;
-  const receiveUsd =
-    quote && quote.amountInUsd != null && quote.feeUsd != null
-      ? Math.max(0, quote.amountInUsd - quote.feeUsd)
-      : null;
+  const receiveUsd = quote?.quotedOutputUsd ?? null;
 
   // ---- picker item lists ----
   const chainChips: ChainChip[] = useMemo(
@@ -306,8 +328,8 @@ export function QuotePanel() {
         <div className="mb-4">
           <h1 className="text-xl font-semibold tracking-tight">Send privately</h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Bridge across chains with the on-chain trail broken. You&apos;re quoted a guaranteed
-            amount up front.
+            Bridge across chains with the on-chain trail broken. You get a live quote before
+            anything moves.
           </p>
         </div>
 
@@ -394,36 +416,54 @@ export function QuotePanel() {
         ) : null}
 
         {quote && !quoteError ? (
-          <div className="animate-step-in border-border mt-3 space-y-2.5 rounded-2xl border px-4 py-3.5 text-sm">
-            <Row label="You receive">
-              <span className="tabular-nums">{formatAmount(quotedOut, quote.destSymbol)}</span>
-            </Row>
-            <Row label="Fee">{quote.feeUsd != null ? formatUsd(quote.feeUsd) : "—"}</Row>
-            <Row label="Network gas">
-              <span className="text-brand font-medium">Covered</span>
-            </Row>
-            <Row label="Privacy">
-              <span className="text-brand font-medium">Confidential</span>
-            </Row>
-            <Row label="Estimated time">{formatEta(quote.etaSeconds)}</Row>
-            <div className="border-border flex items-center justify-between gap-3 border-t pt-2.5">
-              <span className="text-muted-foreground">Route</span>
-              <div className="flex flex-wrap items-center justify-end gap-1.5 text-xs">
-                <span className="flex items-center gap-1">
-                  <RemoteGlyph src={fromChain?.logoUrl} label={fromChain?.displayName ?? ""} size={15} />
-                  <span className="font-medium">{fromChain?.displayName}</span>
+          <div className="animate-step-in border-border mt-3 rounded-2xl border px-4 py-3.5 text-sm">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-brand flex items-center gap-1.5 text-xs font-medium">
+                <span className="relative flex size-2">
+                  <span className="bg-brand absolute inline-flex size-full animate-ping rounded-full opacity-60" />
+                  <span className="bg-brand relative inline-flex size-2 rounded-full" />
                 </span>
-                <span className="text-brand">→ Private →</span>
-                <span className="flex items-center gap-1">
-                  <RemoteGlyph src={toChain?.logoUrl} label={toChain?.displayName ?? ""} size={15} />
-                  <span className="font-medium">{toChain?.displayName}</span>
-                </span>
+                Live quote
+              </span>
+              {refreshing ? (
+                <Loader2 className="text-muted-foreground size-3.5 animate-spin" />
+              ) : (
+                <span className="text-muted-foreground text-[11px]">updates every 20s</span>
+              )}
+            </div>
+            <div className="space-y-2.5">
+              <Row label="You receive">
+                <span className="tabular-nums">{formatAmount(quotedOut, quote.destSymbol)}</span>
+              </Row>
+              <Row label="Fee">
+                {quote.feeUsd != null ? formatUsd(quote.feeUsd) : formatAmount(feeToken, quote.destSymbol)}
+              </Row>
+              <Row label="Network gas">
+                <span className="text-brand font-medium">Covered</span>
+              </Row>
+              <Row label="Privacy">
+                <span className="text-brand font-medium">Confidential</span>
+              </Row>
+              <Row label="Estimated time">{formatEta(quote.etaSeconds)}</Row>
+              <div className="border-border flex items-center justify-between gap-3 border-t pt-2.5">
+                <span className="text-muted-foreground">Route</span>
+                <div className="flex flex-wrap items-center justify-end gap-1.5 text-xs">
+                  <span className="flex items-center gap-1">
+                    <RemoteGlyph src={fromChain?.logoUrl} label={fromChain?.displayName ?? ""} size={15} />
+                    <span className="font-medium">{fromChain?.displayName}</span>
+                  </span>
+                  <span className="text-brand">{"→"} Private {"→"}</span>
+                  <span className="flex items-center gap-1">
+                    <RemoteGlyph src={toChain?.logoUrl} label={toChain?.displayName ?? ""} size={15} />
+                    <span className="font-medium">{toChain?.displayName}</span>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         ) : null}
 
-        {/* recipient — where the funds land, kept at the bottom just above the CTA */}
+        {/* recipient - where the funds land, kept at the bottom just above the CTA */}
         <button
           type="button"
           onClick={() => setDestOpen(true)}
@@ -452,22 +492,15 @@ export function QuotePanel() {
 
         <Button
           size="lg"
-          className="mt-4 h-12 w-full text-base"
+          className="mt-4 h-12 w-full text-base font-semibold"
           disabled={!ready}
           onClick={confirm}
         >
-          {ready ? (
-            <>
-              <ShieldCheck className="size-5" />
-              {cta}
-            </>
-          ) : (
-            cta
-          )}
+          {cta}
         </Button>
 
         <p className="text-muted-foreground mt-6 text-center text-xs leading-relaxed">
-          Private and compliant by design. We deliver the amount we quote.
+          Private and compliant by design. Live pricing from our routing engine.
         </p>
       </div>
 
@@ -495,7 +528,7 @@ export function QuotePanel() {
         open={picker === "to"}
         onOpenChange={(o) => setPicker(o ? "to" : null)}
         title="You receive"
-        description="Pick the token and network to receive — it can differ from what you send."
+        description="Pick the token and network to receive. It can differ from what you send."
         searchPlaceholder="Search tokens…"
         items={toTokenItems}
         onSelect={(address) => {

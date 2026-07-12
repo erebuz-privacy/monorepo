@@ -18,7 +18,7 @@ export default function Welcome() {
   }, [hydrated, authed, router]);
 
   const start = (custody: Custody) => {
-    // Mock sign-in — real auth (Privy / Google) wires in here later.
+    // Mock sign-in - real auth (Privy / Google) wires in here later.
     login({ name: "Alex Rivera", email: "alex@wall8.xyz" }, custody);
     router.push("/");
   };
@@ -52,7 +52,7 @@ export default function Welcome() {
           your own keys.
         </p>
 
-        {/* Managed — prominent */}
+        {/* Managed - prominent */}
         <button
           type="button"
           onClick={() => start("managed")}
@@ -78,7 +78,7 @@ export default function Welcome() {
           Or bring your own keys
         </div>
 
-        {/* Self-custody — disabled for now */}
+        {/* Self-custody - disabled for now */}
         <div
           aria-disabled
           className="border-border/60 bg-card/40 w-full cursor-not-allowed rounded-xl border p-4 text-left opacity-60"

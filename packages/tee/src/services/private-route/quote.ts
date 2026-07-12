@@ -2,9 +2,10 @@
 // same way route creation computes it, but WITHOUT persisting anything or
 // allocating a deposit address — safe to call on every keystroke.
 //
-// Cross-token aware: the source token is bridged to the hub and shielded; the
-// guaranteed output is priced in the (possibly different) destination token via
-// a hub -> destination quote.
+// Fee model: the source token is bridged (and, for cross-token routes, swapped)
+// by Relay into the DESTINATION token. Our fee is charged on that output token,
+// not the input. e.g. 100 USDC in -> Relay yields 0.1 ETH -> we take
+// max($1, 1.5%) of the 0.1 ETH and deliver the rest.
 
 import { getRelayQuote, getRelayChains, chainDisplayName } from '../relay';
 import { computeServiceFee } from './fee';
@@ -24,12 +25,13 @@ export interface QuotePrivateRouteResult {
   hubChainId: number;
   /** Input amount, source token smallest unit (string). */
   amount: string;
-  /** Route fee (spread), source token smallest unit. */
+  /** Route fee (spread), DESTINATION token smallest unit (charged on the output). */
   feeAmount: string;
-  /** Guaranteed output delivered to the user, DESTINATION token smallest unit. */
+  /** Output delivered to the user, DESTINATION token smallest unit (= gross - fee). */
   quotedOutputAmount: string;
-  /** USD value of the input / fee, when Relay provides a price (else null). */
+  /** USD value of the input, and of the delivered output / fee (null if unpriced). */
   amountInUsd: number | null;
+  quotedOutputUsd: number | null;
   feeUsd: number | null;
   /** Rough end-to-end estimate (seconds). */
   etaSeconds: number;
@@ -40,7 +42,7 @@ export interface QuotePrivateRouteResult {
 export async function quotePrivateRoute(input: QuotePrivateRouteInput): Promise<QuotePrivateRouteResult> {
   const { symbol, destSymbol, hubChainId, amount, source, hub, dest } = await resolveRouteTokens(input);
 
-  // Leg-1 (source -> hub): values the input in USD for the fee floor.
+  // Leg-1 (source -> hub): the full input is bridged to the hub token.
   const leg1 = await getRelayQuote({
     originChainId: input.sourceChainId,
     destinationChainId: hubChainId,
@@ -49,34 +51,36 @@ export async function quotePrivateRoute(input: QuotePrivateRouteInput): Promise<
     amount: amount.toString(),
     tradeType: 'EXACT_INPUT',
   });
-
   const amountInUsd = leg1?.amountInUsd ? Number(leg1.amountInUsd) : null;
+  const hubAmount = leg1?.expectedOutputAmount ? BigInt(leg1.expectedOutputAmount) : amount;
 
-  // Fee = the spread between what the user sends and the output we GUARANTEE to
-  // deliver: max($ floor, bps of amount). See config/global-config.ts.
-  const fee = computeServiceFee(amount, amountInUsd);
-  if (fee >= amount) throw new Error('Invalid amount: too small — the fee would exceed the amount');
-  const afterFee = amount - fee; // source-token units routed onward from the hub
-
-  // Guaranteed output = bridge the post-fee amount from the hub token to the
-  // destination token. Same asset + same decimals degenerates to `afterFee`.
-  let quotedOutput: bigint;
+  // Leg-2 (hub -> destination): Relay swaps/bridges the hub amount into the
+  // destination token. This is the GROSS output before our fee.
   const sameAsset = hub.address.toLowerCase() === dest.address.toLowerCase() && hub.decimals === dest.decimals;
+  let grossOutput: bigint;
+  let outputUsd: number | null;
   if (sameAsset) {
-    quotedOutput = afterFee;
+    grossOutput = hubAmount;
+    outputUsd = amountInUsd;
   } else {
     const leg2 = await getRelayQuote({
       originChainId: hubChainId,
       destinationChainId: input.destChainId,
       originCurrency: hub.address,
       destinationCurrency: dest.address,
-      amount: afterFee.toString(),
+      amount: hubAmount.toString(),
       tradeType: 'EXACT_INPUT',
     });
-    if (!leg2?.expectedOutputAmount) throw new Error(`Route unavailable for ${symbol} → ${destSymbol}`);
-    quotedOutput = BigInt(leg2.expectedOutputAmount);
+    if (!leg2?.expectedOutputAmount) throw new Error(`Route unavailable for ${symbol} to ${destSymbol}`);
+    grossOutput = BigInt(leg2.expectedOutputAmount);
+    outputUsd = leg2.outputUsd ? Number(leg2.outputUsd) : null;
   }
-  if (quotedOutput <= 0n) throw new Error('Invalid amount: too small for this route');
+  if (grossOutput <= 0n) throw new Error('Invalid amount: too small for this route');
+
+  // Fee = max($ floor, bps) charged on the OUTPUT (destination token).
+  const fee = computeServiceFee(grossOutput, outputUsd);
+  if (fee >= grossOutput) throw new Error('Invalid amount: too small — the fee would exceed the output');
+  const quotedOutput = grossOutput - fee;
 
   // Rough total = leg-1 bridge + shield/unshield + leg-2 bridge.
   const legEta = leg1?.etaSeconds ?? 30;
@@ -85,7 +89,9 @@ export async function quotePrivateRoute(input: QuotePrivateRouteInput): Promise<
   await getRelayChains(); // populate the in-process display-name cache
   const route = [chainDisplayName(input.sourceChainId), 'Private pool (Arbitrum)', chainDisplayName(input.destChainId)];
 
-  const feeUsd = amountInUsd != null && amount > 0n ? amountInUsd * (Number(fee) / Number(amount)) : null;
+  const feeUsd = outputUsd != null && grossOutput > 0n ? outputUsd * (Number(fee) / Number(grossOutput)) : null;
+  const quotedOutputUsd =
+    outputUsd != null && grossOutput > 0n ? outputUsd * (Number(quotedOutput) / Number(grossOutput)) : null;
 
   return {
     symbol,
@@ -99,6 +105,7 @@ export async function quotePrivateRoute(input: QuotePrivateRouteInput): Promise<
     feeAmount: fee.toString(),
     quotedOutputAmount: quotedOutput.toString(),
     amountInUsd,
+    quotedOutputUsd,
     feeUsd,
     etaSeconds,
     route,

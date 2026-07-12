@@ -46,33 +46,35 @@ export async function createPrivateRoute(input: CreatePrivateRouteInput): Promis
     refundTo: RELAY_NATIVE,
   });
   if (!leg1) throw new Error('Failed to get Relay deposit address for leg-1');
+  const hubAmount = leg1.expectedOutputAmount ? BigInt(leg1.expectedOutputAmount) : amount;
 
-  // Fee = max($ floor, bps of amount). This is the spread between what the user
-  // sends and the output we GUARANTEE to deliver; it covers actual costs
-  // (Railgun 0.5% + Relay legs + gas) plus margin. We must deliver quotedOutput.
-  const fee = computeServiceFee(amount, leg1.amountInUsd ? Number(leg1.amountInUsd) : null);
-  if (fee >= amount) throw new Error('Amount too small: fee would exceed the amount');
-  const afterFee = amount - fee;
-
-  // Guaranteed output in the DESTINATION token: bridge the post-fee amount from
-  // the hub token to the destination token. Same-asset routes degenerate to the
-  // post-fee amount (leg-2 delivers it 1:1).
+  // Gross output in the DESTINATION token: bridge/swap the hub amount to the
+  // destination token. Same-asset routes deliver it 1:1.
   const sameAsset = hub.address.toLowerCase() === dest.address.toLowerCase() && hub.decimals === dest.decimals;
-  let quotedOutput: bigint;
+  let grossOutput: bigint;
+  let outputUsd: number | null;
   if (sameAsset) {
-    quotedOutput = afterFee;
+    grossOutput = hubAmount;
+    outputUsd = leg1.amountInUsd ? Number(leg1.amountInUsd) : null;
   } else {
     const leg2Quote = await getRelayQuote({
       originChainId: hubChainId,
       destinationChainId: input.destChainId,
       originCurrency: hub.address,
       destinationCurrency: dest.address,
-      amount: afterFee.toString(),
+      amount: hubAmount.toString(),
       tradeType: 'EXACT_INPUT',
     });
-    if (!leg2Quote?.expectedOutputAmount) throw new Error(`Route unavailable for ${symbol} → ${destSymbol}`);
-    quotedOutput = BigInt(leg2Quote.expectedOutputAmount);
+    if (!leg2Quote?.expectedOutputAmount) throw new Error(`Route unavailable for ${symbol} to ${destSymbol}`);
+    grossOutput = BigInt(leg2Quote.expectedOutputAmount);
+    outputUsd = leg2Quote.outputUsd ? Number(leg2Quote.outputUsd) : null;
   }
+
+  // Fee = max($ floor, bps) charged on the OUTPUT (destination token). It covers
+  // Railgun 0.5% + Relay legs + gas plus margin; we deliver grossOutput - fee.
+  const fee = computeServiceFee(grossOutput, outputUsd);
+  if (fee >= grossOutput) throw new Error('Amount too small: fee would exceed the output');
+  const quotedOutput = grossOutput - fee;
   if (quotedOutput <= 0n) throw new Error('Amount too small for this route');
 
   await PrivateRouteModel.create({

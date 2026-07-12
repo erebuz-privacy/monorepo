@@ -1,7 +1,7 @@
 "use client";
 
 // Chain + token lists sourced live from the TEE (Relay-backed). Cached at module
-// scope so opening the picker again — or the from/to selectors — doesn't refetch.
+// scope so opening the picker again - or the from/to selectors - doesn't refetch.
 
 import { useEffect, useState } from "react";
 
@@ -54,7 +54,7 @@ export function useTokens(chainId: number | null): TokensState {
   }));
 
   useEffect(() => {
-    // Syncing local state to the chainId prop + the module token cache — a
+    // Syncing local state to the chainId prop + the module token cache - a
     // legitimate external-sync effect (mirrors the store's hydration pattern).
     if (chainId == null) {
       // eslint-disable-next-line react-hooks/set-state-in-effect

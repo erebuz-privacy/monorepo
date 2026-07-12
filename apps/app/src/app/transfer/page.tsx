@@ -1,7 +1,7 @@
 "use client";
 
 // Live transfer screen: shows the Relay deposit address to fund, then polls the
-// TEE for real route status through to completion. All data is live — the route
+// TEE for real route status through to completion. All data is live - the route
 // runs server-side (Relay leg-1 -> Railgun shield/unshield -> Relay leg-2).
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -50,7 +50,7 @@ export default function TransferPage() {
       const r = await tee.getRoute(routeId);
       setRecord(r);
     } catch {
-      // transient — keep the last known state and retry on the next tick
+      // transient - keep the last known state and retry on the next tick
     } finally {
       inFlight.current = false;
     }
@@ -128,7 +128,7 @@ export default function TransferPage() {
                   Send{" "}
                   <span className="font-medium">{formatAmount(sendNum, fromToken.symbol)}</span> on{" "}
                   {fromChain.displayName} to the address below. We&apos;ll route it privately to{" "}
-                  {shortenAddress(recipientAddress)} — you&apos;ll receive{" "}
+                  {shortenAddress(recipientAddress)}. You&apos;ll receive{" "}
                   <span className="font-medium">{formatAmount(quotedOut, quote.destSymbol)}</span>.
                 </p>
               </div>
@@ -176,7 +176,7 @@ export default function TransferPage() {
                   {PROGRESS[activeIdx]?.label ?? "Routing privately"}
                 </p>
                 <p className="text-muted-foreground mt-1 max-w-xs text-sm">
-                  Keep this screen open — this can take a few minutes across the bridge legs.
+                  Keep this screen open. This can take a few minutes across the bridge legs.
                 </p>
               </div>
 
@@ -233,7 +233,7 @@ export default function TransferPage() {
                 <div className="space-y-2 p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Fee</span>
-                    <span>{quote.feeUsd != null ? formatUsd(quote.feeUsd) : "—"}</span>
+                    <span>{quote.feeUsd != null ? formatUsd(quote.feeUsd) : "-"}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Privacy</span>

@@ -2,7 +2,7 @@
 
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 
-/** Thin wrapper around next-themes — the shadcn-standard theming provider. */
+/** Thin wrapper around next-themes - the shadcn-standard theming provider. */
 export function ThemeProvider({
   children,
   ...props
