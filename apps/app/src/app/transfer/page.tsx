@@ -13,6 +13,8 @@ import { Button } from "@erebuz/ui/components/button";
 import { cn } from "@erebuz/ui/lib/utils";
 
 import { RemoteAssetGlyph, RemoteGlyph } from "@/components/crypto-icon";
+import { FullScreenLoader } from "@/components/full-screen-loader";
+import { Screen } from "@/components/screen";
 import { formatAmount, formatUsd, shortenAddress } from "@/lib/format";
 import { useRouteDraft } from "@/lib/route-draft";
 import { fromSmallestUnit, tee, type RouteRecord } from "@/lib/tee";
@@ -69,13 +71,7 @@ export default function TransferPage() {
     return () => clearInterval(id);
   }, [routeId, poll, record]);
 
-  if (!draft?.created) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Loader2 className="text-muted-foreground size-6 animate-spin" />
-      </div>
-    );
-  }
+  if (!draft?.created) return <FullScreenLoader />;
 
   const { created, quote, fromChain, toChain, fromToken, toToken, recipientAddress } = draft;
   const status = record?.status ?? created.status ?? "AWAITING_DEPOSIT";
@@ -99,9 +95,8 @@ export default function TransferPage() {
   const activeIdx = PROGRESS.findIndex((p) => p.status === status);
 
   return (
-    <div className="flex min-h-dvh flex-col items-center px-4 py-8 sm:py-12">
-      <div className="w-full max-w-md">
-        <div className="border-border bg-card overflow-hidden rounded-2xl border shadow-sm">
+    <Screen>
+      <div className="border-border bg-card overflow-hidden rounded-2xl border shadow-sm">
           {/* header */}
           <header className="border-border/60 flex items-center gap-3 border-b px-4 py-4">
             {isAwaiting ? (
@@ -277,7 +272,6 @@ export default function TransferPage() {
             <span>{toChain.displayName}</span>
           </div>
         ) : null}
-      </div>
-    </div>
+    </Screen>
   );
 }

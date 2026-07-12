@@ -7,7 +7,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { ArrowLeft, ChevronDown, Loader2, Plus } from "lucide-react";
 
 import { Button } from "@erebuz/ui/components/button";
@@ -15,6 +14,7 @@ import { Skeleton } from "@erebuz/ui/components/skeleton";
 import { cn } from "@erebuz/ui/lib/utils";
 
 import { AssetPicker, type ChainChip, type PickerItem } from "@/components/asset-picker";
+import { BrandHeader } from "@/components/brand-header";
 import {
   GradientAvatar,
   InitialCircle,
@@ -22,7 +22,7 @@ import {
   RemoteGlyph,
 } from "@/components/crypto-icon";
 import { DestinationDialog, type Destination } from "@/components/destination-dialog";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { Screen } from "@/components/screen";
 import { formatAmount, formatUsd, shortenAddress } from "@/lib/format";
 import { useRouteDraft, type RouteDraft } from "@/lib/route-draft";
 import { useApp } from "@/lib/store";
@@ -312,19 +312,10 @@ export function QuotePanel() {
             : "Review transfer";
 
   return (
-    <div className="flex min-h-dvh flex-col items-center px-4 py-8 sm:py-12">
-      {/* brand + theme */}
-      <div className="mb-6 flex w-full max-w-md items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-neutral-950">
-            <Image src="/wall8-logo.svg" alt="wall8" width={18} height={18} priority unoptimized />
-          </span>
-          <span className="text-lg font-semibold tracking-tight">wall8</span>
-        </div>
-        <ThemeToggle />
-      </div>
+    <Screen>
+      <BrandHeader className="mb-6" />
 
-      <div className="w-full max-w-md">
+      <div>
         <div className="mb-4">
           <h1 className="text-xl font-semibold tracking-tight">Send privately</h1>
           <p className="text-muted-foreground mt-1 text-sm">
@@ -543,6 +534,6 @@ export function QuotePanel() {
       />
 
       <DestinationDialog open={destOpen} onOpenChange={setDestOpen} onSelect={setDest} />
-    </div>
+    </Screen>
   );
 }

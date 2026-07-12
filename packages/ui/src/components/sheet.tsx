@@ -46,7 +46,7 @@ const SIDE = {
 
 /**
  * Right- (or left-) anchored drawer. Slides in over a blurred backdrop using
- * base-ui's starting/ending-style transitions — smooth enter and exit, no layout
+ * base-ui's starting/ending-style transitions - smooth enter and exit, no layout
  * shift. Compose the header/body/footer inside as plain elements.
  */
 function SheetContent({
