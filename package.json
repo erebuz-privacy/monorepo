@@ -22,7 +22,9 @@
       "keccak",
       "secp256k1",
       "sharp",
-      "unrs-resolver"
+      "unrs-resolver",
+      "better-sqlite3",
+      "classic-level"
     ]
   }
 }

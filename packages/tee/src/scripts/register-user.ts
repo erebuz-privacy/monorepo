@@ -22,6 +22,7 @@ import { extractViewingPrivateKeyNode, generateEphemeralPrivateKey } from '@flui
 import { secp256k1 } from 'ethereum-cryptography/secp256k1';
 import { bytesToHex } from 'ethereum-cryptography/utils';
 import { buildRegistrationMessage } from '../config/global-config';
+import { pathToFileURL } from 'node:url';
 
 // TEE endpoint
 const TEE_ENDPOINT = process.env.TEE_ENDPOINT || 'https://tee.assura.network';
@@ -406,7 +407,7 @@ Examples:
 }
 
 // Run CLI if executed directly
-if (import.meta.main) {
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   main().catch((error) => {
     console.error('❌ Fatal error:', error);
     process.exit(1);
