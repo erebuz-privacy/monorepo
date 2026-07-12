@@ -4,6 +4,7 @@ import { Router } from 'itty-router';
 import { createUserRoutes, handleGetEnsUsername, handleRegisterUser } from './user';
 import { handleCcipRecordQuery } from './ccip';
 import { scanForDeposits } from '../../services/deposit-monitor';
+import { handleCreatePrivateRoute, handleGetPrivateRoute } from './private-route';
 import { logger } from '../../managers/log';
 
 export function createApiRoutes() {
@@ -45,6 +46,12 @@ export function createApiRoutes() {
       });
     }
   });
+
+  // Private route (private cross-chain transfer via Relay + Railgun)
+  // POST /api/private-route        - create a route, returns leg-1 deposit address
+  // GET  /api/private-route/:routeId - route status
+  router.post('/api/private-route', handleCreatePrivateRoute);
+  router.get('/api/private-route/:routeId', handleGetPrivateRoute);
 
   return router;
 }
