@@ -3,3 +3,4 @@
 export * from './ens-username';
 export * from './stealth-user';
 export * from './stealth-address';
+export * from './private-route';

@@ -1,6 +1,6 @@
-// Database Manager - SQLite with Bun
+// Database Manager - SQLite (better-sqlite3, Node runtime)
 
-import { Database } from 'bun:sqlite';
+import Database from 'better-sqlite3';
 import { logger } from '../log';
 import path from 'path';
 import fs from 'fs';
@@ -14,19 +14,19 @@ if (!fs.existsSync(dataDir)) {
 }
 
 // Create database connection
-const db = new Database(dbPath, { create: true });
+const db = new Database(dbPath);
 
 // Enable WAL mode for better concurrency
 db.exec('PRAGMA journal_mode = WAL;');
 
 class DbManager {
-  private database: Database;
+  private database: Database.Database;
 
-  constructor(database: Database) {
+  constructor(database: Database.Database) {
     this.database = database;
   }
 
-  getDatabase(): Database {
+  getDatabase(): Database.Database {
     return this.database;
   }
 
@@ -53,7 +53,7 @@ class DbManager {
 
   async healthCheck(): Promise<boolean> {
     try {
-      this.database.query('SELECT 1').get();
+      this.database.prepare('SELECT 1').get();
       return true;
     } catch (error) {
       logger.error('Database health check failed', 'DbManager', error);
@@ -132,6 +132,31 @@ class DbManager {
       CREATE INDEX IF NOT EXISTS idx_smart_account_nonces_chain_id ON smart_account_nonces(chain_id);
     `);
 
+    // Private Routes Table (state for /private-route cross-chain private transfers)
+    this.database.exec(`
+      CREATE TABLE IF NOT EXISTS private_routes (
+        id TEXT PRIMARY KEY,
+        status TEXT NOT NULL,
+        source_chain_id INTEGER NOT NULL,
+        dest_chain_id INTEGER NOT NULL,
+        hub_chain_id INTEGER NOT NULL,
+        token_address TEXT NOT NULL,
+        amount TEXT NOT NULL,
+        user_destination_address TEXT NOT NULL,
+        hub_account TEXT,
+        leg1_request_id TEXT,
+        leg1_deposit_address TEXT,
+        leg2_request_id TEXT,
+        leg2_deposit_address TEXT,
+        shield_tx TEXT,
+        unshield_tx TEXT,
+        error TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_private_routes_status ON private_routes(status);
+    `);
+
     // Run migrations for existing databases
     this.runMigrations();
 
@@ -145,7 +170,7 @@ class DbManager {
     try {
       // Check if stealth_addresses table exists and migrate columns
       const tableInfo = this.database
-        .query('PRAGMA table_info(stealth_addresses)')
+        .prepare('PRAGMA table_info(stealth_addresses)')
         .all() as Array<{ name: string; type: string }>;
 
       if (tableInfo.length > 0) {
@@ -181,7 +206,7 @@ class DbManager {
 
       // Check if stealth_users table exists and migrate columns
       const usersTableInfo = this.database
-        .query('PRAGMA table_info(stealth_users)')
+        .prepare('PRAGMA table_info(stealth_users)')
         .all() as Array<{ name: string; type: string }>;
 
       if (usersTableInfo.length > 0) {
@@ -214,7 +239,7 @@ class DbManager {
       // Create index for smart_account_address if column exists
       try {
         const tableInfo = this.database
-          .query('PRAGMA table_info(stealth_addresses)')
+          .prepare('PRAGMA table_info(stealth_addresses)')
           .all() as Array<{ name: string; type: string }>;
         const columnNames = tableInfo.map((col) => col.name);
         

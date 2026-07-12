@@ -1,4 +1,5 @@
 packages:
   - "apps/*"
   - "packages/*"
+  - "!packages/nexus" # Foundry/Hardhat contracts; deps installed standalone (npm), not pnpm — its git-based Solidity deps don't work under pnpm's build gate
   - "contracts"

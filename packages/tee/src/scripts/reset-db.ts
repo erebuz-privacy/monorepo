@@ -15,7 +15,8 @@
 
 import path from 'path';
 import fs from 'fs';
-import { Database } from 'bun:sqlite';
+import Database from 'better-sqlite3';
+import { pathToFileURL } from 'node:url';
 import { logger } from '../managers/log';
 
 // Get database path (same as in db manager)
@@ -32,7 +33,7 @@ const walFiles = [
 /**
  * Initialize database schema (same as DbManager.initSchema)
  */
-function initSchema(database: Database): void {
+function initSchema(database: Database.Database): void {
   // ENS Usernames Table
   database.exec(`
     CREATE TABLE IF NOT EXISTS ens_usernames (
@@ -132,7 +133,7 @@ async function resetDatabase(): Promise<void> {
   // Close any existing connections by trying to close the database if it exists
   try {
     // Try to close the database file if it's open
-    const testDb = new Database(dbPath, { create: false });
+    const testDb = new Database(dbPath, { fileMustExist: true });
     testDb.close();
   } catch (error) {
     // Database might not exist or might be locked - that's okay
@@ -165,7 +166,7 @@ async function resetDatabase(): Promise<void> {
 
   // Create new database and initialize schema
   console.log('📦 Creating new database...');
-  const db = new Database(dbPath, { create: true });
+  const db = new Database(dbPath);
   
   // Enable WAL mode
   db.exec('PRAGMA journal_mode = WAL;');
@@ -248,7 +249,7 @@ Examples:
 }
 
 // Run if executed directly
-if (import.meta.main) {
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   main().catch((error) => {
     console.error('❌ Fatal error:', error);
     process.exit(1);

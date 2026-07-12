@@ -1,0 +1,14 @@
+{
+  "../ui": {
+    "rev": "58a40fd0ad1c81b0b4eadb192b269122bf63e070"
+  },
+  "../x402-arbitrum": {
+    "rev": "9129ecf4c3ff892ffa96c75712fb71a9b807c8d6"
+  },
+  "lib/openzeppelin-contracts": {
+    "tag": {
+      "name": "v5.4.0",
+      "rev": "c64a1edb67b6e3f4a15cca8909c9482ad33a02b0"
+    }
+  }
+}

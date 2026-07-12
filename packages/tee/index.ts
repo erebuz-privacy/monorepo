@@ -1,11 +1,20 @@
 // TEE Server - Stealth Addresses, ENS Resolution, and NEAR Intent Swaps
 
 import { Router } from 'itty-router';
+import { serve } from '@hono/node-server';
 import { logger } from './src/managers/log';
 import { dbManager } from './src/managers/db';
 import { createApiRoutes } from './src/api/routes';
 import { startDepositMonitor, stopDepositMonitor } from './src/services/deposit-monitor';
-import { DEPOSIT_MONITOR_ENABLED, DEPOSIT_MONITOR_INTERVAL_MS } from './src/config/global-config';
+import { startPrivateRouteMonitor, stopPrivateRouteMonitor } from './src/services/private-route';
+import { initRailgunEngine } from './src/services/railgun';
+import {
+  DEPOSIT_MONITOR_ENABLED,
+  DEPOSIT_MONITOR_INTERVAL_MS,
+  PRIVACY_HUB_CHAIN_ID,
+  PRIVATE_ROUTE_MONITOR_ENABLED,
+  PRIVATE_ROUTE_MONITOR_INTERVAL_MS,
+} from './src/config/global-config';
 import { handleCcipRecordQuery } from './src/api/routes/ccip';
 
 // Create main router instance
@@ -57,6 +66,7 @@ router.get('/*', (request) => {
 
 // Deposit monitor timer
 let depositMonitorTimer: NodeJS.Timeout | null = null;
+let privateRouteMonitorTimer: NodeJS.Timeout | null = null;
 
 // Initialize database connection
 async function initializeDatabase() {
@@ -74,40 +84,41 @@ async function startServer() {
   // Connect to database first
   await initializeDatabase();
 
-  const server = Bun.serve({
-    port: 3000,
-    async fetch(request: Request): Promise<Response> {
-      // Handle CORS preflight requests
-      if (request.method === 'OPTIONS') {
-        return new Response(null, {
-          status: 204,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-            'Access-Control-Max-Age': '86400',
-          },
-        });
-      }
+  const PORT = Number(process.env.PORT) || 3000;
 
-      // Handle the actual request
-      const response = await router.handle(request) || new Response('Not Found', { status: 404 });
-
-      // Add CORS headers to all responses
-      const headers = new Headers(response.headers);
-      headers.set('Access-Control-Allow-Origin', '*');
-      headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-      return new Response(response.body, {
-        status: response.status,
-        statusText: response.statusText,
-        headers,
+  const handleRequest = async (request: Request): Promise<Response> => {
+    // Handle CORS preflight requests
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Max-Age': '86400',
+        },
       });
-    },
-  });
+    }
 
-  logger.info(`Server is running at http://localhost:${server.port}`, 'Server');
+    // Handle the actual request
+    const response = (await router.handle(request)) || new Response('Not Found', { status: 404 });
+
+    // Add CORS headers to all responses
+    const headers = new Headers(response.headers);
+    headers.set('Access-Control-Allow-Origin', '*');
+    headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  };
+
+  serve({ fetch: handleRequest, port: PORT }, (info) => {
+    logger.info(`Server is running at http://localhost:${info.port}`, 'Server');
+  });
   logger.info('Available routes:', 'Server');
   logger.info('  GET  /', 'Routes');
   logger.info('  GET  /api/user/get/:name', 'Routes');
@@ -115,6 +126,8 @@ async function startServer() {
   logger.info('  POST /api/scan', 'Routes');
   logger.info('  GET  /lookup/:sender/:data.json', 'Routes');
   logger.info('  GET  /:sender/:data.json', 'Routes');
+  logger.info('  POST /api/private-route', 'Routes');
+  logger.info('  GET  /api/private-route/:routeId', 'Routes');
 
   // Start deposit monitor if enabled
   if (DEPOSIT_MONITOR_ENABLED) {
@@ -124,11 +137,23 @@ async function startServer() {
     logger.info('Deposit monitor disabled', 'Server');
   }
 
+  // Initialize Railgun engine (non-fatal / lazy) for the private-route privacy leg,
+  // then start the private-route orchestration monitor.
+  await initRailgunEngine(PRIVACY_HUB_CHAIN_ID);
+  if (PRIVATE_ROUTE_MONITOR_ENABLED) {
+    privateRouteMonitorTimer = startPrivateRouteMonitor(PRIVATE_ROUTE_MONITOR_INTERVAL_MS);
+  } else {
+    logger.info('Private-route monitor disabled', 'Server');
+  }
+
   // Graceful shutdown
   process.on('SIGINT', async () => {
     logger.info('Shutting down server...', 'Server');
     if (depositMonitorTimer) {
       stopDepositMonitor(depositMonitorTimer);
+    }
+    if (privateRouteMonitorTimer) {
+      stopPrivateRouteMonitor(privateRouteMonitorTimer);
     }
     await dbManager.disconnect();
     process.exit(0);
@@ -138,6 +163,9 @@ async function startServer() {
     logger.info('Shutting down server...', 'Server');
     if (depositMonitorTimer) {
       stopDepositMonitor(depositMonitorTimer);
+    }
+    if (privateRouteMonitorTimer) {
+      stopPrivateRouteMonitor(privateRouteMonitorTimer);
     }
     await dbManager.disconnect();
     process.exit(0);
