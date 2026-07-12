@@ -188,16 +188,25 @@ function assertReady(): RailgunWalletSDK {
   return RG;
 }
 
+export interface ShieldCall {
+  to: `0x${string}`;
+  data: `0x${string}`;
+  value?: bigint;
+}
+
 /**
- * Shield ERC-20 from a public wallet into our Railgun shielded balance.
- * `fromPrivateKey` funds the public side (must hold the tokens + gas).
+ * Build the [approve, shield] calls needed to shield `amount` of `tokenAddress`
+ * into our Railgun wallet. These are executed FROM the hub smart account as a
+ * single batched UserOperation (see services/aa) — the SA holds the tokens.
+ *
+ * The shield private key (which encrypts the note) is derived from the TEE
+ * signer and is independent of who submits the tx, so the SA can execute it.
  */
-export async function shieldERC20(params: {
+export async function buildShieldCalls(params: {
   chainId: number;
   tokenAddress: string;
   amount: bigint;
-  fromPrivateKey: string;
-}): Promise<{ txHash: string }> {
+}): Promise<{ calls: ShieldCall[] }> {
   const sdk = assertReady();
   const sharedModels = await import('@railgun-community/shared-models');
   const ethers = await import('ethers');
@@ -205,47 +214,43 @@ export async function shieldERC20(params: {
   const networkName = networkNameForChain(sharedModels, params.chainId);
   if (!networkName) throw new Error(`Railgun: unsupported chain ${params.chainId}`);
 
-  const providerConfig = providerConfigForChain(params.chainId);
-  if (!providerConfig) throw new Error(`Railgun: no RPC for chain ${params.chainId}`);
-  const provider = new ethers.JsonRpcProvider(providerConfig.providers[0].provider);
-  const wallet = new ethers.Wallet(params.fromPrivateKey, provider);
-
-  // Shield private key = keccak256(sign(getShieldPrivateKeySignatureMessage()))
+  // Deterministic shield key from the TEE signer (note encryption only).
+  const teePk = process.env.PRIVATE_KEY as string;
   const shieldMsg = sdk.getShieldPrivateKeySignatureMessage();
-  const shieldPrivateKey = ethers.keccak256(await wallet.signMessage(shieldMsg));
+  const shieldPrivateKey = ethers.keccak256(await new ethers.Wallet(teePk).signMessage(shieldMsg));
 
   const erc20AmountRecipients = [
     { tokenAddress: params.tokenAddress, amount: params.amount, recipientAddress: railgunAddress! },
   ];
 
-  // Approve the Railgun proxy contract to pull the tokens.
-  const proxy = sharedModels.NETWORK_CONFIG[networkName].proxyContract;
-  const erc20 = new ethers.Contract(
-    params.tokenAddress,
-    [
-      'function allowance(address,address) view returns (uint256)',
-      'function approve(address,uint256) returns (bool)',
-    ],
-    wallet
-  );
-  const allowance: bigint = await erc20.allowance(wallet.address, proxy);
-  if (allowance < params.amount) {
-    const approveTx = await erc20.approve(proxy, params.amount);
-    await approveTx.wait();
-  }
+  const proxy = sharedModels.NETWORK_CONFIG[networkName].proxyContract as `0x${string}`;
 
+  // approve(proxy, amount) — executed by the SA (the token holder)
+  const approveIface = new ethers.Interface(['function approve(address spender, uint256 amount)']);
+  const approveData = approveIface.encodeFunctionData('approve', [proxy, params.amount]) as `0x${string}`;
+
+  // shield calldata (gasDetails is a stub — the outer UserOp handles gas)
+  const gasStub = {
+    evmGasType: sharedModels.EVMGasType.Type2,
+    gasEstimate: 0n,
+    maxFeePerGas: 1n,
+    maxPriorityFeePerGas: 1n,
+  };
   const { transaction } = await sdk.populateShield(
     sharedModels.TXIDVersion.V2_PoseidonMerkle,
     networkName,
     shieldPrivateKey,
     erc20AmountRecipients,
     [],
-    undefined
+    gasStub as never
   );
-  const tx = await wallet.sendTransaction(transaction);
-  await tx.wait();
-  logger.info(`Railgun shield sent: ${tx.hash}`, 'Railgun');
-  return { txHash: tx.hash };
+
+  return {
+    calls: [
+      { to: params.tokenAddress as `0x${string}`, data: approveData },
+      { to: transaction.to as `0x${string}`, data: transaction.data as `0x${string}`, value: transaction.value ? BigInt(transaction.value.toString()) : 0n },
+    ],
+  };
 }
 
 /**

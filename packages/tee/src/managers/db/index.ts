@@ -140,8 +140,13 @@ class DbManager {
         source_chain_id INTEGER NOT NULL,
         dest_chain_id INTEGER NOT NULL,
         hub_chain_id INTEGER NOT NULL,
+        token_symbol TEXT NOT NULL DEFAULT 'USDC',
         token_address TEXT NOT NULL,
+        dest_token_symbol TEXT,
+        dest_token_address TEXT,
         amount TEXT NOT NULL,
+        fee_amount TEXT NOT NULL DEFAULT '0',
+        quoted_output_amount TEXT NOT NULL DEFAULT '0',
         user_destination_address TEXT NOT NULL,
         hub_account TEXT,
         leg1_request_id TEXT,
@@ -215,10 +220,26 @@ class DbManager {
         // Add smart_account_nonces if missing
         if (!userColumnNames.includes('smart_account_nonces')) {
           this.database.exec(`
-            ALTER TABLE stealth_users 
+            ALTER TABLE stealth_users
             ADD COLUMN smart_account_nonces TEXT DEFAULT '{}';
           `);
           logger.info('Added smart_account_nonces column to stealth_users', 'DbManager');
+        }
+      }
+
+      // Private-route cross-token columns (added after the initial table shipped)
+      const prTableInfo = this.database
+        .prepare('PRAGMA table_info(private_routes)')
+        .all() as Array<{ name: string; type: string }>;
+      if (prTableInfo.length > 0) {
+        const prColumns = prTableInfo.map((col) => col.name);
+        if (!prColumns.includes('dest_token_symbol')) {
+          this.database.exec(`ALTER TABLE private_routes ADD COLUMN dest_token_symbol TEXT;`);
+          logger.info('Added dest_token_symbol column to private_routes', 'DbManager');
+        }
+        if (!prColumns.includes('dest_token_address')) {
+          this.database.exec(`ALTER TABLE private_routes ADD COLUMN dest_token_address TEXT;`);
+          logger.info('Added dest_token_address column to private_routes', 'DbManager');
         }
       }
     } catch (error) {

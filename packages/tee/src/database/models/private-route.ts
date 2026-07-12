@@ -7,7 +7,6 @@ export type PrivateRouteStatus =
   | 'AWAITING_DEPOSIT' // waiting for user to send funds to the leg-1 deposit address
   | 'BRIDGING_IN' // Relay leg-1 in flight (Base -> hub SA)
   | 'RECEIVED_ON_HUB' // funds arrived at the hub smart account
-  | 'EXTRACTED' // funds moved SA -> TEE EOA (ready to shield)
   | 'SHIELDED' // funds shielded into Railgun
   | 'UNSHIELD_SENT' // unshield tx sent to the leg-2 deposit address
   | 'BRIDGING_OUT' // Relay leg-2 in flight (hub -> destination)
@@ -22,8 +21,13 @@ export type PrivateRoute = {
   sourceChainId: number;
   destChainId: number;
   hubChainId: number;
-  tokenAddress: string; // token address on the hub chain
-  amount: string; // requested input amount, smallest unit (bigint-as-string)
+  tokenSymbol: string; // source token symbol (also shielded on the hub)
+  tokenAddress: string; // source token address on the hub chain
+  destTokenSymbol: string; // destination token symbol delivered to the user
+  destTokenAddress: string | null; // destination token address on the dest chain
+  amount: string; // requested input amount, source token smallest unit (bigint-as-string)
+  feeAmount: string; // route fee (spread), source token smallest unit (bigint-as-string)
+  quotedOutputAmount: string; // guaranteed output the user confirmed, DEST token smallest unit
   userDestinationAddress: string;
   hubAccount: string | null; // TEE-owned smart account on the hub chain
   leg1RequestId: string | null;
@@ -43,8 +47,13 @@ type PrivateRouteRow = {
   source_chain_id: number;
   dest_chain_id: number;
   hub_chain_id: number;
+  token_symbol: string;
   token_address: string;
+  dest_token_symbol: string | null;
+  dest_token_address: string | null;
   amount: string;
+  fee_amount: string;
+  quoted_output_amount: string;
   user_destination_address: string;
   hub_account: string | null;
   leg1_request_id: string | null;
@@ -65,8 +74,13 @@ function rowToPrivateRoute(row: PrivateRouteRow): PrivateRoute {
     sourceChainId: row.source_chain_id,
     destChainId: row.dest_chain_id,
     hubChainId: row.hub_chain_id,
+    tokenSymbol: row.token_symbol,
     tokenAddress: row.token_address,
+    destTokenSymbol: row.dest_token_symbol ?? row.token_symbol,
+    destTokenAddress: row.dest_token_address,
     amount: row.amount,
+    feeAmount: row.fee_amount ?? '0',
+    quotedOutputAmount: row.quoted_output_amount ?? '0',
     userDestinationAddress: row.user_destination_address,
     hubAccount: row.hub_account,
     leg1RequestId: row.leg1_request_id,
@@ -87,8 +101,13 @@ export interface CreatePrivateRouteInput {
   sourceChainId: number;
   destChainId: number;
   hubChainId: number;
+  tokenSymbol: string;
   tokenAddress: string;
+  destTokenSymbol?: string | null;
+  destTokenAddress?: string | null;
   amount: string;
+  feeAmount?: string | null;
+  quotedOutputAmount?: string | null;
   userDestinationAddress: string;
   hubAccount?: string | null;
   leg1RequestId?: string | null;
@@ -113,10 +132,12 @@ export class PrivateRouteModel {
     const stmt = db.prepare(`
       INSERT INTO private_routes (
         id, status, source_chain_id, dest_chain_id, hub_chain_id,
-        token_address, amount, user_destination_address, hub_account,
+        token_symbol, token_address, dest_token_symbol, dest_token_address,
+        amount, fee_amount, quoted_output_amount,
+        user_destination_address, hub_account,
         leg1_request_id, leg1_deposit_address
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       RETURNING *
     `);
 
@@ -126,8 +147,13 @@ export class PrivateRouteModel {
       input.sourceChainId,
       input.destChainId,
       input.hubChainId,
+      input.tokenSymbol,
       input.tokenAddress,
+      input.destTokenSymbol ?? input.tokenSymbol,
+      input.destTokenAddress ?? null,
       input.amount,
+      input.feeAmount ?? '0',
+      input.quotedOutputAmount ?? '0',
       input.userDestinationAddress,
       input.hubAccount ?? null,
       input.leg1RequestId ?? null,
