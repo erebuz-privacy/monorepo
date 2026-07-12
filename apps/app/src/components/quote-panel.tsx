@@ -361,31 +361,6 @@ export function QuotePanel() {
               ) : null}
             </div>
 
-            <button
-              type="button"
-              onClick={() => setDestOpen(true)}
-              className="hover:bg-accent/60 -mx-1.5 mt-2 flex w-[calc(100%+0.75rem)] items-center gap-2.5 rounded-xl px-1.5 py-2 text-left transition-colors"
-            >
-              {recipient ? (
-                recipient.icon
-              ) : (
-                <span className="bg-muted flex size-8 items-center justify-center rounded-full">
-                  <Plus className="text-muted-foreground size-4" />
-                </span>
-              )}
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium">
-                  {recipient ? recipient.label : "Choose recipient"}
-                </span>
-                {recipient ? (
-                  <span className="text-muted-foreground block truncate text-xs">
-                    {recipient.sublabel}
-                  </span>
-                ) : null}
-              </span>
-              <ChevronDown className="text-muted-foreground size-4 shrink-0" />
-            </button>
-
             <div className="mt-2 flex items-center gap-3">
               <span
                 className={cn(
@@ -447,6 +422,33 @@ export function QuotePanel() {
             </div>
           </div>
         ) : null}
+
+        {/* recipient — where the funds land, kept at the bottom just above the CTA */}
+        <button
+          type="button"
+          onClick={() => setDestOpen(true)}
+          className="border-border bg-card hover:bg-accent/40 mt-3 flex w-full items-center gap-3 rounded-2xl border p-4 text-left transition-colors"
+        >
+          {recipient ? (
+            recipient.icon
+          ) : (
+            <span className="bg-muted flex size-9 items-center justify-center rounded-full">
+              <Plus className="text-muted-foreground size-4" />
+            </span>
+          )}
+          <span className="min-w-0 flex-1">
+            <span className="text-muted-foreground block text-xs">Recipient</span>
+            <span className="block truncate text-sm font-medium">
+              {recipient ? recipient.label : "Choose recipient"}
+            </span>
+            {recipient ? (
+              <span className="text-muted-foreground block truncate text-xs">
+                {recipient.sublabel}
+              </span>
+            ) : null}
+          </span>
+          <ChevronDown className="text-muted-foreground size-4 shrink-0" />
+        </button>
 
         <Button
           size="lg"
