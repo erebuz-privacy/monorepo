@@ -12,6 +12,7 @@
     "lint": "pnpm -r lint",
     "landing": "pnpm --filter @erebuz/landing dev",
     "app": "pnpm --filter @erebuz/app dev",
+    "docs": "pnpm --filter @erebuz/docs dev",
     "sdk": "pnpm --filter @erebuz/sdk",
     "contracts": "pnpm --filter @erebuz/contracts",
     "tee": "pnpm --filter @erebuz/tee dev"
