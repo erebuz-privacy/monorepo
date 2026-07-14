@@ -3,11 +3,10 @@ import { Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
 import "@erebuz/ui/globals.css";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { Web3Provider } from "@/components/web3-provider";
 import { AppProvider } from "@/lib/store";
 import { RouteDraftProvider } from "@/lib/route-draft";
 
-// Keeps the --font-geist-sans var name so globals.css needs no change; the
-// underlying face is Hanken Grotesk - a cleaner, more distinctive grotesk.
 const geistSans = Hanken_Grotesk({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -46,9 +45,11 @@ export default function RootLayout({
           storageKey="wall8:theme"
           disableTransitionOnChange
         >
-          <AppProvider>
-            <RouteDraftProvider>{children}</RouteDraftProvider>
-          </AppProvider>
+          <Web3Provider>
+            <AppProvider>
+              <RouteDraftProvider>{children}</RouteDraftProvider>
+            </AppProvider>
+          </Web3Provider>
         </ThemeProvider>
       </body>
     </html>
