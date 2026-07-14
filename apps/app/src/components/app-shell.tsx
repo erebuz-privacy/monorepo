@@ -7,6 +7,7 @@ import { Clock, Send, Settings } from "lucide-react";
 
 import { cn } from "@erebuz/ui/lib/utils";
 
+import { ConnectWallet } from "@/components/connect-wallet";
 import { GradientAvatar } from "@/components/crypto-icon";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useApp } from "@/lib/store";
@@ -67,7 +68,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          <ConnectWallet />
           <ThemeToggle />
           <Link href="/settings" className="flex items-center gap-2 pl-1">
             {firstName ? (
