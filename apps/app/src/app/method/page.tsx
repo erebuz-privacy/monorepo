@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, KeyRound, ShieldCheck } from "lucide-react";
 
+import { ErrorNote } from "@/components/error-note";
 import { FullScreenLoader } from "@/components/full-screen-loader";
 import { OptionCard } from "@/components/option-card";
 import { Screen } from "@/components/screen";
@@ -117,6 +118,13 @@ export default function MethodPage() {
           onClick={startManaged}
           loading={creating}
         />
+        {error && !creating ? (
+          <ErrorNote
+            title="Couldn't start the transfer"
+            message={error}
+            onRetry={startManaged}
+          />
+        ) : null}
         <OptionCard
           icon={KeyRound}
           title="Self-custody"
@@ -127,7 +135,6 @@ export default function MethodPage() {
         />
       </div>
 
-      {error ? <p className="text-destructive mt-4 text-sm">{error}</p> : null}
     </Screen>
   );
 }
