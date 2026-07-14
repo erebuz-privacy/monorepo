@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
-import { ArrowLeft, BadgeCheck, Check, Copy, Loader2, ShieldCheck } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Check, Copy, Loader2, XCircle } from "lucide-react";
 
 import { Button } from "@erebuz/ui/components/button";
 import { cn } from "@erebuz/ui/lib/utils";
@@ -247,7 +247,7 @@ export default function TransferPage() {
           {isFailed ? (
             <div className="flex flex-col items-center p-6 text-center">
               <div className="bg-destructive/12 text-destructive mt-3 flex size-14 items-center justify-center rounded-full">
-                <ShieldCheck className="size-7" />
+                <XCircle className="size-7" />
               </div>
               <h2 className="mt-4 text-xl font-semibold">Transfer failed</h2>
               <p className="text-muted-foreground mt-1 max-w-xs text-sm">

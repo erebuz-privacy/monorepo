@@ -3,7 +3,7 @@
 // Chain + token lists sourced live from the TEE (Relay-backed). Cached at module
 // scope so opening the picker again - or the from/to selectors - doesn't refetch.
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { tee, type TeeChain, type TeeToken } from "./tee";
 
@@ -13,8 +13,9 @@ type TokensState = { tokens: TeeToken[]; loading: boolean; error: string | null 
 let chainsCache: TeeChain[] | null = null;
 let chainsPromise: Promise<TeeChain[]> | null = null;
 
-/** All Relay-bridgeable chains, fetched once and cached. */
-export function useChains(): ChainsState {
+/** All Relay-bridgeable chains, fetched once and cached. Retryable on failure. */
+export function useChains(): ChainsState & { retry: () => void } {
+  const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<ChainsState>(() => ({
     chains: chainsCache ?? [],
     loading: !chainsCache,
@@ -24,6 +25,8 @@ export function useChains(): ChainsState {
   useEffect(() => {
     if (chainsCache) return;
     let alive = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setState((s) => ({ ...s, loading: true, error: null }));
     chainsPromise ??= tee.getChains();
     chainsPromise
       .then((c) => {
@@ -37,9 +40,11 @@ export function useChains(): ChainsState {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [attempt]);
 
-  return state;
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
+
+  return { ...state, retry };
 }
 
 const tokensCache = new Map<number, TeeToken[]>();

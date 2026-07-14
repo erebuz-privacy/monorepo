@@ -15,6 +15,7 @@ import { cn } from "@erebuz/ui/lib/utils";
 
 import { AssetPicker, type ChainChip, type PickerItem } from "@/components/asset-picker";
 import { BrandHeader } from "@/components/brand-header";
+import { ErrorNote } from "@/components/error-note";
 import {
   GradientAvatar,
   InitialCircle,
@@ -98,7 +99,7 @@ export function QuotePanel() {
   const { setDraft } = useRouteDraft();
   const { cards, contacts } = useApp();
 
-  const { chains, loading: chainsLoading, error: chainsError } = useChains();
+  const { chains, loading: chainsLoading, error: chainsError, retry: retryChains } = useChains();
 
   // User selections start null and fall back to derived defaults - deriving
   // (rather than syncing via effects) keeps the choice reactive to the async
@@ -284,6 +285,17 @@ export function QuotePanel() {
 
   const ready = Boolean(quote && !quoteError && recipient && canQuote);
 
+  const retryQuote = () => {
+    if (!canQuote || !fromToken || !toToken || fromChainId == null || toChainId == null) return;
+    runQuote(false, {
+      sourceChainId: fromChainId,
+      destChainId: toChainId,
+      amount,
+      tokenSymbol: fromToken.symbol,
+      destTokenSymbol: toToken.symbol,
+    });
+  };
+
   const confirm = () => {
     if (!ready || !quote || !fromChain || !fromToken || !toChain || !toToken || !recipient) return;
     const draft: RouteDraft = {
@@ -325,9 +337,12 @@ export function QuotePanel() {
         </div>
 
         {chainsError ? (
-          <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-2xl border p-4 text-sm">
-            Couldn&apos;t reach the service: {chainsError}
-          </div>
+          <ErrorNote
+            className="mb-3"
+            title="Can't load networks"
+            message={chainsError}
+            onRetry={retryChains}
+          />
         ) : null}
 
         {/* connected bridge panel */}
@@ -401,9 +416,14 @@ export function QuotePanel() {
           </div>
         </div>
 
-        {/* live route + fees */}
+        {/* live route + fees; a failed quote renders where the quote card would */}
         {quoteError && canQuote ? (
-          <p className="text-destructive mt-3 text-sm">{quoteError}</p>
+          <ErrorNote
+            className="mt-3"
+            title="Couldn't get a quote"
+            message={quoteError}
+            onRetry={quoteLoading ? undefined : retryQuote}
+          />
         ) : null}
 
         {quote && !quoteError ? (
