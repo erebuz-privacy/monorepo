@@ -48,7 +48,12 @@ export const DEPOSIT_MONITOR_ENABLED = process.env.DEPOSIT_MONITOR_ENABLED !== '
 
 /**
  * Private-route (/private-route) configuration.
- * The privacy hub chain is where funds are shielded/unshielded via Railgun.
+ *
+ * Router model: every route funnels through the Railgun pool on Arbitrum. Relay
+ * bridges the source (any supported chain) into USDC on Arbitrum, Railgun
+ * shields/unshields there (the privacy break), then Relay bridges out to the
+ * destination (any supported chain). So Arbitrum's Railgun pool is the single
+ * routing hub for all Relay chains; only the in/out legs vary.
  */
 export const PRIVACY_HUB_CHAIN_ID = Number(process.env.PRIVACY_HUB_CHAIN_ID) || 42161; // Arbitrum One
 // Canonical token shielded on the hub. Relay swaps any source token into this on
