@@ -209,6 +209,9 @@ function networkNameForChain(
     56: NetworkName.BNBChain,
     137: NetworkName.Polygon,
     42161: NetworkName.Arbitrum,
+    // Testnet: lets you run the full privacy leg with faucet ETH before mainnet.
+    // Railgun has a real Sepolia deployment with POI, and our POI node serves it.
+    11155111: NetworkName.EthereumSepolia,
   };
   return map[chainId] ?? null;
 }
@@ -363,4 +366,165 @@ export async function unshieldERC20(params: {
   await tx.wait();
   logger.info(`Railgun unshield sent: ${tx.hash}`, 'Railgun');
   return { txHash: tx.hash };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Base-token (native ETH) shield / unshield.
+//
+// Railgun wraps/unwraps ETH <-> WETH inside the pool, so these move native ETH in
+// and out of the shielded pool directly from an EOA (no ERC-20 approve, no AA).
+// Used by the Sepolia test harness (`pnpm --filter @erebuz/tee test:sepolia`) to
+// prove the shield -> unshield round trip end to end with faucet ETH.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Shield native ETH from an EOA into the shielded pool. Sends the tx itself. */
+export async function shieldBaseToken(params: {
+  chainId: number;
+  amount: bigint;
+  signerPrivateKey: string; // EOA that holds the ETH and sends the shield tx
+}): Promise<{ txHash: string; railgunAddress: string }> {
+  const sdk = assertReady();
+  const sharedModels = await import('@railgun-community/shared-models');
+  const ethers = await import('ethers');
+
+  const networkName = networkNameForChain(sharedModels, params.chainId);
+  if (!networkName) throw new Error(`Railgun: unsupported chain ${params.chainId}`);
+  const providerConfig = providerConfigForChain(params.chainId);
+  if (!providerConfig) throw new Error(`Railgun: no RPC for chain ${params.chainId}`);
+  const provider = new ethers.JsonRpcProvider(providerConfig.providers[0].provider);
+  const wallet = new ethers.Wallet(params.signerPrivateKey, provider);
+
+  const wrappedAddress = sharedModels.NETWORK_CONFIG[networkName].baseToken.wrappedAddress;
+  const shieldMsg = sdk.getShieldPrivateKeySignatureMessage();
+  const shieldPrivateKey = ethers.keccak256(await wallet.signMessage(shieldMsg));
+
+  const { transaction } = await sdk.populateShieldBaseToken(
+    sharedModels.TXIDVersion.V2_PoseidonMerkle,
+    networkName,
+    railgunAddress!,
+    shieldPrivateKey,
+    { tokenAddress: wrappedAddress, amount: params.amount }
+  );
+
+  const tx = await wallet.sendTransaction(transaction as never);
+  await tx.wait();
+  logger.info(`Railgun base-token shield sent: ${tx.hash}`, 'Railgun');
+  return { txHash: tx.hash, railgunAddress: railgunAddress! };
+}
+
+/** Unshield native ETH from the shielded pool back to a public EOA. Generates a proof (~20-30s). */
+export async function unshieldBaseToken(params: {
+  chainId: number;
+  amount: bigint;
+  toAddress: string; // public EOA that receives the ETH (also pays gas + submits)
+  gasPrivateKey: string; // must control toAddress
+}): Promise<{ txHash: string }> {
+  const sdk = assertReady();
+  const sharedModels = await import('@railgun-community/shared-models');
+  const ethers = await import('ethers');
+
+  const networkName = networkNameForChain(sharedModels, params.chainId);
+  if (!networkName) throw new Error(`Railgun: unsupported chain ${params.chainId}`);
+  const providerConfig = providerConfigForChain(params.chainId);
+  if (!providerConfig) throw new Error(`Railgun: no RPC for chain ${params.chainId}`);
+  const provider = new ethers.JsonRpcProvider(providerConfig.providers[0].provider);
+  const wallet = new ethers.Wallet(params.gasPrivateKey, provider);
+
+  const wrappedAddress = sharedModels.NETWORK_CONFIG[networkName].baseToken.wrappedAddress;
+  const encryptionKey = process.env.RAILGUN_ENCRYPTION_KEY || '';
+  const wrappedERC20Amount = { tokenAddress: wrappedAddress, amount: params.amount };
+  const sendWithPublicWallet = true;
+  const txidVersion = sharedModels.TXIDVersion.V2_PoseidonMerkle;
+
+  const { gasEstimate } = await sdk.gasEstimateForUnprovenUnshieldBaseToken(
+    txidVersion,
+    networkName,
+    params.toAddress,
+    railgunWalletId!,
+    encryptionKey,
+    wrappedERC20Amount,
+    { evmGasType: sharedModels.EVMGasType.Type2, gasEstimate: 0n, maxFeePerGas: 0n, maxPriorityFeePerGas: 0n } as never,
+    undefined,
+    sendWithPublicWallet
+  );
+
+  const overallBatchMinGasPrice = 0n;
+  await sdk.generateUnshieldBaseTokenProof(
+    txidVersion,
+    networkName,
+    params.toAddress,
+    railgunWalletId!,
+    encryptionKey,
+    wrappedERC20Amount,
+    undefined,
+    sendWithPublicWallet,
+    overallBatchMinGasPrice,
+    (progress: number) => logger.debug(`Unshield(base) proof progress: ${progress}`, 'Railgun')
+  );
+
+  const feeData = await provider.getFeeData();
+  const gasDetails = {
+    evmGasType: sharedModels.EVMGasType.Type2,
+    gasEstimate,
+    maxFeePerGas: feeData.maxFeePerGas ?? 0n,
+    maxPriorityFeePerGas: feeData.maxPriorityFeePerGas ?? 0n,
+  };
+  const { transaction } = await sdk.populateProvedUnshieldBaseToken(
+    txidVersion,
+    networkName,
+    params.toAddress,
+    railgunWalletId!,
+    wrappedERC20Amount,
+    undefined,
+    sendWithPublicWallet,
+    overallBatchMinGasPrice,
+    gasDetails as never
+  );
+
+  const tx = await wallet.sendTransaction(transaction as never);
+  await tx.wait();
+  logger.info(`Railgun base-token unshield sent: ${tx.hash}`, 'Railgun');
+  return { txHash: tx.hash };
+}
+
+/**
+ * Poll the shielded balance of a token until it reaches at least `minAmount`
+ * (i.e. the shield has been scanned into the merkletree and is spendable) or the
+ * timeout elapses. Returns the last observed balance.
+ */
+export async function waitForShieldedBalance(params: {
+  chainId: number;
+  tokenAddress: string;
+  minAmount: bigint;
+  timeoutMs?: number;
+  onPoll?: (balance: bigint) => void;
+}): Promise<bigint> {
+  const sdk = assertReady();
+  const sharedModels = await import('@railgun-community/shared-models');
+  const networkName = networkNameForChain(sharedModels, params.chainId);
+  if (!networkName) throw new Error(`Railgun: unsupported chain ${params.chainId}`);
+
+  const chain = { type: sharedModels.ChainType.EVM, id: params.chainId };
+  const deadline = Date.now() + (params.timeoutMs ?? 180_000);
+  let last = 0n;
+  while (Date.now() < deadline) {
+    await sdk.refreshBalances(chain as never, [railgunWalletId!]);
+    try {
+      const wallet = sdk.walletForID(railgunWalletId!);
+      const bal = await sdk.balanceForERC20Token(
+        sharedModels.TXIDVersion.V2_PoseidonMerkle,
+        wallet as never,
+        networkName,
+        params.tokenAddress,
+        false
+      );
+      last = BigInt(bal ?? 0n);
+      params.onPoll?.(last);
+      if (last >= params.minAmount) return last;
+    } catch {
+      // balance not ready yet — keep polling
+    }
+    await new Promise((r) => setTimeout(r, 5_000));
+  }
+  return last;
 }
