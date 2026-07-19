@@ -55,6 +55,20 @@ export function isRailgunConfigured(): boolean {
   return readConfig() !== null;
 }
 
+/** Quick reachability check for the configured POI aggregator node(s). */
+async function poiNodeReachable(urls: string[]): Promise<boolean> {
+  for (const url of urls) {
+    const base = url.replace(/\/$/, '');
+    try {
+      const res = await fetch(`${base}/node-status-v2`, { signal: AbortSignal.timeout(5000) });
+      if (res.ok) return true;
+    } catch {
+      // try the next url
+    }
+  }
+  return false;
+}
+
 export function isRailgunReady(): boolean {
   return engineReady;
 }
@@ -112,6 +126,16 @@ export async function initRailgunEngine(hubChainId: number): Promise<void> {
   if (!config) {
     logger.warn(
       'Railgun not configured (need RAILGUN_POI_NODE_URL + RAILGUN_MNEMONIC + RAILGUN_ENCRYPTION_KEY); privacy leg disabled.',
+      'Railgun'
+    );
+    return;
+  }
+
+  // Fail fast + clearly if the POI node can't be reached, instead of a vague
+  // engine init error later. Run your own node: see infra/poi-node.
+  if (!(await poiNodeReachable(config.poiNodeURLs))) {
+    logger.warn(
+      `Railgun: POI node unreachable at [${config.poiNodeURLs.join(', ')}]; privacy leg disabled (routes pause at shield). Start one (infra/poi-node) and set RAILGUN_POI_NODE_URL.`,
       'Railgun'
     );
     return;
