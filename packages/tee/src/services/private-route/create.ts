@@ -6,7 +6,7 @@
 import { isAddress, getAddress } from 'viem';
 import { logger } from '../../managers/log';
 import { PrivateRouteModel, type PrivateRoute } from '../../database/models/private-route';
-import { getRelayDepositAddress, getRelayQuote, RELAY_NATIVE } from '../relay';
+import { getRelayChains, getRelayDepositAddress, getRelayQuote, RELAY_NATIVE } from '../relay';
 import { deriveHubAddress, isAaReady } from '../aa';
 import { computeServiceFee } from './fee';
 import { resolveRouteTokens } from './shared';
@@ -17,9 +17,15 @@ function newRouteId(): string {
 }
 
 export async function createPrivateRoute(input: CreatePrivateRouteInput): Promise<CreatePrivateRouteResult> {
-  if (!input.userDestinationAddress || !isAddress(input.userDestinationAddress)) {
-    throw new Error('Invalid userDestinationAddress');
-  }
+  // Validate the recipient against the destination chain's VM. EVM chains get a
+  // strict checksum check; non-EVM chains (Solana, Tron, TON, ...) just need a
+  // plausible non-empty address, and Relay validates the exact format on leg-2.
+  const destChain = (await getRelayChains()).find((c) => c.chainId === input.destChainId);
+  const destIsEvm = !destChain || (destChain.vmType ?? 'evm') === 'evm';
+  const recipient = (input.userDestinationAddress ?? '').trim();
+  const recipientValid = destIsEvm ? isAddress(recipient) : /^[A-Za-z0-9:._-]{8,120}$/.test(recipient);
+  if (!recipientValid) throw new Error('Invalid userDestinationAddress');
+  const storedRecipient = destIsEvm ? getAddress(recipient) : recipient;
 
   // Source is bridged/swapped into the canonical hub token, shielded, then
   // swapped/bridged out to the destination token. Relay is the coverage limiter.
@@ -91,7 +97,7 @@ export async function createPrivateRoute(input: CreatePrivateRouteInput): Promis
     amount: amount.toString(),
     feeAmount: fee.toString(),
     quotedOutputAmount: quotedOutput.toString(),
-    userDestinationAddress: getAddress(input.userDestinationAddress),
+    userDestinationAddress: storedRecipient,
     hubAccount,
     leg1RequestId: leg1.requestId,
     leg1DepositAddress: leg1.depositAddress,
