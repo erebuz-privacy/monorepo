@@ -55,6 +55,20 @@ export function isRailgunConfigured(): boolean {
   return readConfig() !== null;
 }
 
+/** Quick reachability check for the configured POI aggregator node(s). */
+async function poiNodeReachable(urls: string[]): Promise<boolean> {
+  for (const url of urls) {
+    const base = url.replace(/\/$/, '');
+    try {
+      const res = await fetch(`${base}/node-status-v2`, { signal: AbortSignal.timeout(5000) });
+      if (res.ok) return true;
+    } catch {
+      // try the next url
+    }
+  }
+  return false;
+}
+
 export function isRailgunReady(): boolean {
   return engineReady;
 }
@@ -64,17 +78,21 @@ export function getRailgunAddress(): string | null {
 }
 
 function buildArtifactStore(ArtifactStore: RailgunWalletSDK['ArtifactStore'], root: string) {
+  // The store's callbacks must return Promises but the fs ops are sync, so we
+  // wrap in Promise.resolve rather than marking them async (which would be a
+  // no-await lint error).
   return new ArtifactStore(
-    async (path: string) => {
+    (path: string) => {
       const p = join(root, path);
-      return existsSync(p) ? readFileSync(p) : null;
+      return Promise.resolve(existsSync(p) ? readFileSync(p) : null);
     },
-    async (_dir: string, path: string, item: string | Uint8Array) => {
+    (_dir: string, path: string, item: string | Uint8Array) => {
       const p = join(root, path);
       mkdirSync(dirname(p), { recursive: true });
       writeFileSync(p, item as NodeJS.ArrayBufferView | string);
+      return Promise.resolve();
     },
-    async (path: string) => existsSync(join(root, path))
+    (path: string) => Promise.resolve(existsSync(join(root, path)))
   );
 }
 
@@ -108,6 +126,16 @@ export async function initRailgunEngine(hubChainId: number): Promise<void> {
   if (!config) {
     logger.warn(
       'Railgun not configured (need RAILGUN_POI_NODE_URL + RAILGUN_MNEMONIC + RAILGUN_ENCRYPTION_KEY); privacy leg disabled.',
+      'Railgun'
+    );
+    return;
+  }
+
+  // Fail fast + clearly if the POI node can't be reached, instead of a vague
+  // engine init error later. Run your own node: see infra/poi-node.
+  if (!(await poiNodeReachable(config.poiNodeURLs))) {
+    logger.warn(
+      `Railgun: POI node unreachable at [${config.poiNodeURLs.join(', ')}]; privacy leg disabled (routes pause at shield). Start one (infra/poi-node) and set RAILGUN_POI_NODE_URL.`,
       'Railgun'
     );
     return;
@@ -172,11 +200,15 @@ function networkNameForChain(
   chainId: number
 ): import('@railgun-community/shared-models').NetworkName | null {
   const { NetworkName } = sharedModels;
+  // Only the mainnets this SDK version actually supports. Anything else returns
+  // null, and the caller keeps the privacy leg disabled rather than shielding on
+  // the wrong network. (Base is intentionally absent — not a Railgun network in
+  // @railgun-community/shared-models@7.x. The hub is Arbitrum by default.)
   const map: Record<number, import('@railgun-community/shared-models').NetworkName> = {
-    42161: NetworkName.Arbitrum,
-    137: NetworkName.Polygon,
-    8453: NetworkName.BNBChain, // placeholder; Base may not be supported by installed SDK
     1: NetworkName.Ethereum,
+    56: NetworkName.BNBChain,
+    137: NetworkName.Polygon,
+    42161: NetworkName.Arbitrum,
   };
   return map[chainId] ?? null;
 }

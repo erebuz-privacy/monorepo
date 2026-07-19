@@ -1,0 +1,51 @@
+# Self-hosted Railgun PPOI node for the TEE's privacy leg.
+# Same compose runs locally and on a VPS. See README.md.
+#
+#   docker compose --env-file .env up -d --build
+#
+services:
+  mongo:
+    image: mongo:7.0
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-poi}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?Set MONGO_PASSWORD in .env}
+    volumes:
+      - poi-mongo-data:/data/db
+    # Internal only — never published to a host port.
+
+  poi-node:
+    build:
+      context: .
+      args:
+        POI_REF: ${POI_REF:-4b1eaf6ef19099dbfd6b43b1ca78d2ce0132a752}
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - mongo
+    env_file:
+      - .env
+    environment:
+      # Authenticated connection to the compose mongo service (overrides .env).
+      DOCUMENT_DB_URL: mongodb://${MONGO_USER:-poi}:${MONGO_PASSWORD:?Set MONGO_PASSWORD in .env}@mongo:27017/?authSource=admin
+      PORT: "8080"
+    ports:
+      # Bound to localhost by default. To expose publicly, set POI_BIND=0.0.0.0
+      # AND put a TLS reverse proxy in front (see README).
+      - "${POI_BIND:-127.0.0.1}:${POI_HOST_PORT:-8080}:8080"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://localhost:8080/node-status-v2',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  poi-mongo-data:
