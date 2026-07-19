@@ -1,33 +1,45 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+'use client';
+
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 
 /**
- * Email gate shown before the deck. Submissions POST straight into the same
- * Google Form as the landing waitlist (no backend), and the email is kept in
- * localStorage so a viewer is only asked once per browser.
+ * Email gate shown before the deck. Deck viewers go into their OWN Google
+ * Form (a separate sheet from the landing waitlist - the two never mix).
+ * The email is kept in localStorage so a viewer is only asked once.
  *
- * To collect deck viewers in their own sheet, create a dedicated Google Form
- * (one short-answer "Email" question, use "Get pre-filled link" to grab the
- * ids) and swap the two constants below.
+ * Setup: create a Google Form with one short-answer "Email" question, use
+ * the three-dot menu -> "Get pre-filled link", and paste the two ids below.
+ * Until they are set, emails are not sent anywhere (a console warning fires)
+ * but the viewer still gets through.
  */
-const FORM_ID = '1FAIpQLSeyCfVILyiS-3IKPn1OKboKNF-xmMGcbSMW8XBlptzB58xJig';
-const EMAIL_ENTRY = 'entry.117664500';
+const DECK_FORM_ID = '';
+const DECK_EMAIL_ENTRY = '';
 
-const FORM_URL = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
+const FORM_URL = DECK_FORM_ID
+  ? `https://docs.google.com/forms/d/e/${DECK_FORM_ID}/formResponse`
+  : null;
 const STORAGE_KEY = 'erebuz-deck:viewer-email';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export default function EmailGate({ children }: { children: ReactNode }) {
-  const [unlocked, setUnlocked] = useState(() => {
-    try {
-      return Boolean(localStorage.getItem(STORAGE_KEY));
-    } catch {
-      return false;
-    }
-  });
+  // Start locked on both server and client, then read localStorage after
+  // mount - keeps SSR output and hydration consistent.
+  const [checked, setChecked] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(STORAGE_KEY)) setUnlocked(true);
+    } catch {
+      // private mode etc. - stay locked
+    }
+    setChecked(true);
+  }, []);
+
   if (unlocked) return <>{children}</>;
+  if (!checked) return null;
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -42,17 +54,21 @@ export default function EmailGate({ children }: { children: ReactNode }) {
       return;
     }
     setSending(true);
-    try {
-      // no-cors: the response is opaque, reaching past this line means "sent".
-      await fetch(FORM_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ [EMAIL_ENTRY]: email }),
-      });
-    } catch {
-      // network hiccup - still let the viewer through, the gate is a
-      // lead-capture step, not an auth wall
+    if (FORM_URL) {
+      try {
+        // no-cors: the response is opaque, reaching past this line means "sent".
+        await fetch(FORM_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ [DECK_EMAIL_ENTRY]: email }),
+        });
+      } catch {
+        // network hiccup - still let the viewer through, the gate is a
+        // lead-capture step, not an auth wall
+      }
+    } else {
+      console.warn('Deck gate: DECK_FORM_ID not configured, email not stored.');
     }
     try {
       localStorage.setItem(STORAGE_KEY, email);
