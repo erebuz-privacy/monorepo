@@ -1,0 +1,98 @@
+# Erebuz private-route backend — the whole thing in one stack.
+#
+#   cd infra/stack && cp .env.example .env   # then fill it in
+#   docker compose --env-file .env up -d --build
+#
+# Brings up, wired together:
+#   mongo      — datastore for the POI node (internal only, never published)
+#   poi-node   — Railgun Private Proof-of-Innocence aggregator (Arbitrum + more)
+#   tee        — the private-route API the app calls
+#
+# One image per process on purpose: the TEE is Node 20, the POI node is Node 18,
+# and Mongo needs its own volume — three lifecycles, one `docker compose up`.
+services:
+  mongo:
+    image: mongo:7.0
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-poi}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?Set MONGO_PASSWORD in .env}
+    volumes:
+      - poi-mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  poi-node:
+    build:
+      context: ../poi-node
+      args:
+        POI_REF: ${POI_REF:-4b1eaf6ef19099dbfd6b43b1ca78d2ce0132a752}
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      LIST_PROVIDER: "1"
+      pkey: ${pkey:?Set pkey in .env (POI list-provider private key)}
+      pubkey: ${pubkey:?Set pubkey in .env}
+      NODE_CONFIGS: ${NODE_CONFIGS:-[]}
+      DOCUMENT_DB_URL: mongodb://${MONGO_USER:-poi}:${MONGO_PASSWORD:?Set MONGO_PASSWORD in .env}@mongo:27017/?authSource=admin
+      PORT: "8080"
+    # Internal by default: the TEE reaches it over the compose network as
+    # http://poi-node:8080. Only published if you set POI_BIND (see README).
+    ports:
+      - "${POI_BIND:-127.0.0.1}:${POI_HOST_PORT:-8080}:8080"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://localhost:8080/node-status-v2',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  tee:
+    build:
+      context: ../../packages/tee
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      poi-node:
+        condition: service_healthy
+    environment:
+      PORT: "3000"
+      # Reach the POI node over the internal compose network.
+      RAILGUN_POI_NODE_URL: http://poi-node:8080
+      PRIVATE_KEY: ${PRIVATE_KEY:?Set PRIVATE_KEY in .env (funded Arbitrum signer)}
+      RAILGUN_MNEMONIC: ${RAILGUN_MNEMONIC:?Set RAILGUN_MNEMONIC in .env}
+      RAILGUN_ENCRYPTION_KEY: ${RAILGUN_ENCRYPTION_KEY:?Set RAILGUN_ENCRYPTION_KEY in .env}
+      RELAY_API_URL: ${RELAY_API_URL:-https://api.relay.link}
+      RELAY_API_KEY: ${RELAY_API_KEY:-}
+      ETH_MAINNET_RPC_URL: ${ETH_MAINNET_RPC_URL:-}
+      PRIVACY_HUB_CHAIN_ID: ${PRIVACY_HUB_CHAIN_ID:-42161}
+      PRIVACY_HUB_TOKEN_SYMBOL: ${PRIVACY_HUB_TOKEN_SYMBOL:-USDC}
+      # Persist sqlite + railgun db + artifacts on the named volume.
+      DATABASE_PATH: /app/data/tee.sqlite
+      RAILGUN_DB_PATH: /app/data/railgun.db
+      RAILGUN_ARTIFACT_PATH: /app/data/artifacts
+    volumes:
+      - tee-data:/app/data
+    # The public API the app calls. Bound to localhost by default — put a TLS
+    # reverse proxy in front and set NEXT_PUBLIC_TEE_URL to its https URL.
+    ports:
+      - "${TEE_BIND:-127.0.0.1}:${TEE_HOST_PORT:-3000}:3000"
+
+volumes:
+  poi-mongo-data:
+  tee-data:
