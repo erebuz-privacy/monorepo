@@ -53,6 +53,14 @@ body {
 
 /* ── A slide = one full-viewport screen. Content is RESPONSIVE: it
    reflows to the viewport (no fixed canvas, no scaling/clipping). ──── */
+
+/* When the deck is scaled to fit on mobile, vw/vh units inside the slide
+   refer to the actual viewport. Override --gutter to the desktop equivalent
+   so the scaled slide renders with desktop proportions. */
+.deck-scale-frame {
+  --gutter: 80px;
+  --gutter-y: 60px;
+}
 .slide {
   position: relative;
   width: 100%;

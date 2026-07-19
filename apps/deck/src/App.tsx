@@ -478,60 +478,49 @@ export default function App() {
 
       {/* 9. Revenue — punchline */}
       <Slide center nav="Revenue" notes="We charge no one. MEV capture.">
-        <Reveal>
-          <h2 className="headline" style={{ textAlign: 'center', marginInline: 'auto', marginBottom: 8 }}>
-            Revenue
-          </h2>
-        </Reveal>
-        <Reveal delay={0.06}>
-          <p className="lead" style={{ textAlign: 'center', marginInline: 'auto', marginBottom: 'clamp(24px, 4vh, 40px)', maxWidth: '100%', whiteSpace: 'nowrap', fontSize: 'clamp(14px, 1.5vw, 20px)' }}>
-            Users pay zero for privacy.
-          </p>
-        </Reveal>
-        <Build at={1}>
-          <div style={{ display: 'flex', gap: '1px', maxWidth: 640, marginInline: 'auto', background: 'var(--hair)' }}>
-            {/* Stripe column */}
-            <div style={{ flex: 1, background: 'var(--bg)', padding: 'clamp(22px, 2.8vh, 34px) clamp(20px, 2.4vw, 30px)', textAlign: 'center' }}>
-              <div style={{ fontSize: 'clamp(12px, 1.2vw, 15px)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-faint)', marginBottom: 20 }}>
-                Stripe
-              </div>
-              <div style={{ width: 48, height: 48, margin: '0 auto 14px', border: '2px solid var(--fg-faint)', display: 'grid', placeItems: 'center' }}>
-                <svg width="24" height="24" viewBox="0 0 20 20" fill="none" style={{ opacity: 0.5 }}>
-                  <circle cx="10" cy="10" r="8" stroke="var(--fg)" strokeWidth="1.3" />
-                  <path d="M10 6v4l3 3" stroke="var(--fg)" strokeWidth="1.3" strokeLinecap="round" />
-                </svg>
-              </div>
-              <div style={{ color: 'var(--fg-muted)', fontSize: 'clamp(15px, 1.5vw, 18px)', lineHeight: 1.7 }}>
-                Merchant pays
-                <br />
-                <span style={{ color: 'var(--fg)', fontWeight: 600, fontSize: 'clamp(26px, 3vw, 36px)' }}>+3%</span>
-                <br />
-                per transaction
-              </div>
+        <h2 className="headline" style={{ textAlign: 'center', marginInline: 'auto', marginBottom: 8 }}>
+          Revenue
+        </h2>
+        <p className="lead" style={{ textAlign: 'center', marginInline: 'auto', marginBottom: 'clamp(24px, 4vh, 40px)', maxWidth: '100%', whiteSpace: 'nowrap', fontSize: 'clamp(14px, 1.5vw, 20px)' }}>
+          Users pay zero for privacy.
+        </p>
+        <div style={{ display: 'flex', gap: '1px', maxWidth: 640, marginInline: 'auto', background: 'var(--hair)' }}>
+          {/* Stripe column */}
+          <div style={{ flex: 1, background: 'var(--bg)', padding: 'clamp(22px, 2.8vh, 34px) clamp(20px, 2.4vw, 30px)', textAlign: 'center' }}>
+            <div style={{ fontSize: 'clamp(12px, 1.2vw, 15px)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-faint)', marginBottom: 20 }}>
+              Stripe
             </div>
-            {/* Erebuz column */}
-            <div style={{ flex: 1, background: 'var(--surface)', padding: 'clamp(22px, 2.8vh, 34px) clamp(20px, 2.4vw, 30px)', textAlign: 'center' }}>
-              <div style={{ fontSize: 'clamp(12px, 1.2vw, 15px)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg)', marginBottom: 20 }}>
-                Erebuz
-              </div>
-              <div style={{ width: 48, height: 48, margin: '0 auto 14px', border: '2px solid var(--fg)', display: 'grid', placeItems: 'center' }}>
-                <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
-                  <path d="M4 10l4 4 8-8" stroke="var(--fg)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <div style={{ color: 'var(--fg-muted)', fontSize: 'clamp(15px, 1.5vw, 18px)', lineHeight: 1.7 }}>
-                User pays
-                <br />
-                <span style={{ color: 'var(--fg)', fontWeight: 600, fontSize: 'clamp(26px, 3vw, 36px)' }}>$0</span>
-                <br />
-                for our services
-              </div>
+            <div style={{ width: 48, height: 48, margin: '0 auto 14px', border: '2px solid var(--fg-faint)', display: 'grid', placeItems: 'center' }}>
+              <img src="/protocols/stripe.jpg" alt="Stripe" style={{ width: 28, height: 28, opacity: 0.5, objectFit: 'cover' }} />
+            </div>
+            <div style={{ color: 'var(--fg-muted)', fontSize: 'clamp(15px, 1.5vw, 18px)', lineHeight: 1.7 }}>
+              Merchant pays
+              <br />
+              <span style={{ color: 'var(--fg)', fontWeight: 600, fontSize: 'clamp(26px, 3vw, 36px)' }}>+3%</span>
+              <br />
+              per transaction
             </div>
           </div>
-          <p style={{ marginTop: 'clamp(14px, 2vh, 24px)', fontSize: 'clamp(14px, 1.5vw, 20px)', color: 'var(--fg-muted)', maxWidth: 480, marginInline: 'auto' }}>
-            We make money on the route through MEV opportunity.
-          </p>
-        </Build>
+          {/* Erebuz column */}
+          <div style={{ flex: 1, background: 'var(--surface)', padding: 'clamp(22px, 2.8vh, 34px) clamp(20px, 2.4vw, 30px)', textAlign: 'center' }}>
+            <div style={{ fontSize: 'clamp(12px, 1.2vw, 15px)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg)', marginBottom: 20 }}>
+              Erebuz
+            </div>
+            <div style={{ width: 48, height: 48, margin: '0 auto 14px', border: '2px solid var(--fg)', display: 'grid', placeItems: 'center' }}>
+              <img src="/erebuz-logo.svg" alt="Erebuz" style={{ width: 28, height: 28 }} />
+            </div>
+            <div style={{ color: 'var(--fg-muted)', fontSize: 'clamp(15px, 1.5vw, 18px)', lineHeight: 1.7 }}>
+              User pays
+              <br />
+              <span style={{ color: 'var(--fg)', fontWeight: 600, fontSize: 'clamp(26px, 3vw, 36px)' }}>$0</span>
+              <br />
+              for our services
+            </div>
+          </div>
+        </div>
+        <p style={{ marginTop: 'clamp(14px, 2vh, 24px)', fontSize: 'clamp(14px, 1.5vw, 20px)', color: 'var(--fg-muted)', maxWidth: 480, marginInline: 'auto' }}>
+          We make money on the route through MEV opportunity.
+        </p>
       </Slide>
 
       {/* 10. Team */}
@@ -563,11 +552,6 @@ export default function App() {
             Thank You.
           </h2>
         </Reveal>
-        <Build at={1}>
-          <p className="subhead" style={{ marginTop: 20 }}>
-            erebuz.com
-          </p>
-        </Build>
       </Slide>
     </Deck>
   );
