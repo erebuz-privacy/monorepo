@@ -44,6 +44,9 @@ services:
       pkey: ${pkey:?Set pkey in .env (POI list-provider private key)}
       pubkey: ${pubkey:?Set pubkey in .env}
       NODE_CONFIGS: ${NODE_CONFIGS:-[]}
+      # Restrict synced networks (unset = all). Public RPCs 403 on mainnet sync
+      # and crash-loop the node, so pin to what you use (Arbitrum for prod).
+      ACTIVE_NETWORKS: ${ACTIVE_NETWORKS:-Arbitrum}
       DOCUMENT_DB_URL: mongodb://${MONGO_USER:-poi}:${MONGO_PASSWORD:?Set MONGO_PASSWORD in .env}@mongo:27017/?authSource=admin
       PORT: "8080"
     # Internal by default: the TEE reaches it over the compose network as
