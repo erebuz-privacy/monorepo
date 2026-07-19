@@ -1,20 +1,20 @@
 :root {
-  --bg: #0A0A0A;
+  --bg: #0b0b0a;
   --bg-grad-1: transparent;
   --bg-grad-2: transparent;
-  --surface: rgba(245, 243, 239, 0.04);
-  --surface-2: rgba(245, 243, 239, 0.06);
+  --surface: rgba(243, 242, 237, 0.04);
+  --surface-2: rgba(243, 242, 237, 0.06);
 
-  --fg: #F5F3EF;
+  --fg: #f3f2ed;
   --fg-muted: #9a9590;
   --fg-faint: #5a5651;
 
-  --hair: rgba(245, 243, 239, 0.12);
-  --hair-2: rgba(245, 243, 239, 0.06);
+  --hair: rgba(243, 242, 237, 0.12);
+  --hair-2: rgba(243, 242, 237, 0.06);
 
-  --primary: #F5F3EF;
-  --accent: #F5F3EF;
-  --accent-ink: #0A0A0A;
+  --primary: #f3f2ed;
+  --accent: #f3f2ed;
+  --accent-ink: #0b0b0a;
 
   --radius: 0px;
   --radius-sm: 0px;
@@ -23,9 +23,9 @@
   --shadow: none;
   --glow: none;
 
-  --font-head: 'Archivo', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-  --font-body: 'Archivo', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-head: var(--font-archivo), -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  --font-body: var(--font-archivo), -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 
   --dur: 0.35s;
   --ease: cubic-bezier(0.32, 0.72, 0, 1);
