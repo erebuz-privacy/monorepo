@@ -1,0 +1,39 @@
+:root {
+  --bg: #0A0A0A;
+  --bg-grad-1: transparent;
+  --bg-grad-2: transparent;
+  --surface: rgba(245, 243, 239, 0.04);
+  --surface-2: rgba(245, 243, 239, 0.06);
+
+  --fg: #F5F3EF;
+  --fg-muted: #9a9590;
+  --fg-faint: #5a5651;
+
+  --hair: rgba(245, 243, 239, 0.12);
+  --hair-2: rgba(245, 243, 239, 0.06);
+
+  --primary: #F5F3EF;
+  --accent: #F5F3EF;
+  --accent-ink: #0A0A0A;
+
+  --radius: 0px;
+  --radius-sm: 0px;
+  --radius-lg: 0px;
+
+  --shadow: none;
+  --glow: none;
+
+  --font-head: 'Archivo', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  --font-body: 'Archivo', -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --dur: 0.35s;
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --grain: 0;
+  --vignette: transparent;
+
+  --gutter: clamp(28px, 6vw, 120px);
+  --gutter-y: clamp(40px, 8vh, 96px);
+}
