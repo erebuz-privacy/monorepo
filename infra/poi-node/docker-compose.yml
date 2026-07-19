@@ -1,0 +1,42 @@
+# Self-hosted Railgun PPOI node for the TEE's privacy leg.
+# Same compose runs locally and on a VPS. See README.md.
+#
+#   docker compose --env-file .env up -d --build
+#
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - poi-mongo-data:/data/db
+    # Internal only; the node reaches it at mongodb://mongo:27017.
+
+  poi-node:
+    build:
+      context: .
+      args:
+        POI_REF: ${POI_REF:-main}
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    env_file:
+      - .env
+    environment:
+      # Point the node at the compose mongo service (overrides any .env default).
+      DOCUMENT_DB_URL: mongodb://mongo:27017
+      PORT: "8080"
+    ports:
+      - "${POI_HOST_PORT:-8080}:8080"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://localhost:8080/node-status-v2',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  poi-mongo-data:

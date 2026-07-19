@@ -1,0 +1,3 @@
+# .env holds the node's secret pkey — keep it out of git (root ignores it).
+# Track the reference example, which the root's broad .env* rule would ignore.
+!.env.example
