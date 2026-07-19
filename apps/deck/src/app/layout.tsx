@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Erebuz — Privacy middleware for every crypto transaction",
+  title: "Deck | Erebuz",
   description: "The best private payment router for every crypto transaction.",
   icons: { icon: "/erebuz-logo.svg" },
 };
