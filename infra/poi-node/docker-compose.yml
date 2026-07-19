@@ -5,28 +5,37 @@
 #
 services:
   mongo:
-    image: mongo:7
+    image: mongo:7.0
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-poi}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?Set MONGO_PASSWORD in .env}
     volumes:
       - poi-mongo-data:/data/db
-    # Internal only; the node reaches it at mongodb://mongo:27017.
+    # Internal only — never published to a host port.
 
   poi-node:
     build:
       context: .
       args:
-        POI_REF: ${POI_REF:-main}
+        POI_REF: ${POI_REF:-4b1eaf6ef19099dbfd6b43b1ca78d2ce0132a752}
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       - mongo
     env_file:
       - .env
     environment:
-      # Point the node at the compose mongo service (overrides any .env default).
-      DOCUMENT_DB_URL: mongodb://mongo:27017
+      # Authenticated connection to the compose mongo service (overrides .env).
+      DOCUMENT_DB_URL: mongodb://${MONGO_USER:-poi}:${MONGO_PASSWORD:?Set MONGO_PASSWORD in .env}@mongo:27017/?authSource=admin
       PORT: "8080"
     ports:
-      - "${POI_HOST_PORT:-8080}:8080"
+      # Bound to localhost by default. To expose publicly, set POI_BIND=0.0.0.0
+      # AND put a TLS reverse proxy in front (see README).
+      - "${POI_BIND:-127.0.0.1}:${POI_HOST_PORT:-8080}:8080"
     healthcheck:
       test:
         - CMD

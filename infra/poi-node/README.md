@@ -19,15 +19,21 @@ Same compose runs locally and on a VPS.
 cd infra/poi-node
 cp .env.example .env
 
-# 1) Generate the ed25519 key pair, paste pkey/pubkey into .env
+# 1) Set a strong Mongo password in .env (MONGO_PASSWORD), e.g.:
+#    openssl rand -hex 24
+
+# 2) Generate the ed25519 key pair, paste pkey/pubkey into .env
 docker compose run --rm --no-deps poi-node node src/config/keyGenerator.js
 
-# 2) Start mongo + the node
+# 3) Start mongo + the node
 docker compose --env-file .env up -d --build
 
-# 3) Watch it boot / sync
+# 4) Watch it boot / sync
 docker compose logs -f poi-node
 ```
+
+The API is published on **127.0.0.1 only** by default and Mongo is never exposed,
+so nothing is reachable from the internet until you deliberately open it (below).
 
 ## Verify
 
@@ -56,8 +62,12 @@ isn't, the privacy leg stays disabled and routes pause at the shield step.
 
 ## Hosting on a VPS
 Same steps on the server. Then:
-- Put it behind a reverse proxy (Caddy/nginx) with TLS and set
-  `RAILGUN_POI_NODE_URL=https://poi.yourdomain.com`.
+- Keep `POI_BIND=127.0.0.1` and put a **TLS reverse proxy** (Caddy/nginx) in
+  front, pointing at `127.0.0.1:8080`; set `RAILGUN_POI_NODE_URL=https://poi.yourdomain.com`.
+  Only set `POI_BIND=0.0.0.0` if you intend to expose the raw HTTP port directly
+  (not recommended — no TLS).
+- Use a strong, unique `MONGO_PASSWORD`. Mongo stays on the internal compose
+  network and is never published.
 - `docker compose up -d` already restarts on failure/boot.
 - Override the built-in RPCs with your own (Alchemy/Infura) for reliable syncing.
 
