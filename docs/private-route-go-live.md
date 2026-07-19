@@ -53,8 +53,35 @@ you only expose the TEE, behind TLS. Details in `infra/stack/README.md`.
 - [ ] **POI sync**: after boot, let the node sync Arbitrum Railgun events (`curl localhost:8080/node-status-v2` until `Arbitrum` advances past `currentTxidIndex: -1`). Slow on public RPC — use your own.
 - [ ] **List acceptance / peering**: a standalone node proves against *its own* list. For unshields the ecosystem recognizes, set `NODE_CONFIGS` to peer with recognized list providers — the public peers are currently down, so ask the Railgun builders Discord for a live peer. Until then, the privacy leg works against your own pool (fine for testing, not for mainnet acceptance).
 
-### 3. Validate the on-chain path  **(code — highest-value, never run)**
-- [ ] Fork/testnet harness (Anvil/Tenderly Arbitrum fork) exercising shield → unshield → AA UserOp with fake funds, before any real money. This is the one unproven code path.
+### 3. Validate the on-chain path  **(testnet harness now exists)**
+- [x] **Sepolia shield → unshield harness** (`pnpm --filter @erebuz/tee test:sepolia`) — moves native ETH into and out of the Railgun pool on a live testnet against your own POI node. Proves the exact SDK path the hub uses, with faucet ETH.
+- [ ] **Run it** (ops): fund a Sepolia EOA (`PRIVATE_KEY`), point the POI node at Sepolia (`ACTIVE_NETWORKS=Ethereum_Sepolia`), set `RAILGUN_RPC_11155111`, run the harness → confirm the shield + unshield txs land on sepolia.etherscan.io. See "Testnet dry run" below.
+- [ ] Extend to the full flow (Relay-in → shield → unshield → Relay-out) on testnet: Relay bridges Sepolia + Base Sepolia via `api.testnets.relay.link`; point `RELAY_API_URL` there and the hub at Sepolia.
+
+---
+
+## Testnet dry run (Sepolia)  **— prove it works before real money**
+
+Everything the privacy leg needs works on Sepolia: Railgun has a real Sepolia
+deployment with POI, and the self-hosted node serves it.
+
+```bash
+# 1) POI node: sync ONLY Sepolia (stable on public RPC; mainnets crash-loop it)
+cd infra/poi-node   # set ACTIVE_NETWORKS=Ethereum_Sepolia in .env
+docker compose --env-file .env up -d --build
+curl -s localhost:8080/node-status-v2 | jq '.forNetwork | keys'   # ["Ethereum_Sepolia"]
+
+# 2) Fund a Sepolia EOA with faucet ETH (alchemy.com/faucets/ethereum-sepolia)
+
+# 3) Round-trip ETH through the shielded pool
+RAILGUN_POI_NODE_URL=http://localhost:8080 \
+RAILGUN_RPC_11155111=<your-sepolia-rpc> \
+PRIVATE_KEY=<funded-sepolia-key> \
+  pnpm --filter @erebuz/tee test:sepolia -- --amount=0.001
+```
+
+It shields the ETH, waits for the merkletree scan, unshields it back, and prints
+both Etherscan links. Green = the privacy mechanics work end to end.
 
 ### 4. App + users  **(ops + 1 decision)**
 - [ ] Deploy the app (Vercel) with `NEXT_PUBLIC_TEE_URL` → the hosted TEE's https URL.
@@ -70,11 +97,12 @@ you only expose the TEE, behind TLS. Details in `infra/stack/README.md`.
 
 ## Verification ladder
 1. **API** — `pnpm --filter @erebuz/tee verify:route` (chains → tokens → quote → create → poll). No funds. ✅ passes today.
-2. **POI node** — `curl localhost:8080/node-status-v2` lists `Arbitrum`. ✅ works today (sync is the slow part).
-3. **App** — quote → method → transfer shows a real deposit address + polling.
-4. **Bridge-in (no privacy leg)** — small real deposit → status reaches `RECEIVED_ON_HUB` (funds land in the hub account on Arbiscan).
-5. **Privacy leg** — with POI synced + funded key: route advances `SHIELDED → UNSHIELD_SENT → BRIDGING_OUT → COMPLETED`; check shieldTx/unshieldTx + recipient.
-6. **Full E2E** — one small transfer across chains, confirmed `COMPLETED`.
+2. **POI node** — `curl localhost:8080/node-status-v2` lists your `ACTIVE_NETWORKS`. ✅ works today (sync is the slow part; pin to what you use or it 403-crash-loops on public RPC).
+3. **Testnet privacy leg** — `pnpm --filter @erebuz/tee test:sepolia` shields + unshields ETH on Sepolia. Proves the shield/unshield mechanics with faucet ETH. ← do this before mainnet.
+4. **App** — quote → method → transfer shows a real deposit address + polling.
+5. **Bridge-in (no privacy leg)** — small real deposit → status reaches `RECEIVED_ON_HUB` (funds land in the hub account on Arbiscan).
+6. **Privacy leg** — with POI synced + funded key: route advances `SHIELDED → UNSHIELD_SENT → BRIDGING_OUT → COMPLETED`; check shieldTx/unshieldTx + recipient.
+7. **Full E2E** — one small transfer across chains, confirmed `COMPLETED`.
 
 ## Critical path
 **§1 + §2 + §3** = one working end-to-end private transfer. Infra to run the

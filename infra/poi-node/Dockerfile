@@ -23,6 +23,15 @@ RUN sed -i \
       -e "s#\"@railgun-community/wallet\": *\"[^\"]*\"#\"@railgun-community/wallet\": \"${WALLET_VERSION}\"#" \
       package.json
 
+# By default the node loads EVERY non-deprecated POI network and syncs all of them.
+# On public RPCs the mainnet eth_getLogs load draws 403s that surface as uncaught
+# rejections and crash-loop the process. Add an ACTIVE_NETWORKS allowlist (comma-
+# separated NetworkName values, e.g. "Arbitrum,Ethereum_Sepolia") so you only sync
+# what you use. Unset = all networks (original behavior).
+RUN sed -i \
+      's#static NETWORK_NAMES: NetworkName\[\] = Object.values(NetworkName).filter(#static NETWORK_NAMES: NetworkName[] = (process.env.ACTIVE_NETWORKS ? (Object.values(NetworkName) as NetworkName[]).filter(n => process.env.ACTIVE_NETWORKS!.split(",").map(s => s.trim()).includes(n)) : Object.values(NetworkName)).filter(#' \
+      src/config/config.ts
+
 # The upstream Ethereum/Polygon/Arbitrum fallback RPCs use rpc.ankr.com, which now
 # requires an API key and fails the SDK's provider probe on boot (the node loads
 # every POI network and crashes if one is unreachable). Swap the stale ankr
