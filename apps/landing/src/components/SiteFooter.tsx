@@ -3,6 +3,7 @@ import { GithubIcon, XIcon } from "@/components/icons";
 const SOCIAL_URLS: Record<string, string> = {
   X: "https://x.com/0xerebuz",
   GitHub: "https://github.com/erebuz-privacy",
+  Deck: "https://erebuz-deck.vercel.app",
 };
 
 const LOGO_MASK = {
@@ -17,7 +18,7 @@ const LOGO_MASK = {
 } as const;
 
 const COLUMNS = {
-  Erebuz: ["Home", "Whitepaper", "Roadmap", "Security"],
+  Erebuz: ["Home", "Deck", "Whitepaper", "Roadmap", "Security"],
   Developers: ["Docs", "SDK", "API reference", "TEE runtime"],
   Learn: ["Privacy model", "Comparison", "Use cases", "FAQ"],
   Community: ["X", "GitHub", "Blog"],
