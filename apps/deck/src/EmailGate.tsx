@@ -12,8 +12,8 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
  * Until they are set, emails are not sent anywhere (a console warning fires)
  * but the viewer still gets through.
  */
-const DECK_FORM_ID = '';
-const DECK_EMAIL_ENTRY = '';
+const DECK_FORM_ID = '1FAIpQLSf99YNLNnHuETZblxAek-N6gpQ3huI83kCvk2Q7E4EYslqHLQ';
+const DECK_EMAIL_ENTRY = 'entry.147749704';
 
 const FORM_URL = DECK_FORM_ID
   ? `https://docs.google.com/forms/d/e/${DECK_FORM_ID}/formResponse`
@@ -108,7 +108,7 @@ export default function EmailGate({ children }: { children: ReactNode }) {
           textAlign: 'center',
         }}
       >
-        Erebuz — the deck
+        Erebuz's Deck
       </h1>
       <p
         style={{
