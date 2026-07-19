@@ -34,7 +34,9 @@ export function DestinationDialog({
 }) {
   const { contacts, cards, tokenById } = useApp();
   const [address, setAddress] = useState("");
-  const validAddress = /^0x[a-fA-F0-9]{6,}$/.test(address.trim());
+  // Accept EVM and non-EVM address shapes (Solana, Tron, TON, ...); the TEE
+  // validates the exact format against the destination chain.
+  const validAddress = /^[A-Za-z0-9:._-]{8,120}$/.test(address.trim());
 
   const choose = (dest: Destination) => {
     onSelect(dest);

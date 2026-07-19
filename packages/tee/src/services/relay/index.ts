@@ -295,33 +295,52 @@ export interface RelayChain {
   name: string;
   displayName: string;
   logoUrl?: string;
+  /** VM family: evm, svm (Solana), tvm (Tron), tonvm, bvm, etc. */
+  vmType?: string;
 }
+
+// Shape of the fields we read from Relay's /chains response.
+type RawRelayChain = {
+  id?: number;
+  name?: string;
+  displayName?: string;
+  vmType?: string;
+  depositEnabled?: boolean;
+  disabled?: boolean;
+  iconUrl?: string;
+  logoUrl?: string;
+  icon?: { url?: string };
+};
 
 // GET /chains rarely changes; cache it for the process lifetime.
 let chainsCache: RelayChain[] | null = null;
 
 /**
- * List chains Relay can bridge to/from via deposit addresses. Cached in-process.
- * Returns [] on error.
+ * Every chain Relay can bridge to/from via deposit addresses. We include the
+ * full set (all VM families) and only drop chains Relay marks as not
+ * deposit-enabled or disabled, since those can't be routed. Sorted by display
+ * name. Cached in-process. Returns [] on error.
  */
 export async function getRelayChains(): Promise<RelayChain[]> {
   if (chainsCache) return chainsCache;
   try {
     const response = await fetch(`${RELAY_API}/chains`, { method: 'GET', headers: relayHeaders() });
-    const data: any = await response.json();
+    const data = (await response.json()) as RawRelayChain[] | { chains?: RawRelayChain[] };
     if (!response.ok) {
       logger.error(`Relay chains failed (${response.status})`, 'Relay', data);
       return [];
     }
-    const raw: any[] = Array.isArray(data) ? data : (data?.chains ?? []);
+    const raw: RawRelayChain[] = Array.isArray(data) ? data : (data.chains ?? []);
     const chains = raw
-      .filter((c) => typeof c?.id === 'number')
+      .filter((c) => typeof c.id === 'number' && c.depositEnabled !== false && c.disabled !== true)
       .map((c) => ({
-        chainId: c.id as number,
-        name: (c.name ?? String(c.id)) as string,
-        displayName: (c.displayName ?? c.name ?? String(c.id)) as string,
+        chainId: c.id!,
+        name: c.name ?? String(c.id),
+        displayName: c.displayName ?? c.name ?? String(c.id),
+        vmType: typeof c.vmType === 'string' ? c.vmType : undefined,
         logoUrl: c.iconUrl ?? c.logoUrl ?? c.icon?.url,
-      }));
+      }))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName));
     if (chains.length > 0) chainsCache = chains;
     return chains;
   } catch (error) {

@@ -35,6 +35,8 @@ export type TeeChain = {
   name: string;
   displayName: string;
   logoUrl?: string;
+  /** VM family: evm, svm (Solana), tvm (Tron), tonvm, bvm, etc. */
+  vmType?: string;
 };
 
 export type TeeToken = {
