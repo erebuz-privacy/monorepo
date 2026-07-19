@@ -71,6 +71,17 @@ Same steps on the server. Then:
 - `docker compose up -d` already restarts on failure/boot.
 - Override the built-in RPCs with your own (Alchemy/Infura) for reliable syncing.
 
+## Networks
+Serves POI for **Ethereum, BNB Chain, Polygon, and Arbitrum** (+ Sepolia). The
+upstream `main` pins an SDK (`shared-models@7.3.0`) that only has POI for Ethereum
++ testnets, so the Dockerfile bumps it to **7.4.3 + wallet 10.2.2** — the versions
+that add Arbitrum/Polygon POI while keeping the node's proof-query API (it's
+removed in 7.6). Arbitrum is chain `0:42161`, visible in `/node-status-v2`.
+
+The initial Arbitrum scan walks Railgun events from its deployment block, which is
+slow and rate-limited on the built-in public RPC — set your own `RAILGUN_RPC`
+(Alchemy/Infura) for a usable sync.
+
 ## Honest caveats
 - **Booting is easy; producing proofs the ecosystem accepts is the hard part.** A
   standalone list provider proves against *its own* list. For your unshields to
