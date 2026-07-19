@@ -3,7 +3,7 @@ import { GithubIcon, XIcon } from "@/components/icons";
 const SOCIAL_URLS: Record<string, string> = {
   X: "https://x.com/0xerebuz",
   GitHub: "https://github.com/erebuz-privacy",
-  Deck: "https://erebuz-deck.vercel.app",
+  Deck: "https://deck.erebuz.com",
 };
 
 const LOGO_MASK = {

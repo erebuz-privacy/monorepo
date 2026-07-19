@@ -20,7 +20,7 @@ export function Nav() {
           </span>
         </a>
         <a
-          href="https://erebuz-deck.vercel.app"
+          href="https://deck.erebuz.com"
           target="_blank"
           rel="noopener noreferrer"
           className="group flex items-center gap-1.5 border border-white/15 px-4 py-2 text-sm font-medium text-neutral-300 transition-colors hover:border-white/40 hover:text-white"
