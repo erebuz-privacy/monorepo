@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { ReactElement, ReactNode } from 'react';
+import type { CSSProperties, ReactElement, ReactNode } from 'react';
 import { MotionConfig } from 'framer-motion';
 import { DeckCtx } from './DeckContext';
 import Annotator, { type Stroke } from './Annotator';
@@ -120,6 +120,32 @@ export default function Deck({ children }: { children: ReactNode }) {
   const annStore = useRef<Record<number, Stroke[]>>({});
   const slideRef = useRef(slide);
   slideRef.current = slide;
+
+  // Fixed-canvas scale for mobile: capture desktop viewport on mount, then
+  // scale down the slide to fit on smaller screens so it looks identical.
+  const [canvas, setCanvas] = useState({ w: 1280, h: 720 });
+  const [slideScale, setSlideScale] = useState(1);
+  useLayoutEffect(() => {
+    const onResize = () => {
+      const w = Math.max(window.innerWidth, 900);
+      const h = Math.max(window.innerHeight, 600);
+      setCanvas({ w, h });
+    };
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  useLayoutEffect(() => {
+    const calc = () => {
+      const sx = window.innerWidth / canvas.w;
+      const sy = window.innerHeight / canvas.h;
+      const s = Math.min(sx, sy);
+      setSlideScale(s < 1 ? s : 1);
+    };
+    calc();
+    window.addEventListener('resize', calc);
+    return () => window.removeEventListener('resize', calc);
+  }, [canvas]);
 
   const registerMax = useCallback((at: number) => {
     const m = maxMap.current;
@@ -385,9 +411,26 @@ export default function Deck({ children }: { children: ReactNode }) {
     <MotionConfig reducedMotion="user">
       <div className={'deck' + (cursorHidden ? ' nocursor' : '')}>
         <DeckCtx.Provider value={liveCtx}>
-          <div className="slide-stage" key={slide}>
-            {slides[slide]}
-          </div>
+          {slideScale < 1 ? (
+            <div className="slide-stage" key={slide} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div
+                className="deck-scale-frame"
+                style={{
+                  width: canvas.w,
+                  height: canvas.h,
+                  flexShrink: 0,
+                  transform: `scale(${slideScale})`,
+                  transformOrigin: 'center center',
+                }}
+              >
+                {slides[slide]}
+              </div>
+            </div>
+          ) : (
+            <div className="slide-stage" key={slide}>
+              {slides[slide]}
+            </div>
+          )}
         </DeckCtx.Provider>
 
         {showAnnotator && (
