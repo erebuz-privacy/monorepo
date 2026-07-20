@@ -96,14 +96,18 @@ export function RemoteGlyph({
   );
 }
 
-// chainId -> web3icons network slug. Testnets reuse their mainnet's brand logo.
+// chainId -> web3icons network slug (kebab-case of the Network<Name> icon).
+// Testnets reuse their mainnet's brand logo.
 const WEB3_NETWORK_BY_CHAIN_ID: Record<number, string> = {
   1: "ethereum",
   10: "optimism",
   137: "polygon",
   8453: "base",
   42161: "arbitrum-one",
-  // testnets
+  1301: "unichain",
+  4801: "world",
+  1328: "sei-network",
+  // testnets reuse the mainnet brand
   11155111: "ethereum", // Sepolia
   84532: "base", // Base Sepolia
   421614: "arbitrum-one", // Arbitrum Sepolia
