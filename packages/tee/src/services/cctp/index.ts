@@ -39,7 +39,10 @@ const CCTP_CHAINS: Record<number, CctpChainInfo> = {
   84532: { domain: 6, usdc: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', name: 'Base Sepolia', testnet: true },
   421614: { domain: 3, usdc: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', name: 'Arbitrum Sepolia', testnet: true },
   11155420: { domain: 2, usdc: '0x5fd84259d66Cd46123540766Be93DFE6D43130D7', name: 'OP Sepolia', testnet: true },
-  43113: { domain: 1, usdc: '0x5425890298aed601595a70AB815c96711a31Bc65', name: 'Avalanche Fuji', testnet: true, instantFinality: true },
+  80002: { domain: 7, usdc: '0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582', name: 'Polygon Amoy', testnet: true, instantFinality: true },
+  1301: { domain: 10, usdc: '0x31d0220469e10c4E71834a79b1f276d740d3768F', name: 'Unichain Sepolia', testnet: true },
+  4801: { domain: 14, usdc: '0x66145f38cBAC35Ca6F1Dfb4914dF98F1614aeA88', name: 'World Chain Sepolia', testnet: true },
+  1328: { domain: 16, usdc: '0x4fCF1784B31630811181f670Aea7A7bEF803eaED', name: 'Sei Atlantic-2', testnet: true, instantFinality: true },
   // ---- mainnet ----
   1: { domain: 0, usdc: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', name: 'Ethereum', testnet: false },
   8453: { domain: 6, usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', name: 'Base', testnet: false },

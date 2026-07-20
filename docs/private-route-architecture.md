@@ -273,15 +273,27 @@ Defaults: `PRIVATE_ROUTE_FEE_BPS=150` (1.5%), `PRIVATE_ROUTE_FEE_MIN_USD=1`
 Enabled = verified USDC address **+** Nexus deployed (for per‑route source SAs)
 **+** working RPC. Defined in one table in `src/services/cctp/index.ts`.
 
-**Testnet (hub = Ethereum Sepolia):**
+**Testnet (hub = Ethereum Sepolia)** — 8 chains, each with Nexus deployed
+(source-capable), verified USDC, and a working RPC:
 
-| Chain | Chain ID | CCTP domain | USDC |
-| --- | --- | --- | --- |
-| Ethereum Sepolia | 11155111 | 0 | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` |
-| Base Sepolia | 84532 | 6 | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` |
-| Arbitrum Sepolia | 421614 | 3 | `0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d` |
-| OP Sepolia | 11155420 | 2 | `0x5fd84259d66Cd46123540766Be93DFE6D43130D7` |
-| Avalanche Fuji | 43113 | 1 | `0x5425890298aed601595a70AB815c96711a31Bc65` |
+| Chain | Chain ID | CCTP domain | USDC | Finality |
+| --- | --- | --- | --- | --- |
+| Ethereum Sepolia | 11155111 | 0 | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` | fast |
+| Base Sepolia | 84532 | 6 | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` | fast |
+| Arbitrum Sepolia | 421614 | 3 | `0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d` | fast |
+| OP Sepolia | 11155420 | 2 | `0x5fd84259d66Cd46123540766Be93DFE6D43130D7` | fast |
+| Polygon Amoy | 80002 | 7 | `0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582` | instant |
+| Unichain Sepolia | 1301 | 10 | `0x31d0220469e10c4E71834a79b1f276d740d3768F` | fast |
+| World Chain Sepolia | 4801 | 14 | `0x66145f38cBAC35Ca6F1Dfb4914dF98F1614aeA88` | fast |
+| Sei Atlantic-2 | 1328 | 16 | `0x4fCF1784B31630811181f670Aea7A7bEF803eaED` | instant |
+
+> Avalanche Fuji is Nexus-capable but currently disabled (relayer unfunded there);
+> re-add its `CCTP_CHAINS` row + `avalanche-fuji.json` (`"nexus": true`) once funded.
+
+> Chains **without** Biconomy Nexus (Linea Sepolia, Ink, HyperEVM, XDC, Plume,
+> and Arc/Sonic) are intentionally not enabled: our source deposits need a
+> per-route Nexus smart account. They'd require a per-route ephemeral-EOA deposit
+> mode (not yet built) to act as sources.
 
 **Mainnet (hub = Arbitrum):** Ethereum, Base, Arbitrum (extend as verified).
 

@@ -2,6 +2,7 @@
 // ChainManager manages all chain instances
 
 import { Chain, type ChainConfig } from './chain';
+import { CANONICAL_NEXUS_CONTRACTS } from './nexus-contracts';
 import { logger } from '../log';
 import { readdir, readFile } from 'fs/promises';
 import { join } from 'path';
@@ -66,7 +67,13 @@ class ChainManager {
           const filePath = join(CHAIN_CONFIG_DIR, file);
           const fileContent = await readFile(filePath, 'utf-8');
           const chainConfig = JSON.parse(fileContent) as ChainConfig;
-          
+
+          // `"nexus": true` injects the canonical Nexus contracts (deployed at the
+          // same address on every chain) instead of repeating them in each JSON.
+          if (chainConfig.nexus) {
+            chainConfig.contracts = [...CANONICAL_NEXUS_CONTRACTS, ...(chainConfig.contracts ?? [])];
+          }
+
           this.registerChain(chainConfig);
           logger.info(`Loaded chain config: ${chainConfig.name} (ID: ${chainConfig.id}) from ${file}`, 'ChainManager');
         } catch (error) {
