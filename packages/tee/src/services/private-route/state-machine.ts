@@ -12,7 +12,7 @@ import { logger } from '../../managers/log';
 import { PrivateRouteModel, type PrivateRoute, type PrivateRouteStatus } from '../../database/models/private-route';
 import { getRelayDepositAddress, getRelayStatus, isRelayFilled, isRelayFailed, resolveCurrency, RELAY_NATIVE } from '../relay';
 import { executeBatch, isAaReady } from '../aa';
-import { isRailgunReady, buildShieldCalls, unshieldERC20 } from '../railgun';
+import { isRailgunReady, buildShieldCalls, shieldFromEOA, unshieldERC20 } from '../railgun';
 import { chainManager } from '../../managers/chain';
 
 async function set(routeId: string, status: PrivateRouteStatus, extra?: Record<string, string | null>) {
@@ -36,16 +36,30 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
       return;
     }
 
-    // ---- Shield: SA executes a batched [approve, shield] UserOp ----
+    // ---- Shield: SA (AA hub) or EOA (fallback hub) shields the received funds ----
     case 'RECEIVED_ON_HUB': {
-      if (!isAaReady(hubChainId)) return pause(id, `AA not ready on ${hubChainId}`);
+      const aaReady = isAaReady(hubChainId);
+      // EOA-hub fallback needs the signer key; AA hub needs the Nexus stack.
+      if (!aaReady && !process.env.PRIVATE_KEY) return pause(id, `no hub executor on ${hubChainId}`);
       if (!isRailgunReady()) return pause(id, 'Railgun not ready (privacy leg disabled)');
       const received = await chainManager.getTokenBalance(hubChainId, getAddress(route.hubAccount!), token);
       if (received <= 0n) return; // funds not settled on the hub yet
       // Shield everything received. Our fee/margin is realized as the surplus left
       // in the shielded pool after we deliver the quoted output on leg-2.
-      const { calls } = await buildShieldCalls({ chainId: hubChainId, tokenAddress: token, amount: received });
-      const { txHash } = await executeBatch(hubChainId, id, calls);
+      let txHash: string;
+      if (aaReady) {
+        // Production hub: smart account executes a batched [approve, shield] UserOp.
+        const { calls } = await buildShieldCalls({ chainId: hubChainId, tokenAddress: token, amount: received });
+        ({ txHash } = await executeBatch(hubChainId, id, calls));
+      } else {
+        // Fallback hub (e.g. Sepolia test): shield directly from the TEE EOA.
+        ({ txHash } = await shieldFromEOA({
+          chainId: hubChainId,
+          tokenAddress: token,
+          amount: received,
+          signerPrivateKey: process.env.PRIVATE_KEY as string,
+        }));
+      }
       await set(id, 'SHIELDED', { shieldTx: txHash });
       return;
     }

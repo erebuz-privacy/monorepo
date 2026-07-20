@@ -238,6 +238,10 @@ export async function getRelayCurrencies(opts: {
   limit?: number;
 }): Promise<RelayCurrency[]> {
   try {
+    // `verified: true` filters to the verified token list, which is empty on
+    // testnets — set RELAY_VERIFIED_ONLY=false (test mode) to omit it so testnet
+    // tokens (e.g. Sepolia/Base Sepolia USDC) resolve. Defaults to verified-only.
+    const verifiedOnly = process.env.RELAY_VERIFIED_ONLY !== 'false';
     const response = await fetch(`${RELAY_API}/currencies/v2`, {
       method: 'POST',
       headers: relayHeaders(),
@@ -245,7 +249,7 @@ export async function getRelayCurrencies(opts: {
         chainIds: [opts.chainId],
         ...(opts.term ? { term: opts.term } : {}),
         depositAddressOnly: true,
-        verified: true,
+        ...(verifiedOnly ? { verified: true } : {}),
         limit: opts.limit ?? 50,
       }),
     });
