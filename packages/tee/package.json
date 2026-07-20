@@ -17,7 +17,9 @@
     "verify:route": "tsx src/scripts/verify-private-route.ts",
     "gen:railgun-keys": "tsx src/scripts/gen-railgun-keys.ts",
     "test:sepolia": "tsx src/scripts/test-sepolia.ts",
-    "test:cctp": "tsx src/scripts/test-cctp.ts"
+    "test:cctp": "tsx src/scripts/test-cctp.ts",
+    "test:aa": "tsx src/scripts/test-aa.ts",
+    "test:e2e": "tsx src/scripts/test-route-e2e.ts"
   },
   "keywords": [],
   "author": "",

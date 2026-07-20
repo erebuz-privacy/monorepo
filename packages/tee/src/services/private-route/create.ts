@@ -10,7 +10,7 @@ import { getRelayChains, getRelayDepositAddress, getRelayQuote, RELAY_NATIVE } f
 import { deriveHubAddress, isAaReady } from '../aa';
 import { cctpSupportsChain, cctpUsdc } from '../cctp';
 import { BRIDGE_PROVIDER, PRIVACY_HUB_CHAIN_ID } from '../../config/global-config';
-import { computeServiceFee } from './fee';
+import { computeServiceFee, computeCctpRouteFees } from './fee';
 import { resolveRouteTokens } from './shared';
 import type { CreatePrivateRouteInput, CreatePrivateRouteResult } from './types';
 
@@ -152,12 +152,12 @@ async function createCctpRoute(
   const sourceAccount = getAddress(await deriveHubAddress(input.sourceChainId, routeId));
   const hubAccount = getAddress(await deriveHubAddress(hubChainId, routeId));
 
-  // CCTP is 1:1 (minus a tiny bridge fee); USDC ~ $1.
-  const grossOutput = amount;
+  // Net output after our service fee + the Railgun unshield fee + the CCTP dest-leg
+  // fee, so the recipient receives at least the quoted amount. feeAmount stores our
+  // service fee (margin); the monitor unshields `amount − feeAmount` and delivers
+  // the remainder (see the SHIELDED step), which nets to `quotedOutput`.
   const outputUsd = Number(amount) / 1e6;
-  const fee = computeServiceFee(grossOutput, outputUsd);
-  if (fee >= grossOutput) throw new Error('Amount too small: fee would exceed the output');
-  const quotedOutput = grossOutput - fee;
+  const { serviceFee: fee, quotedOutput } = computeCctpRouteFees(amount, outputUsd);
 
   logger.info(
     `Creating CCTP route ${routeId}: ${input.amount} USDC ${input.sourceChainId} -> ${input.destChainId} via hub ${hubChainId}`,

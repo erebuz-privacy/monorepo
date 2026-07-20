@@ -28,8 +28,7 @@
  *     pnpm --filter @erebuz/tee test:sepolia -- --amount=0.001
  */
 
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import '../config/load-env'; // loads .env / .env.railgun.local (+ maps TEST_PRIVATE_KEY) as a side effect
 import { ethers } from 'ethers';
 import {
   initRailgunEngine,
@@ -43,27 +42,6 @@ import {
 
 const SEPOLIA = 11155111;
 const WETH_SEPOLIA = '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14';
-
-// Lightweight .env loader (the project has no dotenv). Fills in any vars that are
-// not already set in the shell, from local secret files, without overriding them.
-function loadEnvFiles(): void {
-  for (const file of ['.env.railgun.local', '.env']) {
-    const path = join(process.cwd(), file);
-    if (!existsSync(path)) continue;
-    for (const raw of readFileSync(path, 'utf8').split('\n')) {
-      const line = raw.trim();
-      if (!line || line.startsWith('#')) continue;
-      const eq = line.indexOf('=');
-      if (eq === -1) continue;
-      const key = line.slice(0, eq).trim();
-      let val = line.slice(eq + 1).trim();
-      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
-        val = val.slice(1, -1);
-      }
-      if (!(key in process.env)) process.env[key] = val;
-    }
-  }
-}
 
 function arg(name: string, fallback: string): string {
   const found = process.argv.find((a) => a.startsWith(`--${name}=`));
@@ -99,8 +77,6 @@ process.on('unhandledRejection', (reason) => {
 process.on('exit', (code) => console.error(`[exit] code=${code}`));
 
 async function main(): Promise<void> {
-  loadEnvFiles();
-
   const amountEth = arg('amount', '0.001');
   const amount = ethers.parseEther(amountEth);
   const pk = process.env.PRIVATE_KEY;

@@ -77,7 +77,14 @@ export function isAaReady(chainId: number): boolean {
   if (!process.env.PRIVATE_KEY) return false;
   const chain = chainManager.getChain(chainId);
   if (!chain) return false;
-  return Boolean(chain.getPublicClient() && chain.getNexusAccountFactory() && chain.getNexusBootstrap());
+  // Check the (cheap) Nexus config first; only then build a client, which throws
+  // for chains not in viem/chains — treat that as "not ready" rather than crashing.
+  if (!chain.getNexusAccountFactory() || !chain.getNexusBootstrap()) return false;
+  try {
+    return Boolean(chain.getPublicClient());
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -93,12 +100,17 @@ function buildInit(chainId: number, routeId: string): { initData: Hex; salt: Hex
   const salt = routeSeed(owner, routeId);
   const defaultValidatorInitData = bytesToHex(toBytes(getAddress(owner)));
 
+  // The bootstrap installs the k1Validator as the account's DEFAULT validator
+  // (owner as init data). It lives in a special slot, NOT the installed-validators
+  // list, so the UserOp nonce key must reference the default-validator sentinel
+  // (see executeBatch), not the k1Validator address. Do NOT also install it in
+  // `validators` — that duplicates it and reverts NexusInitializationFailed.
   const initNexusData = encodeFunctionData({
     abi: bootstrapInitNexusAbi,
     functionName: 'initNexusWithDefaultValidatorAndOtherModulesNoRegistry',
     args: [
       defaultValidatorInitData,
-      [], // validators
+      [], // validators (default validator is set above)
       [], // executors  (no module — owner executes via UserOps)
       { module: ZERO_ADDRESS as Address, data: '0x' as Hex }, // hook
       [], // fallbacks
@@ -138,8 +150,12 @@ export async function deriveHubAddress(chainId: number, routeId: string): Promis
   return getAddress(address);
 }
 
-// ERC-7579 execution mode for a default batch call (CallType 0x01, ExecType 0x00).
-const MODE_BATCH: Hex = pad('0x01', { size: 32 });
+// ERC-7579 execution mode (bytes32, MSB-first):
+//   [1b callType][1b execType][4b unused][4b modeSelector][22b modePayload]
+// Batch + default (revert-on-fail) => callType 0x01 in the FIRST byte, rest 0.
+// NOTE: must be RIGHT-padded — left-padding puts callType in the last byte (0x00
+// = CALLTYPE_SINGLE), which makes Nexus decode batch calldata as a single call.
+const MODE_BATCH: Hex = pad('0x01', { size: 32, dir: 'right' });
 
 /** Encode a batch of calls as ERC-7579 execute(mode, executionCalldata). */
 function encodeExecuteBatch(calls: Call[]): Hex {
@@ -178,7 +194,6 @@ export async function executeBatch(chainId: number, routeId: string, calls: Call
   const publicClient = chain.getPublicClient();
   const walletClient = chain.getWallet(); // TEE EOA = self-bundler + beneficiary
   const factory = chain.getNexusAccountFactory()!;
-  const validator = chain.getContractByName('k1Validator');
 
   const { initData, salt } = buildInit(chainId, routeId);
   const sender = await deriveHubAddress(chainId, routeId);
@@ -192,13 +207,19 @@ export async function executeBatch(chainId: number, routeId: string, calls: Call
     args: [initData, salt],
   });
 
-  // Nexus selects the validator via the top 20 bytes of the nonce key.
-  const validatorKey = validator ? pad(validator.address as Hex, { size: 24 }) : pad('0x', { size: 24 });
+  // Nexus nonce key layout (NonceLib): [3b empty][1b validation mode][20b validator].
+  // Our k1Validator is the account's DEFAULT validator — it lives in a special slot,
+  // NOT the installed-validators sentinel list. Nexus addresses the default validator
+  // by a ZERO validator field (NonceLib.isDefaultValidatorMode); passing the real
+  // k1Validator address instead takes the "is-installed?" branch in _handleValidator
+  // and reverts ValidatorNotInstalled (AA23). So the nonce key is 0 (validator=0,
+  // validation mode=0 => validate).
+  const nonceKey = 0n;
   const nonce = (await publicClient.readContract({
     address: entryPoint07Address,
     abi: entryPoint07Abi,
     functionName: 'getNonce',
-    args: [sender, BigInt(validatorKey)],
+    args: [sender, nonceKey],
   })) as bigint;
 
   const callData = encodeExecuteBatch(calls);
@@ -217,6 +238,7 @@ export async function executeBatch(chainId: number, routeId: string, calls: Call
     maxPriorityFeePerGas: fees.maxPriorityFeePerGas ?? 1_000_000_000n,
   };
 
+  let sponsored = false;
   if (paymasterHook) {
     const pm = await paymasterHook({ sender, chainId });
     if (pm) {
@@ -224,6 +246,36 @@ export async function executeBatch(chainId: number, routeId: string, calls: Call
       userOp.paymasterData = pm.paymasterData;
       userOp.paymasterVerificationGasLimit = pm.paymasterVerificationGasLimit ?? 200_000n;
       userOp.paymasterPostOpGasLimit = pm.paymasterPostOpGasLimit ?? 100_000n;
+      sponsored = true;
+    }
+  }
+
+  // Gas model: "covered". With no paymaster the account itself must prefund the
+  // UserOp (EntryPoint.payPrefund pulls from the sender's balance). Since the TEE
+  // self-bundles, it funds the account's gas: top the account up to the max the
+  // op can cost so validation never reverts AA21 ("didn't pay prefund"). The TEE
+  // is refunded the unused portion as handleOps beneficiary, so net cost ≈ gas
+  // actually used. A paymaster (when configured) replaces this.
+  if (!sponsored) {
+    const maxCost =
+      ((userOp.callGasLimit as bigint) +
+        (userOp.verificationGasLimit as bigint) +
+        (userOp.preVerificationGas as bigint) +
+        // deploy adds real verification cost beyond the limit's headroom
+        (isDeployed ? 0n : 200_000n)) *
+      (userOp.maxFeePerGas as bigint);
+    const required = (maxCost * 12n) / 10n; // 20% buffer
+    const balance = await publicClient.getBalance({ address: sender });
+    if (balance < required) {
+      const topUp = required - balance;
+      logger.info(`AA gas top-up ${topUp} wei -> ${sender} on chain ${chainId}`, 'AA');
+      const fundTx = await walletClient.sendTransaction({
+        account: walletClient.account!,
+        chain: chain.getViemChain(),
+        to: sender,
+        value: topUp,
+      });
+      await publicClient.waitForTransactionReceipt({ hash: fundTx });
     }
   }
 

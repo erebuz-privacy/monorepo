@@ -8,66 +8,78 @@
 import { ethers } from 'ethers';
 import { logger } from '../../managers/log';
 import { chainManager } from '../../managers/chain';
+import { PRIVACY_HUB_CHAIN_ID } from '../../config/global-config';
 
-// CCTP v2 testnet contracts (identical on every supported testnet chain).
+// CCTP v2 contracts. Testnet uses one set across every chain; mainnet another.
 const TOKEN_MESSENGER_V2 = '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA';
 const MESSAGE_TRANSMITTER_V2 = '0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275';
 const IRIS_API = process.env.CCTP_IRIS_API || 'https://iris-api-sandbox.circle.com';
 
-// EVM chainId -> CCTP domain id.
-const CCTP_DOMAINS: Record<number, number> = {
-  11155111: 0, // Ethereum Sepolia
-  84532: 6, // Base Sepolia
-  421614: 3, // Arbitrum Sepolia
-  11155420: 2, // OP Sepolia
-  80002: 7, // Polygon Amoy
-  // mainnet
-  1: 0,
-  8453: 6,
-  42161: 3,
-};
-
-// Finality thresholds: 1000 = Fast Transfer (confirmed), 2000 = standard (finalized).
+// Finality thresholds: 1000 = Fast Transfer, 2000 = standard (finalized). Fast
+// Transfer isn't offered when the SOURCE chain has instant finality — Circle
+// treats those as standard, which is already fast — so we burn them at 2000.
 const FAST_FINALITY = 1000;
+const STANDARD_FINALITY = 2000;
 
-// Canonical USDC per chain (CCTP native token).
-const CCTP_USDC: Record<number, string> = {
-  11155111: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238', // Ethereum Sepolia
-  84532: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // Base Sepolia
-  421614: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', // Arbitrum Sepolia
-  // mainnet
-  1: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
-  8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-  42161: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+interface CctpChainInfo {
+  domain: number;
+  usdc: string;
+  name: string;
+  testnet: boolean;
+  /** Instant-finality chains (Avalanche, Polygon, Sonic, Sei…) burn at STANDARD_FINALITY. */
+  instantFinality?: boolean;
+}
+
+// Single source of truth for CCTP chains. Only chains with a VERIFIED USDC address
+// + Biconomy Nexus deployed (for per-route source accounts) + a working RPC are
+// enabled; add more here as they're verified. Domains per Circle's docs.
+const CCTP_CHAINS: Record<number, CctpChainInfo> = {
+  // ---- testnet ----
+  11155111: { domain: 0, usdc: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238', name: 'Ethereum Sepolia', testnet: true },
+  84532: { domain: 6, usdc: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', name: 'Base Sepolia', testnet: true },
+  421614: { domain: 3, usdc: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', name: 'Arbitrum Sepolia', testnet: true },
+  11155420: { domain: 2, usdc: '0x5fd84259d66Cd46123540766Be93DFE6D43130D7', name: 'OP Sepolia', testnet: true },
+  43113: { domain: 1, usdc: '0x5425890298aed601595a70AB815c96711a31Bc65', name: 'Avalanche Fuji', testnet: true, instantFinality: true },
+  // ---- mainnet ----
+  1: { domain: 0, usdc: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', name: 'Ethereum', testnet: false },
+  8453: { domain: 6, usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', name: 'Base', testnet: false },
+  42161: { domain: 3, usdc: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', name: 'Arbitrum', testnet: false },
 };
+
+export function cctpSupportsChain(chainId: number): boolean {
+  return chainId in CCTP_CHAINS;
+}
+
+export function cctpDomain(chainId: number): number {
+  const c = CCTP_CHAINS[chainId];
+  if (!c) throw new Error(`CCTP: unsupported chain ${chainId}`);
+  return c.domain;
+}
 
 export function cctpUsdc(chainId: number): string {
-  const a = CCTP_USDC[chainId];
-  if (!a) throw new Error(`CCTP: no USDC configured for chain ${chainId}`);
-  return a;
+  const c = CCTP_CHAINS[chainId];
+  if (!c) throw new Error(`CCTP: no USDC configured for chain ${chainId}`);
+  return c.usdc;
 }
-
-const CCTP_CHAIN_NAMES: Record<number, string> = {
-  11155111: 'Ethereum Sepolia',
-  84532: 'Base Sepolia',
-  421614: 'Arbitrum Sepolia',
-  11155420: 'OP Sepolia',
-  80002: 'Polygon Amoy',
-  1: 'Ethereum',
-  8453: 'Base',
-  42161: 'Arbitrum',
-};
 
 export function cctpChainName(chainId: number): string {
-  return CCTP_CHAIN_NAMES[chainId] ?? `Chain ${chainId}`;
+  return CCTP_CHAINS[chainId]?.name ?? `Chain ${chainId}`;
 }
 
-/** Chains available in CCTP mode, as the app's chain-picker list expects. */
+/** minFinalityThreshold for a burn ON the given source chain. */
+function cctpFinality(sourceChainId: number): number {
+  return CCTP_CHAINS[sourceChainId]?.instantFinality ? STANDARD_FINALITY : FAST_FINALITY;
+}
+
+/**
+ * Chains available in CCTP mode, as the app's chain-picker list expects. Filtered
+ * to the privacy hub's network class (a testnet hub only offers testnet chains).
+ */
 export function cctpChains(): Array<{ chainId: number; name: string; displayName: string; vmType: string }> {
-  return Object.keys(CCTP_USDC)
-    .map(Number)
-    .filter((id) => id in CCTP_CHAIN_NAMES)
-    .map((id) => ({ chainId: id, name: cctpChainName(id), displayName: cctpChainName(id), vmType: 'evm' }));
+  const hubIsTestnet = CCTP_CHAINS[PRIVACY_HUB_CHAIN_ID]?.testnet ?? true;
+  return Object.entries(CCTP_CHAINS)
+    .filter(([, info]) => info.testnet === hubIsTestnet)
+    .map(([id, info]) => ({ chainId: Number(id), name: info.name, displayName: info.name, vmType: 'evm' }));
 }
 
 const TOKEN_MESSENGER_ABI = [
@@ -81,14 +93,26 @@ const ERC20_ABI = [
   'function allowance(address owner, address spender) view returns (uint256)',
 ];
 
-export function cctpSupportsChain(chainId: number): boolean {
-  return chainId in CCTP_DOMAINS;
+// Typed views over the ethers Contracts (string ABIs are otherwise `any`, which
+// trips no-unsafe-* lint on .wait()/.hash). Only the methods we call are declared.
+type TxResp = ethers.ContractTransactionResponse;
+interface Erc20Contract extends ethers.BaseContract {
+  allowance(owner: string, spender: string): Promise<bigint>;
+  approve(spender: string, amount: bigint): Promise<TxResp>;
 }
-
-export function cctpDomain(chainId: number): number {
-  const d = CCTP_DOMAINS[chainId];
-  if (d === undefined) throw new Error(`CCTP: unsupported chain ${chainId}`);
-  return d;
+interface TokenMessengerContract extends ethers.BaseContract {
+  depositForBurn(
+    amount: bigint,
+    destinationDomain: number,
+    mintRecipient: string,
+    burnToken: string,
+    destinationCaller: string,
+    maxFee: bigint,
+    minFinalityThreshold: number
+  ): Promise<TxResp>;
+}
+interface MessageTransmitterContract extends ethers.BaseContract {
+  receiveMessage(message: string, attestation: string): Promise<TxResp>;
 }
 
 /** Left-pad an EVM address to a bytes32 (CCTP mintRecipient / destinationCaller). */
@@ -122,15 +146,15 @@ export async function cctpBurn(params: {
   const wallet = new ethers.Wallet(params.signerPrivateKey, provider);
   const destDomain = cctpDomain(params.destChainId);
 
-  const usdc = new ethers.Contract(params.usdc, ERC20_ABI, wallet);
-  const allowance: bigint = await usdc.allowance(wallet.address, TOKEN_MESSENGER_V2);
+  const usdc = new ethers.Contract(params.usdc, ERC20_ABI, wallet) as unknown as Erc20Contract;
+  const allowance = await usdc.allowance(wallet.address, TOKEN_MESSENGER_V2);
   if (allowance < params.amount) {
     const approveTx = await usdc.approve(TOKEN_MESSENGER_V2, params.amount);
     await approveTx.wait();
   }
 
   const maxFee = (params.amount * BigInt(params.maxFeeBps ?? 100)) / 10_000n;
-  const tm = new ethers.Contract(TOKEN_MESSENGER_V2, TOKEN_MESSENGER_ABI, wallet);
+  const tm = new ethers.Contract(TOKEN_MESSENGER_V2, TOKEN_MESSENGER_ABI, wallet) as unknown as TokenMessengerContract;
   const tx = await tm.depositForBurn(
     params.amount,
     destDomain,
@@ -138,7 +162,7 @@ export async function cctpBurn(params: {
     params.usdc,
     ethers.ZeroHash, // destinationCaller = anyone can mint
     maxFee,
-    FAST_FINALITY
+    cctpFinality(params.sourceChainId)
   );
   await tx.wait();
   logger.info(`CCTP burn ${params.sourceChainId}->${params.destChainId}: ${tx.hash}`, 'CCTP');
@@ -151,6 +175,7 @@ export async function cctpBurn(params: {
  * the only bridged asset; a swap provider handles USDC<->other-token conversion.
  */
 export function buildCctpBurnCalls(params: {
+  sourceChainId: number;
   destChainId: number;
   usdc: string;
   amount: bigint;
@@ -175,7 +200,7 @@ export function buildCctpBurnCalls(params: {
         params.usdc,
         ethers.ZeroHash,
         maxFee,
-        FAST_FINALITY,
+        cctpFinality(params.sourceChainId),
       ]) as `0x${string}`,
     },
   ];
@@ -246,7 +271,7 @@ export async function cctpMint(params: {
 }): Promise<{ txHash: string }> {
   const provider = providerFor(params.destChainId);
   const wallet = new ethers.Wallet(params.signerPrivateKey, provider);
-  const mt = new ethers.Contract(MESSAGE_TRANSMITTER_V2, MESSAGE_TRANSMITTER_ABI, wallet);
+  const mt = new ethers.Contract(MESSAGE_TRANSMITTER_V2, MESSAGE_TRANSMITTER_ABI, wallet) as unknown as MessageTransmitterContract;
   const tx = await mt.receiveMessage(params.message, params.attestation);
   await tx.wait();
   logger.info(`CCTP mint on ${params.destChainId}: ${tx.hash}`, 'CCTP');

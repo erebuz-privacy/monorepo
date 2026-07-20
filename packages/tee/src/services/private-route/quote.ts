@@ -11,7 +11,7 @@ import { parseUnits } from 'viem';
 import { getRelayQuote, getRelayChains, chainDisplayName } from '../relay';
 import { cctpChainName } from '../cctp';
 import { BRIDGE_PROVIDER, PRIVACY_HUB_CHAIN_ID } from '../../config/global-config';
-import { computeServiceFee } from './fee';
+import { computeServiceFee, computeCctpRouteFees } from './fee';
 import { resolveRouteTokens, type RouteTokensInput } from './shared';
 
 export type QuotePrivateRouteInput = RouteTokensInput;
@@ -28,14 +28,20 @@ export interface QuotePrivateRouteResult {
   hubChainId: number;
   /** Input amount, source token smallest unit (string). */
   amount: string;
-  /** Route fee (spread), DESTINATION token smallest unit (charged on the output). */
+  /** Our service fee (spread), DESTINATION token smallest unit (our margin). */
   feeAmount: string;
-  /** Output delivered to the user, DESTINATION token smallest unit (= gross - fee). */
+  /** CCTP bridge fee borne by the user (dest leg), DEST smallest unit. "0" for Relay. */
+  bridgeFeeAmount: string;
+  /** Railgun privacy (unshield) fee, DEST smallest unit. "0" for Relay. */
+  privacyFeeAmount: string;
+  /** Output delivered to the user, DEST smallest unit (= amount − all fees). delivered ≥ this. */
   quotedOutputAmount: string;
-  /** USD value of the input, and of the delivered output / fee (null if unpriced). */
+  /** USD value of the input, and of the delivered output / fees (null if unpriced). */
   amountInUsd: number | null;
   quotedOutputUsd: number | null;
   feeUsd: number | null;
+  bridgeFeeUsd: number | null;
+  privacyFeeUsd: number | null;
   /** Rough end-to-end estimate (seconds). */
   etaSeconds: number;
   /** Display hops for the UI route trail. */
@@ -43,16 +49,14 @@ export interface QuotePrivateRouteResult {
 }
 
 export async function quotePrivateRoute(input: QuotePrivateRouteInput): Promise<QuotePrivateRouteResult> {
-  // CCTP mode: USDC bridges 1:1 (burn/mint), so no Relay quote or slippage —
-  // output = amount - fee.
+  // CCTP mode: USDC bridges 1:1 (burn/mint), no slippage. Output = amount minus
+  // our service fee, the Railgun unshield fee, and the CCTP dest-leg fee — all
+  // subtracted so the recipient receives at least the shown amount.
   if (BRIDGE_PROVIDER === 'cctp') {
     const hubChainId = PRIVACY_HUB_CHAIN_ID;
     const amount = parseUnits(input.amount, 6);
-    const grossOutput = amount;
     const outputUsd = Number(amount) / 1e6;
-    const fee = computeServiceFee(grossOutput, outputUsd);
-    if (fee >= grossOutput) throw new Error('Invalid amount: too small — the fee would exceed the output');
-    const quotedOutput = grossOutput - fee;
+    const { serviceFee, privacyFee, bridgeFee, quotedOutput } = computeCctpRouteFees(amount, outputUsd);
     return {
       symbol: 'USDC',
       decimals: 6,
@@ -62,11 +66,15 @@ export async function quotePrivateRoute(input: QuotePrivateRouteInput): Promise<
       destChainId: input.destChainId,
       hubChainId,
       amount: amount.toString(),
-      feeAmount: fee.toString(),
+      feeAmount: serviceFee.toString(),
+      bridgeFeeAmount: bridgeFee.toString(),
+      privacyFeeAmount: privacyFee.toString(),
       quotedOutputAmount: quotedOutput.toString(),
       amountInUsd: outputUsd,
       quotedOutputUsd: Number(quotedOutput) / 1e6,
-      feeUsd: Number(fee) / 1e6,
+      feeUsd: Number(serviceFee) / 1e6,
+      bridgeFeeUsd: Number(bridgeFee) / 1e6,
+      privacyFeeUsd: Number(privacyFee) / 1e6,
       etaSeconds: 120,
       route: [cctpChainName(input.sourceChainId), 'Private pool', cctpChainName(input.destChainId)],
     };
@@ -135,10 +143,16 @@ export async function quotePrivateRoute(input: QuotePrivateRouteInput): Promise<
     hubChainId,
     amount: amount.toString(),
     feeAmount: fee.toString(),
+    // Relay's expectedOutput already nets bridge/protocol costs, so there's no
+    // separate user-borne bridge/privacy fee to itemize here.
+    bridgeFeeAmount: '0',
+    privacyFeeAmount: '0',
     quotedOutputAmount: quotedOutput.toString(),
     amountInUsd,
     quotedOutputUsd,
     feeUsd,
+    bridgeFeeUsd: null,
+    privacyFeeUsd: null,
     etaSeconds,
     route,
   };

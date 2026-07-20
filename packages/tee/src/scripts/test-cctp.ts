@@ -8,8 +8,7 @@
  *   PRIVATE_KEY=<funded base sepolia usdc key> \
  *     pnpm --filter @erebuz/tee test:cctp -- --amount=1
  */
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import '../config/load-env'; // loads .env / .env.railgun.local (+ maps TEST_PRIVATE_KEY) as a side effect
 import { ethers } from 'ethers';
 import { cctpBurn, cctpFetchAttestation, cctpMint } from '../services/cctp';
 
@@ -18,29 +17,12 @@ const ETH_SEPOLIA = 11155111;
 const USDC_BASE = '0x036CbD53842c5426634e7929541eC2318f3dCF7e';
 const USDC_SEP = '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238';
 
-function loadEnvFiles() {
-  for (const f of ['.env.railgun.local', '.env']) {
-    const p = join(process.cwd(), f);
-    if (!existsSync(p)) continue;
-    for (const raw of readFileSync(p, 'utf8').split('\n')) {
-      const l = raw.trim();
-      if (!l || l.startsWith('#')) continue;
-      const i = l.indexOf('=');
-      if (i === -1) continue;
-      const k = l.slice(0, i).trim();
-      let v = l.slice(i + 1).trim().replace(/^["']|["']$/g, '');
-      if (!(k in process.env)) process.env[k] = v;
-    }
-  }
-}
-
 function arg(name: string, fallback: string): string {
   const f = process.argv.find((a) => a.startsWith(`--${name}=`));
   return f ? f.slice(`--${name}=`.length) : fallback;
 }
 
 async function main() {
-  loadEnvFiles();
   const pk = process.env.PRIVATE_KEY;
   if (!pk) throw new Error('PRIVATE_KEY required (funded with Base Sepolia USDC)');
   process.env.RPC_84532 = process.env.RPC_84532 || 'https://sepolia.base.org';
