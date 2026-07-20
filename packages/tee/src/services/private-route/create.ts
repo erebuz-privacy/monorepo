@@ -3,11 +3,13 @@
 // Returns immediately with the address for the user to fund; the background
 // monitor drives the rest.
 
-import { isAddress, getAddress } from 'viem';
+import { isAddress, getAddress, parseUnits } from 'viem';
 import { logger } from '../../managers/log';
 import { PrivateRouteModel, type PrivateRoute } from '../../database/models/private-route';
 import { getRelayChains, getRelayDepositAddress, getRelayQuote, RELAY_NATIVE } from '../relay';
 import { deriveHubAddress, isAaReady } from '../aa';
+import { cctpSupportsChain, cctpUsdc } from '../cctp';
+import { BRIDGE_PROVIDER, PRIVACY_HUB_CHAIN_ID } from '../../config/global-config';
 import { computeServiceFee } from './fee';
 import { resolveRouteTokens } from './shared';
 import type { CreatePrivateRouteInput, CreatePrivateRouteResult } from './types';
@@ -20,19 +22,23 @@ export async function createPrivateRoute(input: CreatePrivateRouteInput): Promis
   // Validate the recipient against the destination chain's VM. EVM chains get a
   // strict checksum check; non-EVM chains (Solana, Tron, TON, ...) just need a
   // plausible non-empty address, and Relay validates the exact format on leg-2.
-  const destChain = (await getRelayChains()).find((c) => c.chainId === input.destChainId);
-  const destIsEvm = !destChain || (destChain.vmType ?? 'evm') === 'evm';
+  const cctp = BRIDGE_PROVIDER === 'cctp';
+  // Recipient validation. CCTP is EVM-only; Relay may target non-EVM chains.
+  const destChain = cctp ? undefined : (await getRelayChains()).find((c) => c.chainId === input.destChainId);
+  const destIsEvm = cctp || !destChain || (destChain.vmType ?? 'evm') === 'evm';
   const recipient = (input.userDestinationAddress ?? '').trim();
   const recipientValid = destIsEvm ? isAddress(recipient) : /^[A-Za-z0-9:._-]{8,120}$/.test(recipient);
   if (!recipientValid) throw new Error('Invalid userDestinationAddress');
   const storedRecipient = destIsEvm ? getAddress(recipient) : recipient;
 
+  const routeId = newRouteId();
+  if (cctp) return createCctpRoute(input, routeId, storedRecipient);
+
+  // ---- Relay path (any token, liquidity-based bridge) ----
   // Source is bridged/swapped into the canonical hub token, shielded, then
   // swapped/bridged out to the destination token. Relay is the coverage limiter.
   const { symbol, destSymbol, hubSymbol, hubChainId, amount, source, hub, dest } =
     await resolveRouteTokens(input);
-
-  const routeId = newRouteId();
   logger.info(
     `Creating private route ${routeId}: ${input.amount} ${symbol} ${input.sourceChainId} -> ${destSymbol} ${input.destChainId} via ${hubSymbol} hub ${hubChainId}`,
     'PrivateRoute'
@@ -117,6 +123,79 @@ export async function createPrivateRoute(input: CreatePrivateRouteInput): Promis
     hubChainId,
     tokenSymbol: symbol,
     destTokenSymbol: destSymbol,
+    amount: amount.toString(),
+    feeAmount: fee.toString(),
+    quotedOutputAmount: quotedOutput.toString(),
+  };
+}
+
+/**
+ * CCTP route: USDC is bridged natively (burn/mint), so there's no Relay quote or
+ * slippage — output = amount - fee, delivered 1:1. The user sends USDC to a
+ * per-route TEE smart account on the source chain; the monitor burns it via CCTP
+ * to the hub smart account, shields, then burns the unshielded USDC to the
+ * recipient on the destination chain. (Non-USDC tokens would swap via a provider.)
+ */
+async function createCctpRoute(
+  input: CreatePrivateRouteInput,
+  routeId: string,
+  storedRecipient: string
+): Promise<CreatePrivateRouteResult> {
+  const hubChainId = PRIVACY_HUB_CHAIN_ID;
+  for (const cid of [input.sourceChainId, hubChainId, input.destChainId]) {
+    if (!cctpSupportsChain(cid)) throw new Error(`CCTP: unsupported chain ${cid}`);
+  }
+  const amount = parseUnits(input.amount, 6); // USDC has 6 decimals
+
+  // Per-route TEE smart accounts: source (receives + burns the user's USDC) and
+  // hub (CCTP mint target + shields). Both counterfactual via the Nexus factory.
+  const sourceAccount = getAddress(await deriveHubAddress(input.sourceChainId, routeId));
+  const hubAccount = getAddress(await deriveHubAddress(hubChainId, routeId));
+
+  // CCTP is 1:1 (minus a tiny bridge fee); USDC ~ $1.
+  const grossOutput = amount;
+  const outputUsd = Number(amount) / 1e6;
+  const fee = computeServiceFee(grossOutput, outputUsd);
+  if (fee >= grossOutput) throw new Error('Amount too small: fee would exceed the output');
+  const quotedOutput = grossOutput - fee;
+
+  logger.info(
+    `Creating CCTP route ${routeId}: ${input.amount} USDC ${input.sourceChainId} -> ${input.destChainId} via hub ${hubChainId}`,
+    'PrivateRoute'
+  );
+
+  await PrivateRouteModel.create({
+    id: routeId,
+    status: 'AWAITING_DEPOSIT',
+    sourceChainId: input.sourceChainId,
+    destChainId: input.destChainId,
+    hubChainId,
+    tokenSymbol: 'USDC',
+    tokenAddress: cctpUsdc(hubChainId),
+    destTokenSymbol: 'USDC',
+    destTokenAddress: cctpUsdc(input.destChainId),
+    amount: amount.toString(),
+    feeAmount: fee.toString(),
+    quotedOutputAmount: quotedOutput.toString(),
+    userDestinationAddress: storedRecipient,
+    hubAccount,
+    leg1DepositAddress: sourceAccount, // user sends USDC here on the source chain
+  });
+
+  logger.info(`CCTP route ${routeId} created; source smart account ${sourceAccount}`, 'PrivateRoute');
+
+  return {
+    routeId,
+    status: 'AWAITING_DEPOSIT',
+    depositAddress: sourceAccount,
+    hubAccount,
+    hubIsSmartAccount: isAaReady(hubChainId),
+    requestId: '',
+    sourceChainId: input.sourceChainId,
+    destChainId: input.destChainId,
+    hubChainId,
+    tokenSymbol: 'USDC',
+    destTokenSymbol: 'USDC',
     amount: amount.toString(),
     feeAmount: fee.toString(),
     quotedOutputAmount: quotedOutput.toString(),

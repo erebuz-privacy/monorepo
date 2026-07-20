@@ -7,7 +7,10 @@
 // not the input. e.g. 100 USDC in -> Relay yields 0.1 ETH -> we take
 // max($1, 1.5%) of the 0.1 ETH and deliver the rest.
 
+import { parseUnits } from 'viem';
 import { getRelayQuote, getRelayChains, chainDisplayName } from '../relay';
+import { cctpChainName } from '../cctp';
+import { BRIDGE_PROVIDER, PRIVACY_HUB_CHAIN_ID } from '../../config/global-config';
 import { computeServiceFee } from './fee';
 import { resolveRouteTokens, type RouteTokensInput } from './shared';
 
@@ -40,6 +43,35 @@ export interface QuotePrivateRouteResult {
 }
 
 export async function quotePrivateRoute(input: QuotePrivateRouteInput): Promise<QuotePrivateRouteResult> {
+  // CCTP mode: USDC bridges 1:1 (burn/mint), so no Relay quote or slippage —
+  // output = amount - fee.
+  if (BRIDGE_PROVIDER === 'cctp') {
+    const hubChainId = PRIVACY_HUB_CHAIN_ID;
+    const amount = parseUnits(input.amount, 6);
+    const grossOutput = amount;
+    const outputUsd = Number(amount) / 1e6;
+    const fee = computeServiceFee(grossOutput, outputUsd);
+    if (fee >= grossOutput) throw new Error('Invalid amount: too small — the fee would exceed the output');
+    const quotedOutput = grossOutput - fee;
+    return {
+      symbol: 'USDC',
+      decimals: 6,
+      destSymbol: 'USDC',
+      destDecimals: 6,
+      sourceChainId: input.sourceChainId,
+      destChainId: input.destChainId,
+      hubChainId,
+      amount: amount.toString(),
+      feeAmount: fee.toString(),
+      quotedOutputAmount: quotedOutput.toString(),
+      amountInUsd: outputUsd,
+      quotedOutputUsd: Number(quotedOutput) / 1e6,
+      feeUsd: Number(fee) / 1e6,
+      etaSeconds: 120,
+      route: [cctpChainName(input.sourceChainId), 'Private pool', cctpChainName(input.destChainId)],
+    };
+  }
+
   const { symbol, destSymbol, hubChainId, amount, source, hub, dest } = await resolveRouteTokens(input);
 
   // Leg-1 (source -> hub): the full input is bridged to the hub token.

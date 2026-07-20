@@ -13,7 +13,11 @@ import { PrivateRouteModel, type PrivateRoute, type PrivateRouteStatus } from '.
 import { getRelayDepositAddress, getRelayStatus, isRelayFilled, isRelayFailed, resolveCurrency, RELAY_NATIVE } from '../relay';
 import { executeBatch, isAaReady } from '../aa';
 import { isRailgunReady, buildShieldCalls, shieldFromEOA, unshieldERC20 } from '../railgun';
+import { buildCctpBurnCalls, cctpMint, cctpTryAttestation, cctpUsdc } from '../cctp';
+import { BRIDGE_PROVIDER } from '../../config/global-config';
 import { chainManager } from '../../managers/chain';
+
+const CCTP = BRIDGE_PROVIDER === 'cctp';
 
 async function set(routeId: string, status: PrivateRouteStatus, extra?: Record<string, string | null>) {
   await PrivateRouteModel.update(routeId, { status, ...(extra ?? {}) });
@@ -24,9 +28,47 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
   const token = route.tokenAddress as Address;
 
   switch (route.status) {
-    // ---- Bridge in: wait for Relay to fill the hub account ----
+    // ---- Bridge in: user's USDC -> hub. CCTP (burn/mint) or Relay. ----
     case 'AWAITING_DEPOSIT':
     case 'BRIDGING_IN': {
+      if (CCTP) {
+        const sourceUsdc = cctpUsdc(route.sourceChainId) as Address;
+        if (!route.leg1RequestId) {
+          // Not burned yet: wait for the user's USDC at the source smart account,
+          // then CCTP-burn it to the hub smart account.
+          const bal = await chainManager.getTokenBalance(
+            route.sourceChainId,
+            getAddress(route.leg1DepositAddress!),
+            sourceUsdc
+          );
+          if (bal <= 0n) return; // deposit not arrived yet
+          const calls = buildCctpBurnCalls({
+            destChainId: hubChainId,
+            usdc: sourceUsdc,
+            amount: bal,
+            mintRecipient: getAddress(route.hubAccount!),
+          });
+          const { txHash } = await executeBatch(route.sourceChainId, id, calls);
+          await set(id, 'BRIDGING_IN', { leg1RequestId: txHash });
+          return;
+        }
+        // Burned: mint on the hub once Circle attests. Hub gets funded on mint, so
+        // a positive hub balance means we already minted -> advance.
+        const hubUsdc = cctpUsdc(hubChainId) as Address;
+        const hubBal = await chainManager.getTokenBalance(hubChainId, getAddress(route.hubAccount!), hubUsdc);
+        if (hubBal > 0n) return void (await set(id, 'RECEIVED_ON_HUB'));
+        const att = await cctpTryAttestation({ sourceChainId: route.sourceChainId, burnTxHash: route.leg1RequestId });
+        if (!att) return; // attestation not ready
+        await cctpMint({
+          destChainId: hubChainId,
+          message: att.message,
+          attestation: att.attestation,
+          signerPrivateKey: process.env.PRIVATE_KEY as string,
+        });
+        await set(id, 'RECEIVED_ON_HUB');
+        return;
+      }
+      // ---- Relay leg-1 ----
       if (!route.leg1RequestId) return;
       const s = await getRelayStatus(route.leg1RequestId);
       if (!s) return;
@@ -64,9 +106,23 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
       return;
     }
 
-    // ---- Unshield: quote Relay leg-2, then unshield to that deposit address ----
+    // ---- Unshield the quoted output, then bridge out (CCTP or Relay) ----
     case 'SHIELDED': {
       if (!isRailgunReady()) return;
+      if (CCTP) {
+        // Unshield the quoted output back to the hub smart account; leg-2 CCTP-burns
+        // it to the recipient on the destination chain (handled in BRIDGING_OUT).
+        const hubUsdc = cctpUsdc(hubChainId);
+        const { txHash } = await unshieldERC20({
+          chainId: hubChainId,
+          tokenAddress: hubUsdc,
+          amount: BigInt(route.quotedOutputAmount),
+          toAddress: getAddress(route.hubAccount!),
+          gasPrivateKey: process.env.PRIVATE_KEY as string,
+        });
+        await set(id, 'UNSHIELD_SENT', { unshieldTx: txHash });
+        return;
+      }
       // Deliver the DESTINATION token (may differ from the shielded source token).
       const destSymbol = route.destTokenSymbol || route.tokenSymbol;
       const dest = route.destTokenAddress
@@ -106,9 +162,44 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
       return;
     }
 
-    // ---- Bridge out: wait for Relay leg-2 to deliver to the user ----
+    // ---- Bridge out: hub -> recipient. CCTP (burn/mint) or Relay. ----
     case 'UNSHIELD_SENT':
     case 'BRIDGING_OUT': {
+      if (CCTP) {
+        const hubUsdc = cctpUsdc(hubChainId) as Address;
+        if (!route.leg2RequestId) {
+          // Not burned yet: wait for the unshielded USDC on the hub SA, then
+          // CCTP-burn it to the recipient on the destination chain.
+          const bal = await chainManager.getTokenBalance(hubChainId, getAddress(route.hubAccount!), hubUsdc);
+          if (bal <= 0n) return; // unshield not settled yet
+          const calls = buildCctpBurnCalls({
+            destChainId: route.destChainId,
+            usdc: cctpUsdc(hubChainId),
+            amount: bal,
+            mintRecipient: route.userDestinationAddress,
+          });
+          const { txHash } = await executeBatch(hubChainId, id, calls);
+          await set(id, 'BRIDGING_OUT', { leg2RequestId: txHash });
+          return;
+        }
+        // Burned: mint on the destination once attested (then the recipient has USDC).
+        const att = await cctpTryAttestation({ sourceChainId: hubChainId, burnTxHash: route.leg2RequestId });
+        if (!att) return; // attestation not ready
+        try {
+          await cctpMint({
+            destChainId: route.destChainId,
+            message: att.message,
+            attestation: att.attestation,
+            signerPrivateKey: process.env.PRIVATE_KEY as string,
+          });
+        } catch (e) {
+          // Nonce may already be consumed (minted on a prior tick) — treat as done.
+          logger.warn(`CCTP leg-2 mint (may be already minted): ${String((e as Error)?.message || e)}`, 'PrivateRoute');
+        }
+        await set(id, 'COMPLETED');
+        return;
+      }
+      // ---- Relay leg-2 ----
       if (!route.leg2RequestId) return;
       const s = await getRelayStatus(route.leg2RequestId);
       if (!s) return;
