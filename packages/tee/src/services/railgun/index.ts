@@ -69,6 +69,22 @@ async function poiNodeReachable(urls: string[]): Promise<boolean> {
   return false;
 }
 
+/** Fetch the POI list key(s) the aggregator node serves (its list-provider keys). */
+async function fetchPOIListKeys(urls: string[]): Promise<string[]> {
+  for (const url of urls) {
+    const base = url.replace(/\/$/, '');
+    try {
+      const res = await fetch(`${base}/node-status-v2`, { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) continue;
+      const json = (await res.json()) as { listKeys?: string[] };
+      if (Array.isArray(json.listKeys) && json.listKeys.length > 0) return json.listKeys;
+    } catch {
+      // try the next url
+    }
+  }
+  return [];
+}
+
 export function isRailgunReady(): boolean {
   return engineReady;
 }
@@ -144,17 +160,64 @@ export async function initRailgunEngine(hubChainId: number): Promise<void> {
   try {
     const sdk = await import('@railgun-community/wallet');
     const sharedModels = await import('@railgun-community/shared-models');
-    const levelMod = await import('level');
+    // The engine wraps the store with `levelup(encoding-down(store))`, so it needs
+    // an abstract-leveldown store (leveldown) — NOT a `level` v10 instance, whose
+    // newer abstract-level API is incompatible and makes every db.get() hang.
+    // @ts-expect-error leveldown ships no type declarations
+    const leveldownMod = (await import('leveldown')) as unknown as { default?: unknown };
+    const leveldown = (leveldownMod.default ?? leveldownMod) as (path: string) => unknown;
     RG = sdk;
 
     const { startRailgunEngine, loadProvider, createRailgunWallet, ArtifactStore } = sdk;
-    const Level = (levelMod as unknown as { Level?: unknown; default?: unknown }).Level ?? (levelMod as unknown as { default: unknown }).default;
 
     mkdirSync(dirname(config.dbPath), { recursive: true });
-    const db = new (Level as new (path: string) => unknown)(config.dbPath);
+    const db = leveldown(config.dbPath);
     const artifactStore = buildArtifactStore(ArtifactStore, config.artifactPath);
 
+    // The wallet SDK merges POI_REQUIRED_LISTS (the official Chainalysis list) with
+    // our custom lists and requires a POI proof for EVERY one of them. A self-hosted
+    // node serves only its own list, so requiring the Chainalysis list makes every
+    // spend/unshield fail ("Failed to generate POIs for ... listKey: efc6ddb5..."),
+    // which aborts the whole POI refresh and leaves funds unspendable. Clear the
+    // default required list on the wallet's OWN shared-models instance so the wallet
+    // requires only the list(s) our node actually serves.
+    try {
+      const { createRequire } = await import('node:module');
+      const req = createRequire(join(process.cwd(), 'package.json'));
+      const walletDir = dirname(req.resolve('@railgun-community/wallet'));
+      const walletSM = req(req.resolve('@railgun-community/shared-models', { paths: [walletDir] })) as {
+        POI_REQUIRED_LISTS?: unknown[];
+      };
+      if (Array.isArray(walletSM.POI_REQUIRED_LISTS)) walletSM.POI_REQUIRED_LISTS.length = 0;
+    } catch (e) {
+      logger.warn(
+        `Railgun: could not clear default POI_REQUIRED_LISTS (spends may fail): ${String((e as Error)?.message || e)}`,
+        'Railgun'
+      );
+    }
+
+    // Register the list key(s) our node actually provides as the active list.
+    const poiListKeys = await fetchPOIListKeys(config.poiNodeURLs);
+    const customPOILists = poiListKeys.map((key) => ({
+      key,
+      type: sharedModels.POIListType.Active,
+      name: 'Self-hosted POI list',
+      description: 'Self-hosted Railgun Proof-of-Innocence list provider',
+    }));
+    if (customPOILists.length) {
+      logger.info(
+        `Railgun: active POI list(s): ${poiListKeys.map((k) => k.slice(0, 10)).join(', ')}`,
+        'Railgun'
+      );
+    } else {
+      logger.warn(
+        'Railgun: POI node returned no list keys; unshields will not become spendable.',
+        'Railgun'
+      );
+    }
+
     // skipMerkletreeScans=false: we need shielded balances to unshield.
+    logger.info('Railgun: starting engine...', 'Railgun');
     await startRailgunEngine(
       'erebuztee',
       db as never,
@@ -163,9 +226,26 @@ export async function initRailgunEngine(hubChainId: number): Promise<void> {
       false, // useNativeArtifacts (false for nodejs)
       false, // skipMerkletreeScans
       config.poiNodeURLs,
-      [],
+      customPOILists,
       false
     );
+    logger.info('Railgun: engine started, loading provider...', 'Railgun');
+
+    // Wire the groth16 prover (snarkjs) so the engine can generate shield/unshield
+    // proofs — without it, unshield fails with "Requires groth16 full prover".
+    try {
+      // @ts-expect-error snarkjs ships no type declarations
+      const snarkjs = (await import('snarkjs')) as { groth16?: unknown; default?: { groth16?: unknown } };
+      const groth16 = snarkjs.groth16 ?? snarkjs.default?.groth16;
+      if (groth16) {
+        sdk.getProver().setSnarkJSGroth16(groth16 as never);
+        logger.info('Railgun: groth16 prover (snarkjs) wired.', 'Railgun');
+      } else {
+        logger.warn('Railgun: snarkjs groth16 not found; proofs will fail.', 'Railgun');
+      }
+    } catch (e) {
+      logger.warn(`Railgun: could not init groth16 prover: ${String((e as Error)?.message || e)}`, 'Railgun');
+    }
 
     const providerConfig = providerConfigForChain(hubChainId);
     if (!providerConfig) {
@@ -183,6 +263,7 @@ export async function initRailgunEngine(hubChainId: number): Promise<void> {
     }
 
     await loadProvider(providerConfig, networkName, 1000 * 60 * 5);
+    logger.info('Railgun: provider loaded, creating wallet...', 'Railgun');
 
     const walletInfo = await createRailgunWallet(config.encryptionKey, config.mnemonic, undefined);
     railgunWalletId = walletInfo.id;
@@ -488,43 +569,81 @@ export async function unshieldBaseToken(params: {
 }
 
 /**
- * Poll the shielded balance of a token until it reaches at least `minAmount`
- * (i.e. the shield has been scanned into the merkletree and is spendable) or the
- * timeout elapses. Returns the last observed balance.
+ * Poll until the shielded balance is SPENDABLE (>= minAmount) or the timeout
+ * elapses. A shield is spendable only once (a) it's scanned into the merkletree
+ * and (b) the wallet has a POI proof for it — which requires the POI node to have
+ * listed the shield. Each iteration refreshes balances, pulls receive-POIs from
+ * the node, and generates the wallet's POI proofs. Returns {total, spendable}.
  */
 export async function waitForShieldedBalance(params: {
   chainId: number;
   tokenAddress: string;
   minAmount: bigint;
   timeoutMs?: number;
-  onPoll?: (balance: bigint) => void;
-}): Promise<bigint> {
+  onPoll?: (info: { total: bigint; spendable: bigint }) => void;
+}): Promise<{ total: bigint; spendable: bigint }> {
   const sdk = assertReady();
   const sharedModels = await import('@railgun-community/shared-models');
   const networkName = networkNameForChain(sharedModels, params.chainId);
   if (!networkName) throw new Error(`Railgun: unsupported chain ${params.chainId}`);
 
   const chain = { type: sharedModels.ChainType.EVM, id: params.chainId };
-  const deadline = Date.now() + (params.timeoutMs ?? 180_000);
-  let last = 0n;
+  const txidVersion = sharedModels.TXIDVersion.V2_PoseidonMerkle;
+  const deadline = Date.now() + (params.timeoutMs ?? 600_000);
+  let total = 0n;
+  let spendable = 0n;
   while (Date.now() < deadline) {
-    await sdk.refreshBalances(chain as never, [railgunWalletId!]);
+    try {
+      await sdk.refreshBalances(chain as never, [railgunWalletId!]);
+    } catch {
+      /* scan not ready */
+    }
+    // Pull the shield's POI status from the node + generate the wallet's proof.
+    // Both are transient failures until the node has listed our shield.
+    try {
+      await sdk.refreshReceivePOIsForWallet(txidVersion, networkName, railgunWalletId!);
+    } catch (e) {
+      if (process.env.POI_DEBUG) console.error('[poi] refreshReceivePOIs:', (e as Error)?.message || e);
+    }
+    try {
+      await sdk.generatePOIsForWallet(networkName, railgunWalletId!);
+    } catch (e) {
+      if (process.env.POI_DEBUG) console.error('[poi] generatePOIs:', (e as Error)?.message || e);
+    }
+    // Are the received TXOs' POIs Valid for our list? That's the real readiness
+    // signal — the `onlySpendable` balance bucket can lag behind POI validation.
+    let allValid = false;
+    try {
+      const info = (await sdk.getTXOsReceivedPOIStatusInfoForWallet(
+        txidVersion,
+        networkName,
+        railgunWalletId!
+      )) as Array<{ strings?: { poisPerList?: Record<string, string> } }>;
+      const statuses = info.flatMap((t) => Object.values(t.strings?.poisPerList ?? {}));
+      allValid = statuses.length > 0 && statuses.every((s) => s === 'Valid');
+      if (process.env.POI_DEBUG) {
+        const counts = statuses.reduce<Record<string, number>>((a, s) => ((a[s] = (a[s] ?? 0) + 1), a), {});
+        console.error('[poi] TXO POI statuses:', JSON.stringify(counts));
+      }
+    } catch (e) {
+      if (process.env.POI_DEBUG) console.error('[poi] status err:', (e as Error)?.message || e);
+    }
     try {
       const wallet = sdk.walletForID(railgunWalletId!);
-      const bal = await sdk.balanceForERC20Token(
-        sharedModels.TXIDVersion.V2_PoseidonMerkle,
-        wallet as never,
-        networkName,
-        params.tokenAddress,
-        false
+      total = BigInt(
+        (await sdk.balanceForERC20Token(txidVersion, wallet as never, networkName, params.tokenAddress, false)) ?? 0n
       );
-      last = BigInt(bal ?? 0n);
-      params.onPoll?.(last);
-      if (last >= params.minAmount) return last;
+      spendable = BigInt(
+        (await sdk.balanceForERC20Token(txidVersion, wallet as never, networkName, params.tokenAddress, true)) ?? 0n
+      );
+      params.onPoll?.({ total, spendable });
+      // Proceed once the funds are POI-Valid (or the spendable bucket has caught up).
+      if (spendable >= params.minAmount) return { total, spendable };
+      if (allValid && total >= params.minAmount) return { total, spendable: total };
     } catch {
-      // balance not ready yet — keep polling
+      /* balance not ready */
     }
-    await new Promise((r) => setTimeout(r, 5_000));
+    await new Promise((r) => setTimeout(r, 8_000));
   }
-  return last;
+  return { total, spendable };
 }
