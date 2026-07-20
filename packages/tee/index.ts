@@ -1,5 +1,7 @@
 // TEE Server - Stealth Addresses, ENS Resolution, and NEAR Intent Swaps
 
+// Load local dev env files (side effect) BEFORE any config module reads process.env.
+import './src/config/load-env';
 import { Router } from 'itty-router';
 import { serve } from '@hono/node-server';
 import { logger } from './src/managers/log';

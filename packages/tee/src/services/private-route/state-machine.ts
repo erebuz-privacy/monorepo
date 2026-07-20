@@ -12,7 +12,7 @@ import { logger } from '../../managers/log';
 import { PrivateRouteModel, type PrivateRoute, type PrivateRouteStatus } from '../../database/models/private-route';
 import { getRelayDepositAddress, getRelayStatus, isRelayFilled, isRelayFailed, resolveCurrency, RELAY_NATIVE } from '../relay';
 import { executeBatch, isAaReady } from '../aa';
-import { isRailgunReady, buildShieldCalls, shieldFromEOA, unshieldERC20 } from '../railgun';
+import { isRailgunReady, buildShieldCalls, shieldFromEOA, unshieldERC20, waitForShieldedBalance } from '../railgun';
 import { buildCctpBurnCalls, cctpMint, cctpTryAttestation, cctpUsdc } from '../cctp';
 import { BRIDGE_PROVIDER } from '../../config/global-config';
 import { chainManager } from '../../managers/chain';
@@ -43,6 +43,7 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
           );
           if (bal <= 0n) return; // deposit not arrived yet
           const calls = buildCctpBurnCalls({
+            sourceChainId: route.sourceChainId,
             destChainId: hubChainId,
             usdc: sourceUsdc,
             amount: bal,
@@ -109,14 +110,31 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
     // ---- Unshield the quoted output, then bridge out (CCTP or Relay) ----
     case 'SHIELDED': {
       if (!isRailgunReady()) return;
+      // The shield commitment must be scanned into the merkletree AND POI-Valid on
+      // our list before it's spendable. This refreshes balances, pulls the shield's
+      // POI status from the node, and generates the wallet proof, returning once the
+      // funds are spendable. Until then it's not-ready -> leave SHIELDED for a retry.
+      // CCTP unshields the GROSS (amount − our service fee); the Railgun unshield
+      // fee + CCTP dest-leg fee then bring it down to the quoted net (see fee.ts,
+      // computeCctpRouteFees). Relay unshields the leg-2 required input computed below.
+      const cctpUnshieldAmount = BigInt(route.amount) - BigInt(route.feeAmount);
+      const unshieldToken = CCTP ? cctpUsdc(hubChainId) : token;
+      const minSpendable = CCTP ? cctpUnshieldAmount : BigInt(route.quotedOutputAmount);
+      const { spendable } = await waitForShieldedBalance({
+        chainId: hubChainId,
+        tokenAddress: unshieldToken,
+        minAmount: minSpendable,
+        timeoutMs: 240_000,
+      });
+      if (spendable < minSpendable) return; // not scanned / POI-Valid yet; retry next tick
       if (CCTP) {
-        // Unshield the quoted output back to the hub smart account; leg-2 CCTP-burns
-        // it to the recipient on the destination chain (handled in BRIDGING_OUT).
+        // Unshield the gross to the hub smart account; leg-2 CCTP-burns it to the
+        // recipient on the destination chain (handled in BRIDGING_OUT).
         const hubUsdc = cctpUsdc(hubChainId);
         const { txHash } = await unshieldERC20({
           chainId: hubChainId,
           tokenAddress: hubUsdc,
-          amount: BigInt(route.quotedOutputAmount),
+          amount: cctpUnshieldAmount,
           toAddress: getAddress(route.hubAccount!),
           gasPrivateKey: process.env.PRIVATE_KEY as string,
         });
@@ -173,6 +191,7 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
           const bal = await chainManager.getTokenBalance(hubChainId, getAddress(route.hubAccount!), hubUsdc);
           if (bal <= 0n) return; // unshield not settled yet
           const calls = buildCctpBurnCalls({
+            sourceChainId: hubChainId,
             destChainId: route.destChainId,
             usdc: cctpUsdc(hubChainId),
             amount: bal,

@@ -1,0 +1,65 @@
+{
+  "id": 43113,
+  "address": "0x0000000000000000000000000000000000000000",
+  "name": "Avalanche Fuji",
+  "url": "https://api.avax-test.network/ext/bc/C/rpc",
+  "tokens": [
+    {
+      "address": "0x5425890298aed601595a70AB815c96711a31Bc65",
+      "symbol": "USDC",
+      "decimals": 6,
+      "name": "USD Coin"
+    }
+  ],
+  "modules": [],
+  "contracts": [
+    {
+      "name": "nexusImplementation",
+      "address": "0x00000000383e8cBe298514674Ea60Ee1d1de50ac",
+      "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "blockNumber": 0,
+      "verified": true,
+      "explorerLink": "https://testnet.snowtrace.io/address/0x00000000383e8cBe298514674Ea60Ee1d1de50ac"
+    },
+    {
+      "name": "nexusAccountFactory",
+      "address": "0x0000006648ED9B2B842552BE63Af870bC74af837",
+      "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "blockNumber": 0,
+      "verified": true,
+      "explorerLink": "https://testnet.snowtrace.io/address/0x0000006648ED9B2B842552BE63Af870bC74af837"
+    },
+    {
+      "name": "biconomyMetaFactory",
+      "address": "0x00000000000000447e69651d841bD8D104Bed493",
+      "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "blockNumber": 0,
+      "verified": true,
+      "explorerLink": "https://testnet.snowtrace.io/address/0x00000000000000447e69651d841bD8D104Bed493"
+    },
+    {
+      "name": "k1Validator",
+      "address": "0x0000000031ef4155C978d48a8A7d4EDba03b04fE",
+      "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "blockNumber": 0,
+      "verified": true,
+      "explorerLink": "https://testnet.snowtrace.io/address/0x0000000031ef4155C978d48a8A7d4EDba03b04fE"
+    },
+    {
+      "name": "nexusBootstrap",
+      "address": "0x0000003eDf18913c01cBc482C978bBD3D6E8ffA3",
+      "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "blockNumber": 0,
+      "verified": true,
+      "explorerLink": "https://testnet.snowtrace.io/address/0x0000003eDf18913c01cBc482C978bBD3D6E8ffA3"
+    },
+    {
+      "name": "mockRegistry",
+      "address": "0x000000000069E2a187AEFFb852bF3cCdC95151B2",
+      "transactionHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "blockNumber": 0,
+      "verified": true,
+      "explorerLink": "https://testnet.snowtrace.io/address/0x000000000069E2a187AEFFb852bF3cCdC95151B2"
+    }
+  ]
+}
