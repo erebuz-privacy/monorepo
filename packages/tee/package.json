@@ -16,7 +16,8 @@
     "test:ens": "tsx src/scripts/test-ens-resolution.ts",
     "verify:route": "tsx src/scripts/verify-private-route.ts",
     "gen:railgun-keys": "tsx src/scripts/gen-railgun-keys.ts",
-    "test:sepolia": "tsx src/scripts/test-sepolia.ts"
+    "test:sepolia": "tsx src/scripts/test-sepolia.ts",
+    "test:cctp": "tsx src/scripts/test-cctp.ts"
   },
   "keywords": [],
   "author": "",
