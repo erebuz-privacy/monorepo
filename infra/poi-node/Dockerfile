@@ -32,6 +32,14 @@ RUN sed -i \
       's#static NETWORK_NAMES: NetworkName\[\] = Object.values(NetworkName).filter(#static NETWORK_NAMES: NetworkName[] = (process.env.ACTIVE_NETWORKS ? (Object.values(NetworkName) as NetworkName[]).filter(n => process.env.ACTIVE_NETWORKS!.split(",").map(s => s.trim()).includes(n)) : Object.values(NetworkName)).filter(#' \
       src/config/config.ts
 
+# The list provider OFAC-screens every shield's address via Chainalysis and THROWS
+# without CHAINALYSIS_API_KEY, so shields never validate -> never get a POI -> the
+# wallet can't unshield. Without a key the node can't screen anyway, so treat
+# "no key" as "not sanctioned" (allow). Set CHAINALYSIS_API_KEY for real screening.
+RUN sed -i \
+      "s#throw new Error('No API Key for Chainalysis OFAC API');#return false; // no key: cannot screen, allow (set CHAINALYSIS_API_KEY for OFAC)#" \
+      src/local-list-provider.ts
+
 # The upstream Ethereum/Polygon/Arbitrum fallback RPCs use rpc.ankr.com, which now
 # requires an API key and fails the SDK's provider probe on boot (the node loads
 # every POI network and crashes if one is unreachable). Swap the stale ankr
