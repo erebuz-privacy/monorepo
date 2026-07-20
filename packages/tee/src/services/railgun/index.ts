@@ -120,14 +120,18 @@ function providerConfigForChain(chainId: number): { chainId: number; providers: 
   const chainUrl = chain && (chain as unknown as { url?: string }).url;
   const primary = envRpc || (chainUrl && chainUrl.length > 0 ? chainUrl : undefined);
   if (!primary) return null;
-  const backup = process.env[`RAILGUN_RPC_${chainId}_BACKUP`] || primary;
-  return {
-    chainId,
-    providers: [
-      { provider: primary, priority: 1, weight: 1, maxLogsPerBatch: 10 },
-      { provider: backup, priority: 2, weight: 1, maxLogsPerBatch: 10 },
-    ],
-  };
+  const backup = process.env[`RAILGUN_RPC_${chainId}_BACKUP`];
+  // The SDK's FallbackProvider needs totalWeight >= 2. Two providers with the SAME
+  // URL stall the quorum in the newer SDK, so: if a DISTINCT backup is configured
+  // use both (weight 1 each); otherwise use a single provider with weight 2.
+  const providers =
+    backup && backup !== primary
+      ? [
+          { provider: primary, priority: 1, weight: 1, maxLogsPerBatch: 10 },
+          { provider: backup, priority: 2, weight: 1, maxLogsPerBatch: 10 },
+        ]
+      : [{ provider: primary, priority: 1, weight: 2, maxLogsPerBatch: 10 }];
+  return { chainId, providers };
 }
 
 /**

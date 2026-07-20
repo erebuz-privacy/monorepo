@@ -280,11 +280,11 @@ importers:
         specifier: ^2.0.8
         version: 2.0.8(hono@4.12.28)
       '@railgun-community/shared-models':
-        specifier: 7.6.1
-        version: 7.6.1(ethers@6.13.1(bufferutil@4.1.0)(utf-8-validate@5.0.10))
+        specifier: 8.0.1
+        version: 8.0.1(ethers@6.13.1(bufferutil@4.1.0)(utf-8-validate@5.0.10))
       '@railgun-community/wallet':
-        specifier: 10.4.0
-        version: 10.4.0(@graphql-tools/utils@11.2.0(graphql@16.14.2))(@types/node@24.13.3)(bufferutil@4.1.0)(chai@4.5.0)(react-native@0.86.0(@babel/core@7.29.7)(@types/react@19.2.17)(bufferutil@4.1.0)(react@19.2.4)(utf-8-validate@5.0.10))(tslib@2.8.1)(utf-8-validate@5.0.10)
+        specifier: 10.9.0
+        version: 10.9.0(@graphql-tools/utils@11.2.0(graphql@16.14.2))(@types/node@24.13.3)(bufferutil@4.1.0)(chai@4.5.0)(react-native@0.86.0(@babel/core@7.29.7)(@types/react@19.2.17)(bufferutil@4.1.0)(react@19.2.4)(utf-8-validate@5.0.10))(tslib@2.8.1)(utf-8-validate@5.0.10)
       better-sqlite3:
         specifier: ^12.11.1
         version: 12.11.1
@@ -2511,8 +2511,8 @@ packages:
   '@railgun-community/curve25519-scalarmult-wasm@0.1.5':
     resolution: {integrity: sha512-Cur8uM/IdNW3WzUwdPloDG1CF0rpSBDWq2yGXJMZ7IMeBGdc4Jj0h9tnNMFRZ35ZuCVVbZ3yClmqSa4PsbpdGQ==}
 
-  '@railgun-community/engine@9.4.0':
-    resolution: {integrity: sha512-7BZcUKo5oVBWdyBrjpKft3zT0hFo1V3PzcDSuvEIDzA8mOqFXTrIr4j+0A9ONwb5bo4A/7vfO0yll6uk0Y4GSQ==}
+  '@railgun-community/engine@9.6.0':
+    resolution: {integrity: sha512-dFMhO8i+hxFIr/u0gtaVKV0C3SRaM6bHccfIzzJ/nAWQOK5gPI/h6cgkw0ICjycDUy8ZSkism19jWsIuIBJVwg==}
 
   '@railgun-community/ffjavascript@0.1.0':
     resolution: {integrity: sha512-wyFr5da1alJzahCKtf8ZF6qegWsIgi+OdSvRBlqXtRyJTY/deRCYrrYJdKNQwivqwR9SHlcqtUm18Ba+oJjTmg==}
@@ -2520,18 +2520,13 @@ packages:
   '@railgun-community/poseidon-hash-wasm@1.0.1':
     resolution: {integrity: sha512-zDAbMu095ZjMqsKIoyOnuKR4Zofnqqx4eTCtnA6qYglnexX5cadxItvJa3ozhDDTmFkDGAidDssQ7Pzl3wwLDA==}
 
-  '@railgun-community/shared-models@7.5.0':
-    resolution: {integrity: sha512-npSFFzSq2nSCLseEBZmLwJlZ4hMJArzEeM/DpqAAyxaTfznSHvpPIKmvEWorXVGjG+6xB7AY01TPGOq+3XHdcA==}
+  '@railgun-community/shared-models@8.0.1':
+    resolution: {integrity: sha512-g5Gt3j2O8XAMoJ+SzxvzyuB/KioFXXOs+2T0wxFQS5ebXB52e+HFBZ5UFVlORCbHteaAwLiURRcR2W8hOBUuoA==}
     peerDependencies:
-      ethers: 6.13.1
+      ethers: 6.14.3
 
-  '@railgun-community/shared-models@7.6.1':
-    resolution: {integrity: sha512-53ZK5oibJNtJIgsDhOCw+nUGM+2WsJoE21ro1vGWTJYqN6xAFBUUC/19OvcbKWUNjWYTr7iaAeSthBrS0DoGIA==}
-    peerDependencies:
-      ethers: 6.13.1
-
-  '@railgun-community/wallet@10.4.0':
-    resolution: {integrity: sha512-G006G9ZAmZDEnVN8k/i6ygeZnbKjXd/MvnvgxRKi33k7uTK9mzlg9MchcEZo3wIvd39onvjUDkBCy/dLO7JbHA==}
+  '@railgun-community/wallet@10.9.0':
+    resolution: {integrity: sha512-y2ncKCWkG3rWSYysBzXzPsTQvKMGE2lCFVwCgKjS3JnkZAHiKRYWjWrcMw1mSrFYmNjTO1/loYO4qALGz09cbg==}
 
   '@rainbow-me/rainbowkit@2.2.11':
     resolution: {integrity: sha512-FHPsRHMBpuHHhuyKktAR13O9agmsUUunDnVEP4hG1dSZ2JojXLUSWyLG28VbGIJakHYylkNguiLFnqM/BM8ERA==}
@@ -5486,6 +5481,10 @@ packages:
 
   ethers@6.13.1:
     resolution: {integrity: sha512-hdJ2HOxg/xx97Lm9HdCWk949BfYqYWpyw4//78SiwOLgASyfrNszfMUNB2joKjvGUdwhHfaiMMFFwacVVoLR9A==}
+    engines: {node: '>=14.0.0'}
+
+  ethers@6.14.3:
+    resolution: {integrity: sha512-qq7ft/oCJohoTcsNPFaXSQUm457MA5iWqkf1Mb11ujONdg7jBI6sAOrHaTi3j0CBqIGFSCeR/RMc+qwRRub7IA==}
     engines: {node: '>=14.0.0'}
 
   ethers@6.17.0:
@@ -11112,7 +11111,7 @@ snapshots:
       '@graphql-mesh/types': 0.91.15(@graphql-mesh/store@0.9.20)(@graphql-tools/utils@11.2.0(graphql@16.14.2))(graphql@16.14.2)(tslib@2.8.1)
       '@graphql-mesh/utils': 0.43.23(@graphql-mesh/cross-helpers@0.3.4(@graphql-tools/utils@11.2.0(graphql@16.14.2))(graphql@16.14.2)(react-native@0.86.0(@babel/core@7.29.7)(@types/react@19.2.17)(bufferutil@4.1.0)(react@19.2.4)(utf-8-validate@5.0.10)))(@graphql-mesh/types@0.91.15)(@graphql-tools/utils@11.2.0(graphql@16.14.2))(graphql@16.14.2)(tslib@2.8.1)
       '@graphql-tools/delegate': 10.2.23(graphql@16.14.2)
-      '@graphql-tools/schema': 10.0.2(graphql@16.14.2)
+      '@graphql-tools/schema': 10.0.36(graphql@16.14.2)
       '@graphql-tools/stitch': 9.4.29(graphql@16.14.2)
       '@graphql-tools/utils': 11.2.0(graphql@16.14.2)
       graphql: 16.14.2
@@ -11180,7 +11179,7 @@ snapshots:
 
   '@graphql-tools/batch-delegate@8.4.25(graphql@16.14.2)':
     dependencies:
-      '@graphql-tools/delegate': 9.0.31(graphql@16.14.2)
+      '@graphql-tools/delegate': 9.0.35(graphql@16.14.2)
       '@graphql-tools/utils': 9.2.1(graphql@16.14.2)
       dataloader: 2.2.2
       graphql: 16.14.2
@@ -11258,7 +11257,7 @@ snapshots:
       '@graphql-tools/executor': 0.0.20(graphql@16.14.2)
       '@graphql-tools/schema': 9.0.19(graphql@16.14.2)
       '@graphql-tools/utils': 9.2.1(graphql@16.14.2)
-      dataloader: 2.2.2
+      dataloader: 2.2.3
       graphql: 16.14.2
       tslib: 2.8.1
       value-or-promise: 1.0.12
@@ -11386,9 +11385,9 @@ snapshots:
   '@graphql-tools/stitch@8.7.48(graphql@16.14.2)':
     dependencies:
       '@graphql-tools/batch-delegate': 8.4.27(graphql@16.14.2)
-      '@graphql-tools/delegate': 9.0.31(graphql@16.14.2)
+      '@graphql-tools/delegate': 9.0.35(graphql@16.14.2)
       '@graphql-tools/merge': 8.4.2(graphql@16.14.2)
-      '@graphql-tools/schema': 9.0.18(graphql@16.14.2)
+      '@graphql-tools/schema': 9.0.19(graphql@16.14.2)
       '@graphql-tools/utils': 9.2.1(graphql@16.14.2)
       '@graphql-tools/wrap': 9.4.2(graphql@16.14.2)
       graphql: 16.14.2
@@ -11410,7 +11409,7 @@ snapshots:
 
   '@graphql-tools/stitching-directives@2.3.34(graphql@16.14.2)':
     dependencies:
-      '@graphql-tools/delegate': 9.0.31(graphql@16.14.2)
+      '@graphql-tools/delegate': 9.0.35(graphql@16.14.2)
       '@graphql-tools/utils': 9.2.1(graphql@16.14.2)
       graphql: 16.14.2
       tslib: 2.8.1
@@ -11418,7 +11417,7 @@ snapshots:
   '@graphql-tools/url-loader@7.17.18(@types/node@24.13.3)(bufferutil@4.1.0)(graphql@16.14.2)(utf-8-validate@5.0.10)':
     dependencies:
       '@ardatan/sync-fetch': 0.0.1
-      '@graphql-tools/delegate': 9.0.31(graphql@16.14.2)
+      '@graphql-tools/delegate': 9.0.35(graphql@16.14.2)
       '@graphql-tools/executor-graphql-ws': 0.0.14(bufferutil@4.1.0)(graphql@16.14.2)(utf-8-validate@5.0.10)
       '@graphql-tools/executor-http': 0.1.10(@types/node@24.13.3)(graphql@16.14.2)
       '@graphql-tools/executor-legacy-ws': 0.0.11(bufferutil@4.1.0)(graphql@16.14.2)(utf-8-validate@5.0.10)
@@ -11475,7 +11474,7 @@ snapshots:
 
   '@graphql-tools/wrap@9.4.2(graphql@16.14.2)':
     dependencies:
-      '@graphql-tools/delegate': 9.0.31(graphql@16.14.2)
+      '@graphql-tools/delegate': 9.0.35(graphql@16.14.2)
       '@graphql-tools/schema': 9.0.19(graphql@16.14.2)
       '@graphql-tools/utils': 9.2.1(graphql@16.14.2)
       graphql: 16.14.2
@@ -12613,7 +12612,7 @@ snapshots:
 
   '@railgun-community/curve25519-scalarmult-wasm@0.1.5': {}
 
-  '@railgun-community/engine@9.4.0(bufferutil@4.1.0)(chai@4.5.0)(utf-8-validate@5.0.10)':
+  '@railgun-community/engine@9.6.0(bufferutil@4.1.0)(chai@4.5.0)(utf-8-validate@5.0.10)':
     dependencies:
       '@noble/ciphers': 0.4.1
       '@noble/ed25519': 1.7.5
@@ -12628,7 +12627,7 @@ snapshots:
       chai-as-promised: 7.1.2(chai@4.5.0)
       encoding-down: 7.1.0
       ethereum-cryptography: 2.2.1
-      ethers: 6.13.1(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      ethers: 6.14.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       fast-text-encoding: 1.0.6
       levelup: 5.1.1
       msgpack-lite: 0.1.26
@@ -12646,15 +12645,15 @@ snapshots:
 
   '@railgun-community/poseidon-hash-wasm@1.0.1': {}
 
-  '@railgun-community/shared-models@7.5.0(ethers@6.13.1(bufferutil@4.1.0)(utf-8-validate@5.0.10))':
+  '@railgun-community/shared-models@8.0.1(ethers@6.13.1(bufferutil@4.1.0)(utf-8-validate@5.0.10))':
     dependencies:
       ethers: 6.13.1(bufferutil@4.1.0)(utf-8-validate@5.0.10)
 
-  '@railgun-community/shared-models@7.6.1(ethers@6.13.1(bufferutil@4.1.0)(utf-8-validate@5.0.10))':
+  '@railgun-community/shared-models@8.0.1(ethers@6.14.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))':
     dependencies:
-      ethers: 6.13.1(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      ethers: 6.14.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
 
-  '@railgun-community/wallet@10.4.0(@graphql-tools/utils@11.2.0(graphql@16.14.2))(@types/node@24.13.3)(bufferutil@4.1.0)(chai@4.5.0)(react-native@0.86.0(@babel/core@7.29.7)(@types/react@19.2.17)(bufferutil@4.1.0)(react@19.2.4)(utf-8-validate@5.0.10))(tslib@2.8.1)(utf-8-validate@5.0.10)':
+  '@railgun-community/wallet@10.9.0(@graphql-tools/utils@11.2.0(graphql@16.14.2))(@types/node@24.13.3)(bufferutil@4.1.0)(chai@4.5.0)(react-native@0.86.0(@babel/core@7.29.7)(@types/react@19.2.17)(bufferutil@4.1.0)(react@19.2.4)(utf-8-validate@5.0.10))(tslib@2.8.1)(utf-8-validate@5.0.10)':
     dependencies:
       '@graphql-mesh/cache-localforage': 0.7.20(@graphql-mesh/types@0.91.15)(@graphql-mesh/utils@0.43.23)(graphql@16.14.2)(tslib@2.8.1)
       '@graphql-mesh/cross-helpers': 0.3.4(@graphql-tools/utils@11.2.0(graphql@16.14.2))(graphql@16.14.2)(react-native@0.86.0(@babel/core@7.29.7)(@types/react@19.2.17)(bufferutil@4.1.0)(react@19.2.4)(utf-8-validate@5.0.10))
@@ -12667,8 +12666,8 @@ snapshots:
       '@graphql-mesh/types': 0.91.15(@graphql-mesh/store@0.9.20)(@graphql-tools/utils@11.2.0(graphql@16.14.2))(graphql@16.14.2)(tslib@2.8.1)
       '@graphql-mesh/utils': 0.43.23(@graphql-mesh/cross-helpers@0.3.4(@graphql-tools/utils@11.2.0(graphql@16.14.2))(graphql@16.14.2)(react-native@0.86.0(@babel/core@7.29.7)(@types/react@19.2.17)(bufferutil@4.1.0)(react@19.2.4)(utf-8-validate@5.0.10)))(@graphql-mesh/types@0.91.15)(@graphql-tools/utils@11.2.0(graphql@16.14.2))(graphql@16.14.2)(tslib@2.8.1)
       '@noble/ed25519': 1.7.5
-      '@railgun-community/engine': 9.4.0(bufferutil@4.1.0)(chai@4.5.0)(utf-8-validate@5.0.10)
-      '@railgun-community/shared-models': 7.5.0(ethers@6.13.1(bufferutil@4.1.0)(utf-8-validate@5.0.10))
+      '@railgun-community/engine': 9.6.0(bufferutil@4.1.0)(chai@4.5.0)(utf-8-validate@5.0.10)
+      '@railgun-community/shared-models': 8.0.1(ethers@6.14.3(bufferutil@4.1.0)(utf-8-validate@5.0.10))
       '@whatwg-node/fetch': 0.8.8
       assert: 2.0.0
       axios: 1.7.2
@@ -12676,7 +12675,7 @@ snapshots:
       buffer: 6.0.3
       crypto-browserify: 3.12.0
       ethereum-cryptography: 2.2.1
-      ethers: 6.13.1(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+      ethers: 6.14.3(bufferutil@4.1.0)(utf-8-validate@5.0.10)
       events: 3.3.0
       graphql: 16.14.2
       stream-browserify: 3.0.0
@@ -16964,6 +16963,19 @@ snapshots:
       '@types/node': 18.15.13
       aes-js: 4.0.0-beta.5
       tslib: 2.4.0
+      ws: 8.17.1(bufferutil@4.1.0)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  ethers@6.14.3(bufferutil@4.1.0)(utf-8-validate@5.0.10):
+    dependencies:
+      '@adraffy/ens-normalize': 1.10.1
+      '@noble/curves': 1.2.0
+      '@noble/hashes': 1.3.2
+      '@types/node': 22.7.5
+      aes-js: 4.0.0-beta.5
+      tslib: 2.7.0
       ws: 8.17.1(bufferutil@4.1.0)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil

@@ -24,8 +24,8 @@
   "dependencies": {
     "@fluidkey/stealth-account-kit": "^1.1.0",
     "@hono/node-server": "^2.0.8",
-    "@railgun-community/shared-models": "7.6.1",
-    "@railgun-community/wallet": "10.4.0",
+    "@railgun-community/shared-models": "8.0.1",
+    "@railgun-community/wallet": "10.9.0",
     "better-sqlite3": "^12.11.1",
     "ethereum-cryptography": "^2.0.0",
     "ethers": "6.13.1",
