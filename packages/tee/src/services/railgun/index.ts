@@ -374,6 +374,39 @@ export async function buildShieldCalls(params: {
 }
 
 /**
+ * Shield an ERC-20 into the pool directly from an EOA (the same [approve, shield]
+ * calls as buildShieldCalls, but sent by the EOA instead of a smart account).
+ * Used for the EOA-hub fallback on chains without the Nexus AA stack (e.g. the
+ * Sepolia test hub). Returns the shield tx hash.
+ */
+export async function shieldFromEOA(params: {
+  chainId: number;
+  tokenAddress: string;
+  amount: bigint;
+  signerPrivateKey: string;
+}): Promise<{ txHash: string }> {
+  const ethers = await import('ethers');
+  const { calls } = await buildShieldCalls({
+    chainId: params.chainId,
+    tokenAddress: params.tokenAddress,
+    amount: params.amount,
+  });
+  const providerConfig = providerConfigForChain(params.chainId);
+  if (!providerConfig) throw new Error(`Railgun: no RPC for chain ${params.chainId}`);
+  const provider = new ethers.JsonRpcProvider(providerConfig.providers[0].provider);
+  const wallet = new ethers.Wallet(params.signerPrivateKey, provider);
+
+  let lastHash = '';
+  for (const call of calls) {
+    const tx = await wallet.sendTransaction({ to: call.to, data: call.data, value: call.value ?? 0n });
+    await tx.wait();
+    lastHash = tx.hash;
+  }
+  logger.info(`Railgun EOA shield sent: ${lastHash}`, 'Railgun');
+  return { txHash: lastHash };
+}
+
+/**
  * Unshield ERC-20 from our shielded balance to a public recipient (the Relay
  * leg-2 deposit address). Generates a proof (~20-30s).
  */

@@ -115,6 +115,15 @@ function buildInit(chainId: number, routeId: string): { initData: Hex; salt: Hex
 
 /** Compute the TEE-owned hub account address for a route (counterfactual, no deploy). */
 export async function deriveHubAddress(chainId: number, routeId: string): Promise<Address> {
+  // EOA-hub fallback: on chains without the Nexus AA stack (e.g. the Sepolia test
+  // hub), the hub account IS the TEE's EOA — funds bridge to it, and the shield
+  // step executes directly from the EOA (see state-machine RECEIVED_ON_HUB). This
+  // is the same EOA path proven by scripts/test-sepolia.ts. Note: a single EOA is
+  // shared across routes (no per-route isolation), so this is for test / low-volume
+  // use; production hubs (Arbitrum) use per-route AA accounts below.
+  if (!isAaReady(chainId)) {
+    return teeOwner().address;
+  }
   const chain = chainManager.getChain(chainId);
   const publicClient = chain?.getPublicClient();
   const factory = chain?.getNexusAccountFactory();
