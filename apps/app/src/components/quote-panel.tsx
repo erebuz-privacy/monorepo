@@ -30,8 +30,12 @@ import { useApp } from "@/lib/store";
 import { useChains, useTokens } from "@/lib/tee-data";
 import { fromSmallestUnit, tee, type TeeQuote, type TeeToken } from "@/lib/tee";
 
-const DEFAULT_FROM_CHAIN = 8453; // Base
-const DEFAULT_TO_CHAIN = 137; // Polygon
+// Test mode targets the Sepolia testnet hub (Base Sepolia <-> Sepolia); prod
+// defaults to Base -> Polygon. These are just initial selections — the actual
+// chain/token lists come from the TEE, and the code falls back gracefully.
+export const TEST_MODE = process.env.NEXT_PUBLIC_TEST_MODE === "true";
+const DEFAULT_FROM_CHAIN = TEST_MODE ? 84532 : 8453; // Base Sepolia : Base
+const DEFAULT_TO_CHAIN = TEST_MODE ? 84532 : 137; // Base Sepolia : Polygon
 const DEFAULT_SYMBOL = "USDC";
 
 function formatEta(seconds: number): string {
