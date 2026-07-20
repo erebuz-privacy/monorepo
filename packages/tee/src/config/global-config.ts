@@ -64,6 +64,11 @@ export const PRIVACY_HUB_TOKEN_SYMBOL = process.env.PRIVACY_HUB_TOKEN_SYMBOL || 
 export const PRIVATE_ROUTE_MONITOR_INTERVAL_MS = Number(process.env.PRIVATE_ROUTE_MONITOR_INTERVAL_MS) || 15000;
 export const PRIVATE_ROUTE_MONITOR_ENABLED = process.env.PRIVATE_ROUTE_MONITOR_ENABLED !== 'false';
 
+// Bridge provider for the in/out legs. 'cctp' = Circle CCTP (native USDC burn/mint,
+// no slippage/liquidity caps); 'relay' = Relay (any token, liquidity-based). CCTP
+// bridges USDC only; a swap provider handles USDC<->other-token conversion.
+export const BRIDGE_PROVIDER = (process.env.BRIDGE_PROVIDER || 'relay').toLowerCase();
+
 /**
  * The route fee is the spread between what the user sends and the output we
  * GUARANTEE to deliver: fee = max(min-USD floor, bps of amount). It's not a

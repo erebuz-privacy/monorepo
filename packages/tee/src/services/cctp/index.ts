@@ -30,6 +30,46 @@ const CCTP_DOMAINS: Record<number, number> = {
 // Finality thresholds: 1000 = Fast Transfer (confirmed), 2000 = standard (finalized).
 const FAST_FINALITY = 1000;
 
+// Canonical USDC per chain (CCTP native token).
+const CCTP_USDC: Record<number, string> = {
+  11155111: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238', // Ethereum Sepolia
+  84532: '0x036CbD53842c5426634e7929541eC2318f3dCF7e', // Base Sepolia
+  421614: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d', // Arbitrum Sepolia
+  // mainnet
+  1: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  42161: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+};
+
+export function cctpUsdc(chainId: number): string {
+  const a = CCTP_USDC[chainId];
+  if (!a) throw new Error(`CCTP: no USDC configured for chain ${chainId}`);
+  return a;
+}
+
+const CCTP_CHAIN_NAMES: Record<number, string> = {
+  11155111: 'Ethereum Sepolia',
+  84532: 'Base Sepolia',
+  421614: 'Arbitrum Sepolia',
+  11155420: 'OP Sepolia',
+  80002: 'Polygon Amoy',
+  1: 'Ethereum',
+  8453: 'Base',
+  42161: 'Arbitrum',
+};
+
+export function cctpChainName(chainId: number): string {
+  return CCTP_CHAIN_NAMES[chainId] ?? `Chain ${chainId}`;
+}
+
+/** Chains available in CCTP mode, as the app's chain-picker list expects. */
+export function cctpChains(): Array<{ chainId: number; name: string; displayName: string; vmType: string }> {
+  return Object.keys(CCTP_USDC)
+    .map(Number)
+    .filter((id) => id in CCTP_CHAIN_NAMES)
+    .map((id) => ({ chainId: id, name: cctpChainName(id), displayName: cctpChainName(id), vmType: 'evm' }));
+}
+
 const TOKEN_MESSENGER_ABI = [
   'function depositForBurn(uint256 amount, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold) returns (uint64)',
 ];
@@ -106,6 +146,42 @@ export async function cctpBurn(params: {
 }
 
 /**
+ * Build the [approve, depositForBurn] calls for a CCTP burn, to be executed by a
+ * smart account via executeBatch (the per-route TEE hub/source accounts). USDC is
+ * the only bridged asset; a swap provider handles USDC<->other-token conversion.
+ */
+export function buildCctpBurnCalls(params: {
+  destChainId: number;
+  usdc: string;
+  amount: bigint;
+  mintRecipient: string;
+  maxFeeBps?: number;
+}): Array<{ to: `0x${string}`; data: `0x${string}` }> {
+  const destDomain = cctpDomain(params.destChainId);
+  const maxFee = (params.amount * BigInt(params.maxFeeBps ?? 100)) / 10_000n;
+  const erc20 = new ethers.Interface(ERC20_ABI);
+  const tm = new ethers.Interface(TOKEN_MESSENGER_ABI);
+  return [
+    {
+      to: params.usdc as `0x${string}`,
+      data: erc20.encodeFunctionData('approve', [TOKEN_MESSENGER_V2, params.amount]) as `0x${string}`,
+    },
+    {
+      to: TOKEN_MESSENGER_V2 as `0x${string}`,
+      data: tm.encodeFunctionData('depositForBurn', [
+        params.amount,
+        destDomain,
+        addressToBytes32(params.mintRecipient),
+        params.usdc,
+        ethers.ZeroHash,
+        maxFee,
+        FAST_FINALITY,
+      ]) as `0x${string}`,
+    },
+  ];
+}
+
+/**
  * Poll Circle's Iris attestation service until the burn is attested. Returns the
  * message bytes + attestation signature needed for receiveMessage on the dest.
  */
@@ -135,6 +211,28 @@ export async function cctpFetchAttestation(params: {
       // transient; keep polling
     }
     await new Promise((r) => setTimeout(r, 6_000));
+  }
+  return null;
+}
+
+/** Single-shot attestation check (for the per-tick state machine). Null if not ready. */
+export async function cctpTryAttestation(params: {
+  sourceChainId: number;
+  burnTxHash: string;
+}): Promise<{ message: string; attestation: string } | null> {
+  const srcDomain = cctpDomain(params.sourceChainId);
+  try {
+    const res = await fetch(`${IRIS_API}/v2/messages/${srcDomain}?transactionHash=${params.burnTxHash}`);
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      messages?: Array<{ status?: string; message?: string; attestation?: string }>;
+    };
+    const m = data.messages?.[0];
+    if (m && m.status === 'complete' && m.attestation && m.attestation !== 'PENDING' && m.message) {
+      return { message: m.message, attestation: m.attestation };
+    }
+  } catch {
+    /* transient */
   }
   return null;
 }
