@@ -9,8 +9,10 @@ RUN apt-get update \
 WORKDIR /app
 
 # Install deps first for layer caching (tsx is a runtime dep here — `tsx index.ts`).
+# --legacy-peer-deps: local dev uses pnpm (lenient peers); npm is strict and
+# @railgun-community/shared-models peers ethers@6.14.3 vs our pinned ethers@6.13.1.
 COPY package.json ./
-RUN npm install --no-audit --no-fund
+RUN npm install --no-audit --no-fund --legacy-peer-deps
 
 COPY . .
 
