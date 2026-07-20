@@ -31,6 +31,7 @@
     "ethers": "6.13.1",
     "itty-router": "4.2.2",
     "level": "^10.0.0",
+    "leveldown": "^6.1.1",
     "snarkjs": "^0.7.6",
     "tsx": "^4.23.0",
     "viem": "^2.38.6"
