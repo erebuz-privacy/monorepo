@@ -1,11 +1,11 @@
 {
-  "id": 84532,
+  "id": 4801,
   "address": "0x0000000000000000000000000000000000000000",
-  "name": "Base Sepolia",
-  "url": "https://base-sepolia-rpc.publicnode.com",
+  "name": "World Chain Sepolia",
+  "url": "https://worldchain-sepolia.g.alchemy.com/public",
   "tokens": [
     {
-      "address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "address": "0x66145f38cBAC35Ca6F1Dfb4914dF98F1614aeA88",
       "symbol": "USDC",
       "decimals": 6,
       "name": "USD Coin"

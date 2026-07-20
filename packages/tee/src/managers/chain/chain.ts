@@ -59,7 +59,9 @@ export interface ChainConfig {
   url: string; // RPC URL
   tokens: ChainToken[];
   modules: DeployedModule[];
-  contracts: Contract[];
+  /** When true, the loader injects the canonical Nexus contracts (see nexus-contracts.ts). */
+  nexus?: boolean;
+  contracts?: Contract[];
 }
 
 /**
@@ -86,7 +88,7 @@ export class Chain {
     this.url = config.url;
     this.tokens = config.tokens;
     this.modules = config.modules;
-    this.contracts = config.contracts;
+    this.contracts = config.contracts ?? [];
   }
 
   /**

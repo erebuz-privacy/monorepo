@@ -1,11 +1,11 @@
 {
-  "id": 84532,
+  "id": 80002,
   "address": "0x0000000000000000000000000000000000000000",
-  "name": "Base Sepolia",
-  "url": "https://base-sepolia-rpc.publicnode.com",
+  "name": "Polygon Amoy",
+  "url": "https://polygon-amoy-bor-rpc.publicnode.com",
   "tokens": [
     {
-      "address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "address": "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582",
       "symbol": "USDC",
       "decimals": 6,
       "name": "USD Coin"

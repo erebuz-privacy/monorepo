@@ -1,11 +1,11 @@
 {
-  "id": 84532,
+  "id": 1328,
   "address": "0x0000000000000000000000000000000000000000",
-  "name": "Base Sepolia",
-  "url": "https://base-sepolia-rpc.publicnode.com",
+  "name": "Sei Atlantic-2",
+  "url": "https://evm-rpc-testnet.sei-apis.com",
   "tokens": [
     {
-      "address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "address": "0x4fCF1784B31630811181f670Aea7A7bEF803eaED",
       "symbol": "USDC",
       "decimals": 6,
       "name": "USD Coin"
