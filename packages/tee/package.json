@@ -32,6 +32,7 @@
     "better-sqlite3": "^12.11.1",
     "ethereum-cryptography": "^2.0.0",
     "ethers": "6.13.1",
+    "hono": "^4.12.28",
     "itty-router": "4.2.2",
     "level": "^10.0.0",
     "leveldown": "^6.1.1",
