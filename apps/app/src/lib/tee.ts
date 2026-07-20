@@ -60,13 +60,21 @@ export type TeeQuote = {
   sourceChainId: number;
   destChainId: number;
   hubChainId: number;
-  /** amount is source-token smallest units; feeAmount + quotedOutputAmount are DEST-token smallest units. */
+  /** amount is source-token smallest units; fee + output amounts are DEST-token smallest units. */
   amount: string;
+  /** Our service fee (margin). */
   feeAmount: string;
+  /** CCTP bridge fee borne by the user (dest leg). "0" for Relay routes. */
+  bridgeFeeAmount: string;
+  /** Railgun privacy (unshield) fee. "0" for Relay routes. */
+  privacyFeeAmount: string;
+  /** Guaranteed net delivered to the recipient (amount − all fees). */
   quotedOutputAmount: string;
   amountInUsd: number | null;
   quotedOutputUsd: number | null;
   feeUsd: number | null;
+  bridgeFeeUsd: number | null;
+  privacyFeeUsd: number | null;
   etaSeconds: number;
   route: string[];
 };

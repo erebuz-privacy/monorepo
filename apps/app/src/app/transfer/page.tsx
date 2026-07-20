@@ -12,10 +12,10 @@ import { ArrowLeft, BadgeCheck, Check, Copy, Loader2, XCircle } from "lucide-rea
 import { Button } from "@erebuz/ui/components/button";
 import { cn } from "@erebuz/ui/lib/utils";
 
-import { RemoteAssetGlyph, RemoteGlyph } from "@/components/crypto-icon";
+import { AssetGlyph, ChainGlyph } from "@/components/crypto-icon";
 import { FullScreenLoader } from "@/components/full-screen-loader";
 import { Screen } from "@/components/screen";
-import { formatAmount, formatUsd, shortenAddress } from "@/lib/format";
+import { formatAmount, shortenAddress } from "@/lib/format";
 import { useRouteDraft } from "@/lib/route-draft";
 import { fromSmallestUnit, tee, type RouteRecord } from "@/lib/tee";
 
@@ -210,11 +210,12 @@ export default function TransferPage() {
 
               <div className="border-border mt-6 w-full overflow-hidden rounded-2xl border text-left text-sm">
                 <div className="bg-muted/40 flex items-center gap-3 p-4">
-                  <RemoteAssetGlyph
+                  <AssetGlyph
+                    symbol={quote.destSymbol}
                     tokenLogo={toToken.logoUrl}
-                    tokenLabel={quote.destSymbol}
-                    chainLogo={toChain.logoUrl}
+                    chainId={toChain.chainId}
                     chainLabel={toChain.displayName}
+                    chainLogo={toChain.logoUrl}
                     size={38}
                   />
                   <div className="min-w-0 flex-1">
@@ -227,12 +228,8 @@ export default function TransferPage() {
                 </div>
                 <div className="space-y-2 p-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Fee</span>
-                    <span>{quote.feeUsd != null ? formatUsd(quote.feeUsd) : "-"}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Privacy</span>
-                    <span className="text-brand font-medium">Confidential</span>
+                    <span className="text-brand font-medium">Anonymous</span>
                   </div>
                 </div>
               </div>
@@ -265,10 +262,10 @@ export default function TransferPage() {
         {/* route footer */}
         {!isFailed ? (
           <div className="text-muted-foreground mt-4 flex items-center justify-center gap-2 text-xs">
-            <RemoteGlyph src={fromChain.logoUrl} label={fromChain.displayName} size={14} />
+            <ChainGlyph chainId={fromChain.chainId} logoUrl={fromChain.logoUrl} label={fromChain.displayName} size={14} />
             <span>{fromChain.displayName}</span>
             <span className="text-brand">→ Private →</span>
-            <RemoteGlyph src={toChain.logoUrl} label={toChain.displayName} size={14} />
+            <ChainGlyph chainId={toChain.chainId} logoUrl={toChain.logoUrl} label={toChain.displayName} size={14} />
             <span>{toChain.displayName}</span>
           </div>
         ) : null}

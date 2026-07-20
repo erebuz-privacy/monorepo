@@ -17,10 +17,11 @@ import { AssetPicker, type ChainChip, type PickerItem } from "@/components/asset
 import { BrandHeader } from "@/components/brand-header";
 import { ErrorNote } from "@/components/error-note";
 import {
+  AssetGlyph,
+  ChainGlyph,
   GradientAvatar,
   InitialCircle,
-  RemoteAssetGlyph,
-  RemoteGlyph,
+  SymbolGlyph,
 } from "@/components/crypto-icon";
 import { DestinationDialog, type Destination } from "@/components/destination-dialog";
 import { Screen } from "@/components/screen";
@@ -47,6 +48,7 @@ function formatEta(seconds: number): string {
 function AssetSelect({
   tokenLogo,
   symbol,
+  chainId,
   chainLogo,
   chainName,
   onClick,
@@ -54,6 +56,7 @@ function AssetSelect({
 }: {
   tokenLogo?: string | null;
   symbol?: string;
+  chainId?: number;
   chainLogo?: string | null;
   chainName?: string;
   onClick?: () => void;
@@ -66,11 +69,12 @@ function AssetSelect({
       className="border-border bg-card hover:bg-accent flex shrink-0 items-center gap-2.5 rounded-full border py-1.5 pl-1.5 pr-3 transition-colors"
     >
       {symbol ? (
-        <RemoteAssetGlyph
+        <AssetGlyph
+          symbol={symbol}
           tokenLogo={tokenLogo}
-          tokenLabel={symbol}
-          chainLogo={chainLogo}
+          chainId={chainId}
           chainLabel={chainName ?? ""}
+          chainLogo={chainLogo}
           size={30}
         />
       ) : (
@@ -262,7 +266,6 @@ export function QuotePanel() {
   }, [canQuote, fromToken, toToken, fromChainId, toChainId, amount, runQuote]);
 
   const quotedOut = quote ? fromSmallestUnit(quote.quotedOutputAmount, quote.destDecimals) : 0;
-  const feeToken = quote ? fromSmallestUnit(quote.feeAmount, quote.destDecimals) : 0;
   const sendUsd = quote?.amountInUsd ?? null;
   const receiveUsd = quote?.quotedOutputUsd ?? null;
 
@@ -272,7 +275,7 @@ export function QuotePanel() {
       chains.map((c) => ({
         id: String(c.chainId),
         label: c.displayName,
-        icon: <RemoteGlyph src={c.logoUrl} label={c.displayName} size={24} />,
+        icon: <ChainGlyph chainId={c.chainId} label={c.displayName} logoUrl={c.logoUrl} size={24} />,
       })),
     [chains]
   );
@@ -282,7 +285,7 @@ export function QuotePanel() {
       id: t.address,
       label: t.symbol,
       sublabel: t.name,
-      icon: <RemoteGlyph src={t.logoUrl} label={t.symbol} size={32} />,
+      icon: <SymbolGlyph symbol={t.symbol} logoUrl={t.logoUrl} size={32} />,
     }));
   const fromTokenItems = useMemo(() => toPickerItems(fromTokens), [fromTokens]);
   const toTokenItems = useMemo(() => toPickerItems(toTokens), [toTokens]);
@@ -366,6 +369,7 @@ export function QuotePanel() {
               <AssetSelect
                 tokenLogo={fromToken?.logoUrl}
                 symbol={fromToken?.symbol}
+                chainId={fromChain?.chainId}
                 chainLogo={fromChain?.logoUrl}
                 chainName={fromChain?.displayName}
                 onClick={() => setPicker("from")}
@@ -411,6 +415,7 @@ export function QuotePanel() {
               <AssetSelect
                 tokenLogo={toToken?.logoUrl}
                 symbol={toToken?.symbol}
+                chainId={toChain?.chainId}
                 chainLogo={toChain?.logoUrl}
                 chainName={toChain?.displayName}
                 onClick={() => setPicker("to")}
@@ -450,26 +455,23 @@ export function QuotePanel() {
               <Row label="You receive">
                 <span className="tabular-nums">{formatAmount(quotedOut, quote.destSymbol)}</span>
               </Row>
-              <Row label="Fee">
-                {quote.feeUsd != null ? formatUsd(quote.feeUsd) : formatAmount(feeToken, quote.destSymbol)}
-              </Row>
               <Row label="Network gas">
                 <span className="text-brand font-medium">Covered</span>
               </Row>
               <Row label="Privacy">
-                <span className="text-brand font-medium">Confidential</span>
+                <span className="text-brand font-medium">Anonymous</span>
               </Row>
               <Row label="Estimated time">{formatEta(quote.etaSeconds)}</Row>
               <div className="border-border flex items-center justify-between gap-3 border-t pt-2.5">
                 <span className="text-muted-foreground">Route</span>
                 <div className="flex flex-wrap items-center justify-end gap-1.5 text-xs">
                   <span className="flex items-center gap-1">
-                    <RemoteGlyph src={fromChain?.logoUrl} label={fromChain?.displayName ?? ""} size={15} />
+                    <ChainGlyph chainId={fromChain?.chainId} logoUrl={fromChain?.logoUrl} label={fromChain?.displayName ?? ""} size={15} />
                     <span className="font-medium">{fromChain?.displayName}</span>
                   </span>
                   <span className="text-brand">{"→"} Private {"→"}</span>
                   <span className="flex items-center gap-1">
-                    <RemoteGlyph src={toChain?.logoUrl} label={toChain?.displayName ?? ""} size={15} />
+                    <ChainGlyph chainId={toChain?.chainId} logoUrl={toChain?.logoUrl} label={toChain?.displayName ?? ""} size={15} />
                     <span className="font-medium">{toChain?.displayName}</span>
                   </span>
                 </div>
