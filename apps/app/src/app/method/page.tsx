@@ -12,8 +12,8 @@ import { ErrorNote } from "@/components/error-note";
 import { FullScreenLoader } from "@/components/full-screen-loader";
 import { OptionCard } from "@/components/option-card";
 import { Screen } from "@/components/screen";
-import { RemoteAssetGlyph } from "@/components/crypto-icon";
-import { formatAmount, formatUsd, shortenAddress } from "@/lib/format";
+import { AssetGlyph } from "@/components/crypto-icon";
+import { formatAmount, shortenAddress } from "@/lib/format";
 import { useRouteDraft } from "@/lib/route-draft";
 import { useApp } from "@/lib/store";
 import { fromSmallestUnit, tee } from "@/lib/tee";
@@ -73,11 +73,12 @@ export default function MethodPage() {
 
       {/* transfer summary */}
       <div className="border-border bg-muted/30 flex items-center gap-3 rounded-2xl border p-4">
-        <RemoteAssetGlyph
+        <AssetGlyph
+          symbol={quote.destSymbol}
           tokenLogo={toToken.logoUrl}
-          tokenLabel={quote.destSymbol}
-          chainLogo={toChain.logoUrl}
+          chainId={toChain.chainId}
           chainLabel={toChain.displayName}
+          chainLogo={toChain.logoUrl}
           size={40}
         />
         <div className="min-w-0 flex-1">
@@ -92,9 +93,7 @@ export default function MethodPage() {
           <p className="text-sm font-semibold tabular-nums">
             {formatAmount(quotedOut, quote.destSymbol)}
           </p>
-          <p className="text-muted-foreground text-xs">
-            fee {quote.feeUsd != null ? formatUsd(quote.feeUsd) : "-"}
-          </p>
+          <p className="text-muted-foreground text-xs">they receive</p>
         </div>
       </div>
 

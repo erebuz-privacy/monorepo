@@ -96,32 +96,101 @@ export function RemoteGlyph({
   );
 }
 
-/** Remote token logo with a small network badge - the all-chains analog of TokenOnChainGlyph. */
-export function RemoteAssetGlyph({
+// chainId -> web3icons network slug. Testnets reuse their mainnet's brand logo.
+const WEB3_NETWORK_BY_CHAIN_ID: Record<number, string> = {
+  1: "ethereum",
+  10: "optimism",
+  137: "polygon",
+  8453: "base",
+  42161: "arbitrum-one",
+  // testnets
+  11155111: "ethereum", // Sepolia
+  84532: "base", // Base Sepolia
+  421614: "arbitrum-one", // Arbitrum Sepolia
+  11155420: "optimism", // OP Sepolia
+  80002: "polygon", // Polygon Amoy
+};
+
+/**
+ * Chain logo by chainId via web3icons (real brand), falling back to the TEE's
+ * remote logo URL, then a colored initials circle. Use for the live TEE-driven
+ * selectors so USDC/Base/Ethereum etc. render their real logos.
+ */
+export function ChainGlyph({
+  chainId,
+  label,
+  logoUrl,
+  size = 32,
+  className,
+}: {
+  chainId?: number;
+  label: string;
+  logoUrl?: string | null;
+  size?: number;
+  className?: string;
+}) {
+  const network = chainId != null ? WEB3_NETWORK_BY_CHAIN_ID[chainId] : undefined;
+  const fallback = <RemoteGlyph src={logoUrl} label={label} size={size} className={className} />;
+  if (!network) return fallback;
+  return (
+    <NetworkIcon
+      id={network}
+      variant="branded"
+      size={size}
+      className={cn("shrink-0 rounded-full", className)}
+      fallback={fallback}
+    />
+  );
+}
+
+/** Token logo by symbol via web3icons (real brand), falling back to remote URL then initials. */
+export function SymbolGlyph({
+  symbol,
+  logoUrl,
+  size = 32,
+  className,
+}: {
+  symbol: string;
+  logoUrl?: string | null;
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <TokenIcon
+      symbol={symbol}
+      variant="branded"
+      size={size}
+      className={cn("shrink-0 rounded-full", className)}
+      fallback={<RemoteGlyph src={logoUrl} label={symbol} size={size} className={className} />}
+    />
+  );
+}
+
+/** Token logo + small chain badge, both via web3icons brands (remote/initials fallback). */
+export function AssetGlyph({
+  symbol,
   tokenLogo,
-  tokenLabel,
-  chainLogo,
+  chainId,
   chainLabel,
+  chainLogo,
   size = 40,
 }: {
+  symbol: string;
   tokenLogo?: string | null;
-  tokenLabel: string;
-  chainLogo?: string | null;
+  chainId?: number;
   chainLabel: string;
+  chainLogo?: string | null;
   size?: number;
 }) {
   const badge = Math.round(size * 0.44);
   return (
-    <span
-      className="relative inline-block shrink-0"
-      style={{ width: size, height: size }}
-    >
-      <RemoteGlyph src={tokenLogo} label={tokenLabel} size={size} />
+    <span className="relative inline-block shrink-0" style={{ width: size, height: size }}>
+      <SymbolGlyph symbol={symbol} logoUrl={tokenLogo} size={size} />
       <span
         className="ring-background absolute -bottom-0.5 -right-0.5 inline-flex overflow-hidden rounded-full ring-2"
         style={{ width: badge, height: badge }}
       >
-        <RemoteGlyph src={chainLogo} label={chainLabel} size={badge} />
+        <ChainGlyph chainId={chainId} label={chainLabel} logoUrl={chainLogo} size={badge} />
       </span>
     </span>
   );
