@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronDown, Loader2, Plus } from "lucide-react";
+import { ArrowLeft, ChevronDown, Loader2, Lock, Plus } from "lucide-react";
 
 import { Button } from "@erebuz/ui/components/button";
 import { Skeleton } from "@erebuz/ui/components/skeleton";
@@ -118,6 +118,8 @@ export function QuotePanel() {
   const [toTokenSel, setToToken] = useState<TeeToken | null>(null);
   const [amount, setAmount] = useState("");
   const [dest, setDest] = useState<Destination | null>(null);
+  // Testnet is live; mainnet is a "coming soon" placeholder for now.
+  const [network, setNetwork] = useState<"testnet" | "mainnet">("testnet");
 
   const [picker, setPicker] = useState<"from" | "to" | null>(null);
   const [destOpen, setDestOpen] = useState(false);
@@ -334,6 +336,48 @@ export function QuotePanel() {
     <Screen>
       <BrandHeader className="mb-6" />
 
+      {/* network toggle: testnet is live, mainnet is coming soon */}
+      <div className="border-border bg-muted/40 mb-5 flex rounded-full border p-1 text-sm font-medium">
+        <button
+          type="button"
+          onClick={() => setNetwork("testnet")}
+          className={cn(
+            "flex-1 rounded-full py-1.5 transition-colors",
+            network === "testnet" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+          )}
+        >
+          Testnet
+        </button>
+        <button
+          type="button"
+          onClick={() => setNetwork("mainnet")}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 transition-colors",
+            network === "mainnet" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+          )}
+        >
+          Mainnet
+          <span className="bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+            Soon
+          </span>
+        </button>
+      </div>
+
+      {network === "mainnet" ? (
+        <div className="border-border bg-muted/30 rounded-2xl border p-8 text-center">
+          <div className="bg-muted mx-auto flex size-12 items-center justify-center rounded-full">
+            <Lock className="text-muted-foreground size-5" />
+          </div>
+          <h2 className="mt-4 text-lg font-semibold">Mainnet is coming soon</h2>
+          <p className="text-muted-foreground mx-auto mt-2 max-w-xs text-sm leading-relaxed">
+            Private transfers on mainnet are launching shortly. Try it now on testnet — the full
+            flow works end to end.
+          </p>
+          <Button variant="outline" className="mt-5" onClick={() => setNetwork("testnet")}>
+            Switch to Testnet
+          </Button>
+        </div>
+      ) : (
       <div>
         <div className="mb-4">
           <h1 className="text-xl font-semibold tracking-tight">Send privately</h1>
@@ -520,6 +564,7 @@ export function QuotePanel() {
           Private and compliant by design. Live pricing from our routing engine.
         </p>
       </div>
+      )}
 
       {/* from: token + chain */}
       <AssetPicker
