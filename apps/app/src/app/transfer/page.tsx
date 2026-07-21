@@ -37,6 +37,10 @@ export default function TransferPage() {
   const [record, setRecord] = useState<RouteRecord | null>(null);
   const [copied, setCopied] = useState(false);
   const inFlight = useRef(false);
+  // Latest record for the poll loop's terminal check, WITHOUT making `record` a
+  // dependency of the polling effect (that caused it to re-run — and re-fire an
+  // immediate poll — on every status update, i.e. a tight request loop).
+  const recordRef = useRef<RouteRecord | null>(null);
 
   const routeId = draft?.created?.routeId ?? null;
 
@@ -50,6 +54,7 @@ export default function TransferPage() {
     inFlight.current = true;
     try {
       const r = await tee.getRoute(routeId);
+      recordRef.current = r;
       setRecord(r);
     } catch {
       // transient - keep the last known state and retry on the next tick
@@ -65,11 +70,12 @@ export default function TransferPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void poll();
     const id = setInterval(() => {
-      if (record && TERMINAL.has(record.status)) return;
+      const cur = recordRef.current;
+      if (cur && TERMINAL.has(cur.status)) return;
       void poll();
     }, 4000);
     return () => clearInterval(id);
-  }, [routeId, poll, record]);
+  }, [routeId, poll]);
 
   if (!draft?.created) return <FullScreenLoader />;
 
