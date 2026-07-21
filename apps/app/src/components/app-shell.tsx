@@ -7,7 +7,7 @@ import { Clock, Send, Settings } from "lucide-react";
 
 import { cn } from "@erebuz/ui/lib/utils";
 
-import { ConnectWallet } from "@/components/connect-wallet";
+// import { ConnectWallet } from "@/components/connect-wallet"; // not needed for now
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const NAV = [
@@ -54,7 +54,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="flex items-center gap-2 justify-self-end">
-          <ConnectWallet />
+          {/* <ConnectWallet /> — not needed for now */}
           <ThemeToggle />
         </div>
       </header>

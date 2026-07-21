@@ -63,6 +63,8 @@ export type ActivityLive = {
   stage?: string;
   /** Deposit address to fund (set while the route is awaiting a deposit). */
   depositAddress?: string;
+  /** Quoted end-to-end estimate (seconds) — used to flag a slow route. */
+  etaSeconds?: number;
 };
 
 export type Activity = {
