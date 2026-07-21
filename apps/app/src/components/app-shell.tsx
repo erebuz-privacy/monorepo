@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Clock, Send, Settings } from "lucide-react";
+import { /* Clock, */ Send /* , Settings */ } from "lucide-react";
 
 import { cn } from "@erebuz/ui/lib/utils";
 
@@ -12,8 +12,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 const NAV = [
   { href: "/", label: "Send", icon: Send },
-  { href: "/activity", label: "Activity", icon: Clock },
-  { href: "/settings", label: "Settings", icon: Settings },
+  // { href: "/activity", label: "Activity", icon: Clock },
+  // { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
