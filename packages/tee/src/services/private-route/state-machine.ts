@@ -19,6 +19,9 @@ import { chainManager } from '../../managers/chain';
 
 const CCTP = BRIDGE_PROVIDER === 'cctp';
 
+// Auto-cancel a route that's still AWAITING_DEPOSIT after this window (no funds sent).
+const DEPOSIT_EXPIRY_MS = Number(process.env.PRIVATE_ROUTE_DEPOSIT_EXPIRY_MS) || 5 * 60 * 1000;
+
 async function set(routeId: string, status: PrivateRouteStatus, extra?: Record<string, string | null>) {
   await PrivateRouteModel.update(routeId, { status, ...(extra ?? {}) });
 }
@@ -41,7 +44,15 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
             getAddress(route.leg1DepositAddress!),
             sourceUsdc
           );
-          if (bal <= 0n) return; // deposit not arrived yet
+          if (bal <= 0n) {
+            // Expire the intent if the user never funds it within the deposit window.
+            if (route.status === 'AWAITING_DEPOSIT' && Date.now() - route.createdAt.getTime() > DEPOSIT_EXPIRY_MS) {
+              return void (await set(id, 'FAILED', {
+                error: 'Deposit window expired — no funds received within 5 minutes. Start a new transfer.',
+              }));
+            }
+            return; // deposit not arrived yet
+          }
           const calls = buildCctpBurnCalls({
             sourceChainId: route.sourceChainId,
             destChainId: hubChainId,
