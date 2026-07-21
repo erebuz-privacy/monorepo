@@ -466,7 +466,10 @@ export function BridgeFlow() {
   };
 
   return (
-    <div className="page-enter mx-auto w-full max-w-md px-4 py-8 sm:py-12">
+    <div className="page-enter mx-auto flex w-full max-w-md flex-col items-center gap-8 px-4 py-8 sm:gap-10 sm:py-12">
+      {/* hero */}
+      <GradientHeading as="h1" size="xl" weight="black" className="whitespace-nowrap text-5xl sm:text-6xl lg:text-7xl">Send Privately, Anywhere</GradientHeading>
+
       <motion.div
         layout
         transition={sizeSpring}
@@ -498,12 +501,6 @@ export function BridgeFlow() {
                   </button>
                 ) : null}
 
-                <GradientHeading as="h1" size="md" weight="semi">
-                  Send privately
-                </GradientHeading>
-                <p className="text-muted-foreground mt-2 max-w-[42ch] text-sm leading-relaxed">
-                  Bridge across chains with the on-chain trail broken. Live quote before anything moves.
-                </p>
 
                 {chainsError ? (
                   <ErrorNote className="mt-4" title="Can't load networks" message={chainsError} onRetry={retryChains} />
