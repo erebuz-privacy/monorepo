@@ -4,7 +4,7 @@
 // a single container that springs its shape/size and crossfades its contents as
 // the user acts. Views:
 //   form     — enter amount, pick assets + recipient, live quote
-//   method   — choose how funds are handled (managed / self-custody)
+//   route    — inspect the discovered route, fees, and transfer time
 //   status   — a specific transfer's live state (funding → routing → done/failed)
 //   pending  — the list of in-flight transfers (opened from the badge)
 //
@@ -15,6 +15,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { glassSurfaceVariants } from "@erebuz/ui/components/glass-surface";
 import { QRCodeSVG } from "qrcode.react";
 import {
   ArrowDown,
@@ -24,21 +25,18 @@ import {
   ChevronRight,
   Clock,
   Copy,
-  KeyRound,
   Loader2,
   Lock,
-  Plus,
   ShieldCheck,
+  X,
   XCircle,
 } from "lucide-react";
 
 import { Button } from "@erebuz/ui/components/button";
 import { GradientHeading } from "@erebuz/ui/components/gradient-heading";
 import { Input } from "@erebuz/ui/components/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@erebuz/ui/components/popover";
 import { Skeleton } from "@erebuz/ui/components/skeleton";
 import { TextureButton } from "@erebuz/ui/components/texture-button";
-import { TextureCard } from "@erebuz/ui/components/texture-card";
 import { cn } from "@erebuz/ui/lib/utils";
 
 import { AssetPicker, type ChainChip, type PickerItem } from "@/components/asset-picker";
@@ -47,11 +45,8 @@ import {
   AssetGlyph,
   ChainGlyph,
   GradientAvatar,
-  InitialCircle,
   SymbolGlyph,
 } from "@/components/crypto-icon";
-// import { DestinationDialog, type Destination } from "@/components/destination-dialog";
-import { OptionCard } from "@/components/option-card";
 import { formatAmount, formatUsd, shortenAddress } from "@/lib/format";
 import { useApp } from "@/lib/store";
 import type { Activity } from "@/lib/mock-data";
@@ -60,7 +55,7 @@ import { fromSmallestUnit, tee, type CreatedRoute, type TeeQuote, type TeeToken 
 
 export const TEST_MODE = process.env.NEXT_PUBLIC_TEST_MODE === "true";
 const DEFAULT_FROM_CHAIN = TEST_MODE ? 84532 : 8453; // Base Sepolia : Base
-const DEFAULT_TO_CHAIN = TEST_MODE ? 84532 : 137; // Base Sepolia : Polygon
+const DEFAULT_TO_CHAIN = TEST_MODE ? 11155111 : 1; // Ethereum Sepolia : Ethereum
 const DEFAULT_SYMBOL = "USDC";
 const REFRESH_MS = 20_000;
 
@@ -73,16 +68,8 @@ const PROGRESS: { status: string; label: string }[] = [
 ];
 
 function formatEta(seconds: number): string {
+  if (seconds < 120) return `~${Math.max(1, Math.round(seconds))} sec`;
   return `~${Math.max(1, Math.round(seconds / 60))} min`;
-}
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-right font-medium">{children}</span>
-    </div>
-  );
 }
 
 function stageLabel(stage?: string): string {
@@ -133,10 +120,11 @@ function RoutingStatus({ etaSeconds }: { etaSeconds?: number }) {
   );
 }
 
-type View = "form" | "method" | "pending";
+type View = "form" | "route" | "pending";
 
-/** Token-on-chain pill (Relay/Jumper-style trigger), driven by remote logos. */
-function AssetSelect({
+/** Large route row inspired by Superbridge's scannable chain/token hierarchy. */
+function RouteAssetRow({
+  eyebrow,
   tokenLogo,
   symbol,
   chainId,
@@ -145,6 +133,7 @@ function AssetSelect({
   onClick,
   loading,
 }: {
+  eyebrow: string;
   tokenLogo?: string | null;
   symbol?: string;
   chainId?: number;
@@ -155,13 +144,13 @@ function AssetSelect({
 }) {
   if (loading && !symbol) {
     return (
-      <div className="border-border flex shrink-0 items-center gap-2.5 rounded-full border py-1.5 pr-3 pl-1.5">
-        <Skeleton className="size-[30px] rounded-full" />
-        <div className="space-y-1">
-          <Skeleton className="h-3 w-10" />
-          <Skeleton className="h-2 w-8" />
+      <div className="flex min-h-28 items-center gap-4 px-5 py-5">
+        <Skeleton className="size-14 rounded-full" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-3 w-20" />
+          <Skeleton className="h-6 w-28" />
         </div>
-        <ChevronDown className="text-muted-foreground size-4" />
+        <Skeleton className="h-8 w-16 rounded-full" />
       </div>
     );
   }
@@ -169,7 +158,7 @@ function AssetSelect({
     <button
       type="button"
       onClick={onClick}
-      className="press border-border bg-card hover:bg-accent flex shrink-0 cursor-pointer items-center gap-2.5 rounded-full border py-1.5 pr-3 pl-1.5 shadow-sm shadow-black/[0.03] dark:shadow-black/20"
+      className="group flex min-h-28 w-full cursor-pointer items-center gap-4 px-5 py-5 text-left [-webkit-tap-highlight-color:transparent] focus-visible:outline-none"
     >
       {symbol ? (
         <AssetGlyph
@@ -178,26 +167,35 @@ function AssetSelect({
           chainId={chainId}
           chainLabel={chainName ?? ""}
           chainLogo={chainLogo}
-          size={30}
+          size={56}
         />
       ) : (
-        <span className="bg-muted flex size-[30px] items-center justify-center rounded-full">
-          {loading ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+        <span className="border-foreground/20 bg-foreground/[0.04] flex size-14 items-center justify-center rounded-full border border-dashed">
+          <ChevronDown className="text-foreground/45 size-5" />
         </span>
       )}
-      <span className="text-left">
-        <span className="block text-sm leading-tight font-semibold">{symbol ?? "Select"}</span>
-        <span className="text-muted-foreground block text-[11px] leading-tight">
-          {chainName ?? "token"}
+      <span className="min-w-0 flex-1">
+        <span className="text-foreground/55 mb-1 flex items-center gap-1.5 truncate text-xs font-medium">
+          <span>{eyebrow}</span>
+          <span aria-hidden="true">·</span>
+          <span className="truncate">{chainName ?? "Choose network"}</span>
+        </span>
+        <span className="text-foreground block truncate text-xl font-semibold tracking-tight sm:text-2xl">
+          {symbol ?? "Select asset"}
         </span>
       </span>
-      <ChevronDown className="text-muted-foreground size-4" />
+      {symbol ? (
+        <span className="bg-foreground/[0.06] text-foreground/60 rounded-full px-3 py-1.5 text-sm font-semibold">
+          {symbol}
+        </span>
+      ) : null}
+      <ChevronDown className="text-foreground/45 group-hover:text-foreground/70 size-4 shrink-0 transition-colors" />
     </button>
   );
 }
 
 export function BridgeFlow() {
-  const { cards, contacts, activity, upsertActivity } = useApp();
+  const { activity, upsertActivity } = useApp();
   const prefersReduced = useReducedMotion();
   const reduce = !!prefersReduced;
 
@@ -216,6 +214,7 @@ export function BridgeFlow() {
   const [toTokenSel, setToToken] = useState<TeeToken | null>(null);
   const [amount, setAmount] = useState("");
   const [recipientAddr, setRecipientAddr] = useState("");
+  const [routeNeedsRecipient, setRouteNeedsRecipient] = useState(false);
   const [picker, setPicker] = useState<"from" | "to" | null>(null);
 
   const [quote, setQuote] = useState<TeeQuote | null>(null);
@@ -291,8 +290,8 @@ export function BridgeFlow() {
     []
   );
 
-  // Only quote while the form is the active view (no point polling behind a
-  // status/method/pending morph).
+  // Only quote while the form is active (no point polling behind route details,
+  // status, or activity views).
   const quoting = view === "form" && !activeRouteId;
   useEffect(() => {
     const id = ++reqIdRef.current;
@@ -316,10 +315,9 @@ export function BridgeFlow() {
   const quotedOut = quote ? fromSmallestUnit(quote.quotedOutputAmount, quote.destDecimals) : 0;
   const sendUsd = quote?.amountInUsd ?? null;
   const receiveUsd = quote?.quotedOutputUsd ?? null;
-  // The privacy pool the route goes through is the middle hop of quote.route,
-  // e.g. "Private pool (Arbitrum)". The TEE returns a single route (one pool),
-  // so there's nothing to choose between.
-  const pool = quote?.route?.[1] ?? "Private pool";
+  // The private hop is implemented by Railgun. Keep the product-facing route
+  // name stable even if the backend returns a chain-qualified pool label.
+  const pool = "Railgun";
 
   const chainChips: ChainChip[] = useMemo(
     () => chains.map((c) => ({ id: String(c.chainId), label: c.displayName, icon: <ChainGlyph chainId={c.chainId} label={c.displayName} logoUrl={c.logoUrl} size={24} /> })),
@@ -344,6 +342,7 @@ export function BridgeFlow() {
     setQuoteError(null);
     setCreateError(null);
     setCreating(false);
+    setRouteNeedsRecipient(false);
   };
 
   // ---- create the route (managed path) ----
@@ -372,7 +371,7 @@ export function BridgeFlow() {
         receiveAmount: fromSmallestUnit(quote.quotedOutputAmount, quote.destDecimals),
         feeUsd: quote.feeUsd ?? 0,
         status: "pending",
-        route: [fromChain.displayName, "Private", toChain.displayName],
+        route: [fromChain.displayName, "Railgun", toChain.displayName],
         live: {
           fromChainId: fromChain.chainId,
           fromChainName: fromChain.displayName,
@@ -430,18 +429,6 @@ export function BridgeFlow() {
           : "routing"
     : view;
 
-  const cta = !fromToken
-    ? "Select a token"
-    : amountNum <= 0
-      ? "Enter an amount"
-      : !recipient
-        ? "Choose a recipient"
-        : quoteLoading
-          ? "Fetching quote…"
-          : quoteError
-            ? "Route unavailable"
-            : "Review transfer";
-
   // ---- morph motion config ----
   // GPU-only (transform + opacity) — no animated blur, which is a paint cost
   // that makes the morph feel laggy. Size springs; content crossfades on a fast
@@ -455,14 +442,45 @@ export function BridgeFlow() {
   };
 
   return (
-    <div className="page-enter mx-auto flex w-full max-w-md flex-col items-center gap-8 px-4 py-8 sm:gap-10 sm:py-12">
-      {/* hero */}
-      <GradientHeading as="h1" size="xl" weight="black" className="whitespace-nowrap text-5xl sm:text-6xl lg:text-7xl">Send Privately, Anywhere</GradientHeading>
+    <div className="page-enter mx-auto flex w-full max-w-xl flex-col items-center gap-4 px-4 pb-12 pt-5 sm:pt-9">
+      {viewKey === "form" ? (
+        <div className="flex w-full items-center justify-between px-1">
+          <div
+            className={cn(
+              glassSurfaceVariants({ tone: "ink", depth: "raised", blur: "sm" }),
+              "text-foreground/80 flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold",
+            )}
+          >
+            <ShieldCheck className="size-4" />
+            {TEST_MODE ? "Testnet" : "Private route"}
+          </div>
+          <button
+            type="button"
+            onClick={() => setView("pending")}
+            className={cn(
+              glassSurfaceVariants({ tone: "ink", depth: "raised", blur: "sm" }),
+              "press text-foreground/80 flex cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold",
+            )}
+          >
+            Activity
+            {pending.length > 0 ? (
+              <span className="bg-brand text-brand-foreground flex size-5 items-center justify-center rounded-full text-[10px] font-bold">
+                {pending.length}
+              </span>
+            ) : (
+              <Clock className="size-4" />
+            )}
+          </button>
+        </div>
+      ) : null}
 
       <motion.div
         layout
         transition={sizeSpring}
-        className="border-border bg-card overflow-hidden rounded-3xl border shadow-sm shadow-black/[0.04] dark:shadow-2xl dark:shadow-black/40"
+        className={cn(
+          glassSurfaceVariants({ tone: "ink", depth: "floating", blur: "sm" }),
+          "text-foreground w-full overflow-hidden rounded-[2rem]",
+        )}
       >
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.div
@@ -475,207 +493,187 @@ export function BridgeFlow() {
           >
             {/* ============================= FORM ============================= */}
             {viewKey === "form" ? (
-              <div className="p-5">
-                {pending.length > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => setView("pending")}
-                    className="press bg-brand/10 text-brand ring-brand/20 mb-4 flex w-full cursor-pointer items-center gap-2 rounded-full py-1.5 pr-2 pl-3 text-xs font-medium ring-1 ring-inset"
-                  >
-                    <Loader2 className="size-3.5 animate-spin" />
-                    <span className="flex-1 text-left">
-                      {pending.length} transfer{pending.length > 1 ? "s" : ""} in progress
-                    </span>
-                    <ChevronRight className="size-3.5" />
-                  </button>
-                ) : null}
-
-
+              <div className="space-y-3 p-3 sm:p-4">
                 {chainsError ? (
-                  <ErrorNote className="mt-4" title="Can't load networks" message={chainsError} onRetry={retryChains} />
+                  <ErrorNote title="Can't load networks" message={chainsError} onRetry={retryChains} />
                 ) : null}
 
-                {/* send / receive */}
-                <div className="border-border bg-foreground/[0.02] relative mt-4 rounded-2xl border">
-                  <div className="p-4">
-                    <span className="text-muted-foreground text-sm">You send</span>
-                    <div className="mt-2 flex items-center gap-3">
-                      <input
-                        inputMode="decimal"
-                        autoFocus
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
-                        placeholder="0"
-                        className="placeholder:text-muted-foreground/40 w-full min-w-0 bg-transparent text-3xl font-semibold tracking-tight tabular-nums outline-none"
-                      />
-                      <AssetSelect
-                        tokenLogo={fromToken?.logoUrl}
-                        symbol={fromToken?.symbol}
-                        chainId={fromChain?.chainId}
-                        chainLogo={fromChain?.logoUrl}
-                        chainName={fromChain?.displayName}
-                        onClick={() => setPicker("from")}
-                        loading={chainsLoading || fromTokensLoading}
-                      />
-                    </div>
-                    {sendUsd != null ? <div className="text-muted-foreground mt-1.5 text-sm">≈ {formatUsd(sendUsd)}</div> : null}
-                  </div>
-
-                  <div className="border-border relative border-t">
-                    <span className="bg-card border-border text-muted-foreground absolute top-0 left-1/2 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border shadow-sm shadow-black/[0.03] dark:shadow-black/30">
+                <div
+                  className={cn(
+                    glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" }),
+                    "border-foreground/[0.14] relative overflow-hidden rounded-[1.65rem] backdrop-saturate-150",
+                  )}
+                >
+                  <RouteAssetRow
+                    eyebrow="From"
+                    tokenLogo={fromToken?.logoUrl}
+                    symbol={fromToken?.symbol}
+                    chainId={fromChain?.chainId}
+                    chainLogo={fromChain?.logoUrl}
+                    chainName={fromChain?.displayName}
+                    onClick={() => setPicker("from")}
+                    loading={chainsLoading || fromTokensLoading}
+                  />
+                  <div className="border-foreground/[0.07] relative mx-7 border-t">
+                    <span className="border-foreground/[0.08] bg-background/85 text-foreground/40 absolute top-0 left-[28px] flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border shadow-lg">
                       <ArrowDown className="size-3.5" />
                     </span>
                   </div>
+                  <RouteAssetRow
+                    eyebrow="To"
+                    tokenLogo={toToken?.logoUrl}
+                    symbol={toToken?.symbol}
+                    chainId={toChain?.chainId}
+                    chainLogo={toChain?.logoUrl}
+                    chainName={toChain?.displayName}
+                    onClick={() => setPicker("to")}
+                    loading={chainsLoading || toTokensLoading}
+                  />
+                </div>
 
-                  <div className="p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground text-sm">They receive</span>
-                      {receiveUsd != null ? <span className="text-muted-foreground text-xs">≈ {formatUsd(receiveUsd)}</span> : null}
-                    </div>
-                    <div className="mt-2 flex items-center gap-3">
-                      <span className={cn("w-full min-w-0 text-3xl font-semibold tracking-tight tabular-nums", quote ? "" : "text-muted-foreground/40")}>
-                        {quote ? formatAmount(quotedOut) : quoteLoading ? <Skeleton className="h-8 w-28" /> : "0"}
-                      </span>
-                      <AssetSelect
-                        tokenLogo={toToken?.logoUrl}
-                        symbol={toToken?.symbol}
-                        chainId={toChain?.chainId}
-                        chainLogo={toChain?.logoUrl}
-                        chainName={toChain?.displayName}
-                        onClick={() => setPicker("to")}
-                        loading={chainsLoading || toTokensLoading}
-                      />
-                    </div>
+                <div
+                  className={cn(
+                    glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" }),
+                    "border-foreground/[0.14] rounded-[1.65rem] p-5 backdrop-saturate-150 sm:p-6",
+                  )}
+                >
+                  <label htmlFor="bridge-amount" className="text-foreground/80 text-sm font-semibold">
+                    Amount
+                  </label>
+                  <input
+                    id="bridge-amount"
+                    inputMode="decimal"
+                    autoFocus
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
+                    placeholder="0"
+                    className="text-foreground placeholder:text-foreground/30 mt-4 w-full bg-transparent text-5xl font-medium tracking-[-0.04em] tabular-nums outline-none"
+                  />
+                  <div className="mt-6 flex items-end justify-between gap-4 text-sm">
+                    <span className="text-foreground/52">{sendUsd != null ? `≈ ${formatUsd(sendUsd)}` : "$0"}</span>
+                    <span className="text-foreground/58 max-w-[65%] text-right">
+                      {quoteLoading ? (
+                        <Skeleton className="h-4 w-24" />
+                      ) : quote ? (
+                        <>Receive {formatAmount(quotedOut, quote.destSymbol)}</>
+                      ) : (
+                        <>Receive 0 {toToken?.symbol ?? ""}</>
+                      )}
+                      {receiveUsd != null ? <span className="text-foreground/45 ml-1">· {formatUsd(receiveUsd)}</span> : null}
+                    </span>
                   </div>
                 </div>
 
                 {quoteError && canQuote ? (
-                  <ErrorNote className="mt-3" title="Couldn't get a quote" message={quoteError} onRetry={quoteLoading ? undefined : retryQuote} />
+                  <ErrorNote title="Couldn't get a quote" message={quoteError} onRetry={quoteLoading ? undefined : retryQuote} />
                 ) : null}
 
-                {/* Quote details — a fixed-height trigger (shown once an amount is
-                    entered) with the breakdown in a portaled popover, so the
-                    bridge never changes height as the quote updates. */}
-                {amountNum > 0 && !quoteError ? (
-                  <Popover>
-                    <PopoverTrigger className="press border-border bg-foreground/[0.02] hover:bg-accent/40 mt-3 flex w-full cursor-pointer items-center justify-between gap-2 rounded-2xl border px-4 py-3 text-sm">
-                      <span className="flex min-w-0 items-center gap-2">
-                        <span className="bg-brand/10 text-brand ring-brand/20 inline-flex min-w-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset">
-                          <Lock className="size-3 shrink-0" />
-                          <span className="truncate">{pool}</span>
-                        </span>
-                      </span>
-                      <span className="text-muted-foreground flex shrink-0 items-center gap-1.5">
-                        {quote ? (
-                          <span className="tabular-nums">{formatEta(quote.etaSeconds)}</span>
-                        ) : (
-                          <Skeleton className="h-3.5 w-10" />
-                        )}
-                        <ChevronDown className="size-4" />
-                      </span>
-                    </PopoverTrigger>
-                    <PopoverContent align="center" sideOffset={8} className="w-(--anchor-width)">
-                      <div className="space-y-2.5 text-sm">
-                        <Row label="You receive">
-                          {quote ? (
-                            <span className="tabular-nums">{formatAmount(quotedOut, quote.destSymbol)}</span>
-                          ) : (
-                            <Skeleton className="h-4 w-24" />
-                          )}
-                        </Row>
-                        <Row label="Pool">
-                          <span className="font-medium">{pool}</span>
-                        </Row>
-                        <Row label="Network gas">
-                          <span className="text-brand font-medium">Covered</span>
-                        </Row>
-                        <Row label="Privacy">
-                          <span className="text-brand font-medium">Anonymous</span>
-                        </Row>
-                        <Row label="Estimated time">
-                          {quote ? (
-                            <span className="tabular-nums">{formatEta(quote.etaSeconds)}</span>
-                          ) : (
-                            <Skeleton className="h-4 w-14" />
-                          )}
-                        </Row>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                ) : null}
-
-                <label className="text-muted-foreground mt-3 block text-xs font-medium">Recipient address</label>
-                <Input
-                  value={recipientAddr}
-                  onChange={(e) => setRecipientAddr(e.target.value)}
-                  placeholder="0x… or any chain address"
-                  className="mt-1.5"
-                />
-
-                <TextureButton variant="brand" size="lg" className="mt-4" disabled={!ready} onClick={() => setView("method")}>
-                  {quoteLoading ? <Loader2 className="size-4 animate-spin" /> : null}
-                  {cta}
-                </TextureButton>
-
-                <p className="text-muted-foreground mt-5 flex items-center justify-center gap-1.5 text-center text-xs leading-relaxed">
-                  <Lock className="size-3" />
-                  Private and compliant by design.
-                </p>
+                <div
+                  className={cn(
+                    glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" }),
+                    "border-foreground/[0.14] rounded-[1.4rem] px-5 py-4 backdrop-saturate-150",
+                  )}
+                >
+                  <label htmlFor="bridge-recipient" className="text-foreground/75 block text-sm font-semibold">
+                    Recipient address
+                  </label>
+                  <Input
+                    id="bridge-recipient"
+                    value={recipientAddr}
+                    onChange={(e) => setRecipientAddr(e.target.value)}
+                    placeholder="0x… or any chain address"
+                    className="border-foreground/[0.12] bg-background/18 text-foreground placeholder:text-foreground/42 focus-visible:border-foreground/20 focus-visible:ring-foreground/12 mt-3 h-14 rounded-xl border px-4 text-base shadow-inner shadow-black/10 focus-visible:ring-1"
+                  />
+                </div>
               </div>
             ) : null}
 
-            {/* ============================ METHOD =========================== */}
-            {viewKey === "method" ? (
-              <div className="p-5">
-                <button
-                  type="button"
-                  onClick={() => setView("form")}
-                  className="press hover:bg-accent -ml-2 mb-4 w-fit cursor-pointer rounded-lg p-2"
-                  aria-label="Back"
-                  disabled={creating}
-                >
-                  <ArrowLeft className="size-5" />
-                </button>
+            {/* ======================= ROUTE CONFIRMATION ===================== */}
+            {viewKey === "route" && quote && fromChain && toChain && fromToken && toToken ? (
+              <div className="space-y-5 p-4 sm:p-6">
+                <header className="flex items-center gap-3">
+                  <span className="flex size-12 items-center justify-center rounded-full bg-emerald-500/12 ring-1 ring-emerald-500/20 ring-inset">
+                    <SymbolGlyph symbol="RAIL" size={34} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-foreground/40 text-xs font-medium">Via</p>
+                    <h2 className="text-foreground truncate text-lg font-semibold">{pool}</h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRouteNeedsRecipient(false);
+                      setView("form");
+                    }}
+                    className="bg-foreground/[0.05] text-foreground/45 hover:text-foreground flex size-11 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none"
+                    aria-label="Close route"
+                    disabled={creating}
+                  >
+                    <X className="size-5" />
+                  </button>
+                </header>
 
-                {fromChain && toChain && fromToken && toToken && quote ? (
-                  <TextureCard>
-                    <div className="text-foreground flex items-center gap-3 p-4">
-                      <AssetGlyph symbol={quote.destSymbol} tokenLogo={toToken.logoUrl} chainId={toChain.chainId} chainLabel={toChain.displayName} chainLogo={toChain.logoUrl} size={40} />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">
-                          {formatAmount(amountNum, fromToken.symbol)} on {fromChain.displayName}
-                        </p>
-                        <p className="text-muted-foreground truncate text-xs">
-                          to {recipient?.label} on {toChain.displayName}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold tabular-nums">{formatAmount(quotedOut, quote.destSymbol)}</p>
-                        <p className="text-muted-foreground text-xs">they receive</p>
-                      </div>
-                    </div>
-                  </TextureCard>
+                {routeNeedsRecipient ? (
+                  <div
+                    className={cn(
+                      glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" }),
+                      "border-foreground/[0.14] rounded-[1.4rem] px-5 py-4 backdrop-saturate-150",
+                    )}
+                  >
+                    <label htmlFor="route-recipient" className="text-foreground/75 block text-sm font-semibold">
+                      Recipient address
+                    </label>
+                    <Input
+                      id="route-recipient"
+                      value={recipientAddr}
+                      onChange={(event) => setRecipientAddr(event.target.value)}
+                      placeholder="0x… or any chain address"
+                      autoFocus
+                      className="border-foreground/[0.12] bg-background/18 text-foreground placeholder:text-foreground/42 focus-visible:border-foreground/20 focus-visible:ring-foreground/12 mt-3 h-14 rounded-xl border px-4 text-lg shadow-inner shadow-black/10 focus-visible:ring-1"
+                    />
+                  </div>
                 ) : null}
 
-                <div className="mt-6 mb-5">
-                  <GradientHeading as="h2" size="sm" weight="semi">
-                    How do you want to send?
-                  </GradientHeading>
-                  <p className="text-muted-foreground mt-2 text-sm leading-relaxed">Choose how your funds are handled for this transfer.</p>
+                <div className="border-foreground/[0.08] bg-foreground/[0.035] overflow-hidden rounded-[1.65rem] border">
+                  <div className="flex items-center gap-4 p-5">
+                    <AssetGlyph symbol={fromToken.symbol} tokenLogo={fromToken.logoUrl} chainId={fromChain.chainId} chainLabel={fromChain.displayName} chainLogo={fromChain.logoUrl} size={52} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-foreground/45 truncate text-sm font-medium">{fromChain.displayName}</p>
+                      <p className="text-foreground mt-1 text-2xl font-semibold tabular-nums">{formatAmount(amountNum, fromToken.symbol)}</p>
+                    </div>
+                  </div>
+                  <div className="border-foreground/[0.07] mx-5 border-t" />
+                  <div className="flex items-center gap-4 p-5">
+                    <AssetGlyph symbol={toToken.symbol} tokenLogo={toToken.logoUrl} chainId={toChain.chainId} chainLabel={toChain.displayName} chainLogo={toChain.logoUrl} size={52} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-foreground/45 truncate text-sm font-medium">{toChain.displayName}</p>
+                      <p className="text-foreground mt-1 text-2xl font-semibold tabular-nums">{formatAmount(quotedOut, quote.destSymbol)}</p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-3">
-                  <OptionCard
-                    icon={ShieldCheck}
-                    title="Managed"
-                    badge="Recommended"
-                    description={creating ? "Preparing your private transfer…" : "Secured in a protected enclave. Gasless, recoverable, easiest."}
-                    onClick={startManaged}
-                    loading={creating}
-                  />
-                  {createError && !creating ? <ErrorNote title="Couldn't start the transfer" message={createError} onRetry={startManaged} /> : null}
-                  <OptionCard icon={KeyRound} title="Self-custody" badge="Coming soon" badgeVariant="outline" description="Hold your own keys and sign each step yourself." disabled />
+                <div className="divide-foreground/[0.07] divide-y text-sm">
+                  <div className="flex items-center justify-between gap-4 py-4">
+                    <span className="text-foreground/65 flex items-center gap-2"><Clock className="size-4" /> Transfer time</span>
+                    <span className="text-foreground/80 font-semibold tabular-nums">{formatEta(quote.etaSeconds)}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-4 py-4">
+                    <span className="text-foreground/65 flex items-center gap-2"><Lock className="size-4" /> Network fees</span>
+                    <span className="text-foreground/80 font-semibold tabular-nums">{quote.feeUsd != null ? formatUsd(quote.feeUsd) : "Included"}</span>
+                  </div>
                 </div>
+
+                {createError && !creating ? <ErrorNote title="Couldn't start the transfer" message={createError} onRetry={startManaged} /> : null}
+
+                <button
+                  type="button"
+                  onClick={startManaged}
+                  disabled={!ready || creating}
+                  className="bg-foreground text-background hover:bg-foreground/90 flex h-14 w-full items-center justify-center gap-2 rounded-full text-base font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  {creating ? <Loader2 className="size-4 animate-spin" /> : null}
+                  {!recipient ? "Enter recipient address" : creating ? "Starting…" : "Start"}
+                </button>
               </div>
             ) : null}
 
@@ -865,6 +863,63 @@ export function BridgeFlow() {
           </motion.div>
         </AnimatePresence>
       </motion.div>
+
+      {viewKey === "form" && quote && fromToken && toToken && toChain ? (
+        <button
+          type="button"
+          onClick={() => {
+            setRouteNeedsRecipient(!recipient);
+            setView("route");
+          }}
+          className={cn(
+            glassSurfaceVariants({ tone: "ink", depth: "floating", blur: "sm" }),
+            "text-foreground focus-visible:ring-foreground/15 w-full cursor-pointer rounded-[2rem] p-5 text-left [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-1 sm:p-6",
+          )}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <span className="bg-foreground/[0.055] text-foreground/75 inline-flex min-w-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold">
+              <ShieldCheck className="text-brand size-3.5 shrink-0" />
+              <span className="truncate">Route found · {pool}</span>
+            </span>
+            <span className="bg-foreground/[0.045] text-foreground/60 flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold tabular-nums">
+              {formatEta(quote.etaSeconds)} <Clock className="size-3.5" />
+            </span>
+          </div>
+
+          <div className="mt-8 flex items-center gap-4">
+            <AssetGlyph
+              symbol={toToken.symbol}
+              tokenLogo={toToken.logoUrl}
+              chainId={toChain.chainId}
+              chainLabel={toChain.displayName}
+              chainLogo={toChain.logoUrl}
+              size={52}
+            />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-2xl font-semibold tracking-tight tabular-nums">
+                {formatAmount(quotedOut, quote.destSymbol)}
+              </p>
+              <p className="text-foreground/38 mt-1 text-sm">
+                {receiveUsd != null ? formatUsd(receiveUsd) : `on ${toChain.displayName}`}
+              </p>
+            </div>
+            <ChevronRight className="text-foreground/30 size-5 shrink-0" />
+          </div>
+
+          <div className="mt-8 flex items-center justify-between gap-4 text-xs font-semibold">
+            <span className="bg-foreground/[0.045] text-foreground/60 rounded-full px-3 py-1.5">
+              Private route
+            </span>
+            <span className="text-foreground/38 tabular-nums">
+              {quote.feeUsd != null && quote.feeUsd > 0 ? `${formatUsd(quote.feeUsd)} fees` : "No extra fees"}
+            </span>
+          </div>
+        </button>
+      ) : viewKey === "form" && quoteLoading && amountNum > 0 ? (
+        <div className="border-foreground/[0.08] bg-background/20 text-foreground/45 flex size-11 items-center justify-center rounded-full border backdrop-blur-sm">
+          <Loader2 className="size-4 animate-spin" />
+        </div>
+      ) : null}
 
       {/* route footer for the active transfer */}
       {showStatus && stage !== "FAILED" && activeRecord?.live ? (

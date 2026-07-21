@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Montserrat } from "next/font/google";
 import "@erebuz/ui/globals.css";
 import "./theme.css";
 
@@ -6,6 +7,12 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { TxTracker } from "@/components/tx-tracker";
 import { Web3Provider } from "@/components/web3-provider";
 import { AppProvider } from "@/lib/store";
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-montserrat",
+});
 
 export const metadata: Metadata = {
   title: "wall8 | Private Transfers",
@@ -18,9 +25,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // System font stack (SF on Apple devices) is applied via ./theme.css — no
-    // next/font, so the UI reads native/Apple rather than "AI template".
-    <html lang="en" suppressHydrationWarning className="h-full antialiased">
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${montserrat.variable} h-full antialiased`}
+    >
       <body
         className="bg-background text-foreground min-h-dvh font-sans"
         suppressHydrationWarning

@@ -7,6 +7,8 @@ import Image from "next/image";
 
 // import { ConnectWallet } from "@/components/connect-wallet"; // not needed for now
 import { ThemeToggle } from "@/components/theme-toggle";
+import { DitheringSimplexBackdrop } from "@/components/dithering-simplex-backdrop";
+import { glassSurfaceVariants } from "@erebuz/ui/components/glass-surface";
 
 // const NAV = [
 //   { href: "/", label: "Send" },
@@ -16,21 +18,23 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-background flex min-h-dvh flex-col">
-      <header className="border-border/60 bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-30 flex h-16 shrink-0 items-center border-b px-4 backdrop-blur-xl sm:px-6">
-        <Link href="/" className="press flex w-fit items-center gap-2">
-          <span className="flex size-8 items-center justify-center rounded-xl bg-neutral-950 ring-1 ring-black/10 dark:ring-white/10">
+    <DitheringSimplexBackdrop>
+      <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center px-4 sm:px-6">
+        <Link href="/" className="press text-foreground flex w-fit items-center gap-2.5">
+          <span className={`${glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" })} flex size-8 items-center justify-center rounded-xl`}>
             <Image src="/wall8-logo.svg" alt="wall8" width={18} height={18} priority unoptimized />
           </span>
           <span className="tracking-apple hidden text-lg font-semibold sm:inline">wall8</span>
         </Link>
 
         <div className="ml-auto flex items-center gap-2">
-          <ThemeToggle />
+          <div className={`${glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" })} rounded-full [&_button]:text-foreground/65 [&_button:hover]:bg-foreground/10 [&_button:hover]:text-foreground`}>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
       <main className="flex-1">{children}</main>
-    </div>
+    </DitheringSimplexBackdrop>
   );
 }

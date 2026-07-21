@@ -1,6 +1,7 @@
 /* apps/app/src/app/theme.css
  *
- * App-only "Apple-dark" refinements layered on top of @erebuz/ui/globals.css.
+ * App-only typography and motion refinements layered on top of
+ * @erebuz/ui/globals.css.
  * Kept local to apps/app on purpose — the shared @erebuz/ui package is also
  * consumed by apps/landing, so font/tracking/motion tweaks live here, not there.
  *
@@ -10,12 +11,10 @@
  */
 
 :root {
-  /* Real San Francisco on Apple devices, graceful elsewhere. The shared theme's
-     `font-sans` / `font-mono` utilities read these vars, so overriding them here
-     re-fonts the whole app without touching the shared package. */
+  /* Montserrat is self-hosted by next/font in layout.tsx. Shared font utilities
+     read this variable, so every app surface and portaled dialog inherits it. */
   --font-geist-sans:
-    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
-    "Helvetica Neue", "Inter", system-ui, sans-serif;
+    var(--font-montserrat), "Montserrat", ui-sans-serif, system-ui, sans-serif;
   --font-geist-mono:
     ui-monospace, "SF Mono", "SFMono-Regular", Menlo, monospace;
 
@@ -29,7 +28,7 @@
 
 html {
   font-family: var(--font-geist-sans);
-  letter-spacing: -0.011em; /* Apple optical tightening */
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
