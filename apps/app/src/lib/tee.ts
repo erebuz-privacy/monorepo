@@ -123,6 +123,8 @@ export type RouteRecord = {
   userDestinationAddress: string;
   depositAddress?: string | null;
   leg1DepositAddress?: string | null;
+  hubAccount?: string | null;
+  createdAt?: string | null;
   error?: string | null;
   [key: string]: unknown;
 };

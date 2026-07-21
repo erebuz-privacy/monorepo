@@ -27,6 +27,7 @@ import {
   Copy,
   Loader2,
   Lock,
+  ScanQrCode,
   ShieldCheck,
   X,
   XCircle,
@@ -41,6 +42,7 @@ import { cn } from "@erebuz/ui/lib/utils";
 
 import { AssetPicker, type ChainChip, type PickerItem } from "@/components/asset-picker";
 import { ErrorNote } from "@/components/error-note";
+import { QrScanDialog, normalizeScannedAddress } from "@/components/qr-scan-dialog";
 import {
   AssetGlyph,
   ChainGlyph,
@@ -84,25 +86,29 @@ function stageLabel(stage?: string): string {
  * quoted estimate. Mounts when the routing view appears (deposit detected), so
  * it starts from zero then; self-contained so only it re-renders each tick.
  */
-function RoutingStatus({ etaSeconds }: { etaSeconds?: number }) {
-  const [seconds, setSeconds] = useState(0);
+function RoutingStatus({ etaSeconds, startedAt }: { etaSeconds?: number; startedAt?: number }) {
+  // Elapsed is anchored to the route's creation time (server-authoritative when
+  // passed), so it stays correct across refresh / reopen instead of restarting.
+  const [mountedAt] = useState(() => Date.now());
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const start = Date.now();
-    const id = setInterval(() => setSeconds(Math.floor((Date.now() - start) / 1000)), 1000);
+    const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
+  const start = startedAt && startedAt > 0 ? startedAt : mountedAt;
+  const seconds = Math.max(0, Math.floor((now - start) / 1000));
   const mm = Math.floor(seconds / 60);
   const ss = seconds % 60;
   // A minute past the quoted estimate (min 2.5m) counts as "longer than usual".
   const slow = seconds > Math.max(150, (etaSeconds ?? 120) + 60);
   return (
     <>
-      <div className="text-muted-foreground mt-2 flex items-center gap-1.5 text-sm">
-        <Clock className="size-3.5" />
-        <span className="tabular-nums">
+      <div className="mt-3 flex justify-center">
+        <span className="bg-foreground/[0.06] text-foreground/85 ring-foreground/[0.08] inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold tabular-nums ring-1 ring-inset">
+          <Clock className="size-3.5" />
           {mm}:{ss.toString().padStart(2, "0")}
-        </span>{" "}
-        elapsed
+          <span className="text-foreground/40 font-normal">elapsed</span>
+        </span>
       </div>
       {slow ? (
         <div className="mt-4 flex items-start gap-2 rounded-2xl bg-amber-500/10 px-3 py-2.5 text-left text-sm text-amber-600 ring-1 ring-amber-500/20 ring-inset dark:text-amber-400">
@@ -144,7 +150,7 @@ function RouteAssetRow({
 }) {
   if (loading && !symbol) {
     return (
-      <div className="flex min-h-28 items-center gap-4 px-5 py-5">
+      <div className="flex min-h-24 items-center gap-4 px-5 py-3.5 sm:min-h-28 sm:py-5">
         <Skeleton className="size-14 rounded-full" />
         <div className="flex-1 space-y-2">
           <Skeleton className="h-3 w-20" />
@@ -158,7 +164,7 @@ function RouteAssetRow({
     <button
       type="button"
       onClick={onClick}
-      className="group flex min-h-28 w-full cursor-pointer items-center gap-4 px-5 py-5 text-left [-webkit-tap-highlight-color:transparent] focus-visible:outline-none"
+      className="group flex min-h-24 w-full cursor-pointer items-center gap-4 px-5 py-3.5 text-left [-webkit-tap-highlight-color:transparent] focus-visible:outline-none sm:min-h-28 sm:py-5"
     >
       {symbol ? (
         <AssetGlyph
@@ -215,6 +221,7 @@ export function BridgeFlow() {
   const [amount, setAmount] = useState("");
   const [recipientAddr, setRecipientAddr] = useState("");
   const [routeNeedsRecipient, setRouteNeedsRecipient] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
   const [picker, setPicker] = useState<"from" | "to" | null>(null);
 
   const [quote, setQuote] = useState<TeeQuote | null>(null);
@@ -442,7 +449,7 @@ export function BridgeFlow() {
   };
 
   return (
-    <div className="page-enter mx-auto flex w-full max-w-xl flex-col items-center gap-4 px-4 pb-12 pt-5 sm:pt-9">
+    <div className="page-enter mx-auto flex w-full max-w-xl flex-col items-center gap-2.5 px-4 pb-8 pt-3 sm:gap-4 sm:pb-12 sm:pt-9">
       {viewKey === "form" ? (
         <div className="flex w-full items-center justify-between px-1">
           <div
@@ -534,7 +541,7 @@ export function BridgeFlow() {
                 <div
                   className={cn(
                     glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" }),
-                    "border-foreground/[0.14] rounded-[1.65rem] p-5 backdrop-saturate-150 sm:p-6",
+                    "border-foreground/[0.14] rounded-[1.65rem] p-4 backdrop-saturate-150 sm:p-6",
                   )}
                 >
                   <label htmlFor="bridge-amount" className="text-foreground/80 text-sm font-semibold">
@@ -547,53 +554,45 @@ export function BridgeFlow() {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ""))}
                     placeholder="0"
-                    className="text-foreground placeholder:text-foreground/30 mt-4 w-full bg-transparent text-5xl font-medium tracking-[-0.04em] tabular-nums outline-none"
+                    className="text-foreground placeholder:text-foreground/30 mt-2 w-full bg-transparent text-4xl font-medium tracking-[-0.04em] tabular-nums outline-none sm:mt-4 sm:text-5xl"
                   />
-                  <div className="mt-6 flex items-end justify-between gap-4 text-sm">
-                    <span className="text-foreground/52">{sendUsd != null ? `≈ ${formatUsd(sendUsd)}` : "$0"}</span>
-                    <span className="text-foreground/58 max-w-[65%] text-right">
+                  <div className="mt-3 space-y-1 sm:mt-6">
+                    <div className="text-foreground/45 text-sm">
+                      {sendUsd != null ? `≈ ${formatUsd(sendUsd)}` : "$0"}
+                    </div>
+                    <div className="text-right text-sm">
                       {quoteLoading ? (
-                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="ml-auto h-4 w-40" />
                       ) : quote ? (
-                        <>Receive {formatAmount(quotedOut, quote.destSymbol)}</>
+                        <span className="text-foreground/55">
+                          Receive{" "}
+                          <span className="text-foreground/90 font-semibold tabular-nums">
+                            {formatAmount(quotedOut, quote.destSymbol)}
+                          </span>
+                          {receiveUsd != null ? (
+                            <span className="text-foreground/45"> · {formatUsd(receiveUsd)}</span>
+                          ) : null}
+                        </span>
                       ) : (
-                        <>Receive 0 {toToken?.symbol ?? ""}</>
+                        <span className="text-foreground/50">Receive 0 {toToken?.symbol ?? ""}</span>
                       )}
-                      {receiveUsd != null ? <span className="text-foreground/45 ml-1">· {formatUsd(receiveUsd)}</span> : null}
-                    </span>
+                    </div>
                   </div>
                 </div>
 
                 {quoteError && canQuote ? (
                   <ErrorNote title="Couldn't get a quote" message={quoteError} onRetry={quoteLoading ? undefined : retryQuote} />
                 ) : null}
-
-                <div
-                  className={cn(
-                    glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" }),
-                    "border-foreground/[0.14] rounded-[1.4rem] px-5 py-4 backdrop-saturate-150",
-                  )}
-                >
-                  <label htmlFor="bridge-recipient" className="text-foreground/75 block text-sm font-semibold">
-                    Recipient address
-                  </label>
-                  <Input
-                    id="bridge-recipient"
-                    value={recipientAddr}
-                    onChange={(e) => setRecipientAddr(e.target.value)}
-                    placeholder="0x… or any chain address"
-                    className="border-foreground/[0.12] bg-background/18 text-foreground placeholder:text-foreground/42 focus-visible:border-foreground/20 focus-visible:ring-foreground/12 mt-3 h-14 rounded-xl border px-4 text-base shadow-inner shadow-black/10 focus-visible:ring-1"
-                  />
-                </div>
+                {/* Recipient is collected on the next (route) step. */}
               </div>
             ) : null}
 
             {/* ======================= ROUTE CONFIRMATION ===================== */}
             {viewKey === "route" && quote && fromChain && toChain && fromToken && toToken ? (
-              <div className="space-y-5 p-4 sm:p-6">
-                <header className="flex items-center gap-3">
-                  <span className="flex size-12 items-center justify-center rounded-full bg-emerald-500/12 ring-1 ring-emerald-500/20 ring-inset">
-                    <SymbolGlyph symbol="RAIL" size={34} />
+              <div className="p-4 sm:p-6">
+                <header className="mb-5 flex items-center gap-3">
+                  <span className="flex size-11 items-center justify-center rounded-full bg-emerald-500/12 ring-1 ring-emerald-500/20 ring-inset">
+                    <SymbolGlyph symbol="RAIL" size={30} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-foreground/40 text-xs font-medium">Via</p>
@@ -605,7 +604,7 @@ export function BridgeFlow() {
                       setRouteNeedsRecipient(false);
                       setView("form");
                     }}
-                    className="bg-foreground/[0.05] text-foreground/45 hover:text-foreground flex size-11 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none"
+                    className="bg-foreground/[0.05] text-foreground/45 hover:text-foreground flex size-10 cursor-pointer items-center justify-center rounded-full focus-visible:outline-none"
                     aria-label="Close route"
                     disabled={creating}
                   >
@@ -613,63 +612,77 @@ export function BridgeFlow() {
                   </button>
                 </header>
 
+                {/* Recipient — a clean field on the card (no nested box), with a clear Scan button. */}
                 {routeNeedsRecipient ? (
-                  <div
-                    className={cn(
-                      glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" }),
-                      "border-foreground/[0.14] rounded-[1.4rem] px-5 py-4 backdrop-saturate-150",
-                    )}
-                  >
-                    <label htmlFor="route-recipient" className="text-foreground/75 block text-sm font-semibold">
-                      Recipient address
+                  <div className="mb-5">
+                    <label htmlFor="route-recipient" className="text-foreground/70 mb-2 block text-sm font-semibold">
+                      Recipient address <span className="text-foreground/40 font-normal">· {toChain.displayName}</span>
                     </label>
-                    <Input
-                      id="route-recipient"
-                      value={recipientAddr}
-                      onChange={(event) => setRecipientAddr(event.target.value)}
-                      placeholder="0x… or any chain address"
-                      autoFocus
-                      className="border-foreground/[0.12] bg-background/18 text-foreground placeholder:text-foreground/42 focus-visible:border-foreground/20 focus-visible:ring-foreground/12 mt-3 h-14 rounded-xl border px-4 text-lg shadow-inner shadow-black/10 focus-visible:ring-1"
-                    />
+                    <div className="relative">
+                      <Input
+                        id="route-recipient"
+                        value={recipientAddr}
+                        onChange={(event) => setRecipientAddr(event.target.value)}
+                        placeholder={`0x… address on ${toChain.displayName}`}
+                        autoFocus
+                        className="border-foreground/[0.12] bg-background/25 text-foreground placeholder:text-foreground/40 focus-visible:border-brand/40 focus-visible:ring-brand/20 h-14 rounded-2xl border pl-4 pr-[6.5rem] text-base shadow-inner shadow-black/10 focus-visible:ring-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setScanOpen(true)}
+                        className="bg-brand/15 text-brand hover:bg-brand/25 absolute right-2 top-1/2 flex -translate-y-1/2 cursor-pointer items-center gap-1.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
+                        aria-label="Scan a wallet QR code"
+                      >
+                        <ScanQrCode className="size-4" /> Scan
+                      </button>
+                    </div>
                   </div>
                 ) : null}
 
-                <div className="border-foreground/[0.08] bg-foreground/[0.035] overflow-hidden rounded-[1.65rem] border">
-                  <div className="flex items-center gap-4 p-5">
-                    <AssetGlyph symbol={fromToken.symbol} tokenLogo={fromToken.logoUrl} chainId={fromChain.chainId} chainLabel={fromChain.displayName} chainLogo={fromChain.logoUrl} size={52} />
+                {/* From → To — flat rows on the card, connected by an arrow (no bordered sub-box). */}
+                <div className="relative">
+                  <div className="flex items-center gap-4 py-3">
+                    <AssetGlyph symbol={fromToken.symbol} tokenLogo={fromToken.logoUrl} chainId={fromChain.chainId} chainLabel={fromChain.displayName} chainLogo={fromChain.logoUrl} size={46} />
                     <div className="min-w-0 flex-1">
-                      <p className="text-foreground/45 truncate text-sm font-medium">{fromChain.displayName}</p>
-                      <p className="text-foreground mt-1 text-2xl font-semibold tabular-nums">{formatAmount(amountNum, fromToken.symbol)}</p>
+                      <p className="text-foreground/45 truncate text-xs font-medium">{fromChain.displayName}</p>
+                      <p className="text-foreground mt-0.5 text-2xl font-semibold tabular-nums">{formatAmount(amountNum, fromToken.symbol)}</p>
                     </div>
                   </div>
-                  <div className="border-foreground/[0.07] mx-5 border-t" />
-                  <div className="flex items-center gap-4 p-5">
-                    <AssetGlyph symbol={toToken.symbol} tokenLogo={toToken.logoUrl} chainId={toChain.chainId} chainLabel={toChain.displayName} chainLogo={toChain.logoUrl} size={52} />
+                  <div className="border-foreground/[0.08] relative border-t">
+                    <span className="border-foreground/[0.08] bg-background text-foreground/40 absolute left-6 top-0 flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border">
+                      <ArrowDown className="size-3.5" />
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4 py-3">
+                    <AssetGlyph symbol={toToken.symbol} tokenLogo={toToken.logoUrl} chainId={toChain.chainId} chainLabel={toChain.displayName} chainLogo={toChain.logoUrl} size={46} />
                     <div className="min-w-0 flex-1">
-                      <p className="text-foreground/45 truncate text-sm font-medium">{toChain.displayName}</p>
-                      <p className="text-foreground mt-1 text-2xl font-semibold tabular-nums">{formatAmount(quotedOut, quote.destSymbol)}</p>
+                      <p className="text-foreground/45 truncate text-xs font-medium">{toChain.displayName}</p>
+                      <p className="text-foreground mt-0.5 text-2xl font-semibold tabular-nums">{formatAmount(quotedOut, quote.destSymbol)}</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="divide-foreground/[0.07] divide-y text-sm">
-                  <div className="flex items-center justify-between gap-4 py-4">
-                    <span className="text-foreground/65 flex items-center gap-2"><Clock className="size-4" /> Transfer time</span>
-                    <span className="text-foreground/80 font-semibold tabular-nums">{formatEta(quote.etaSeconds)}</span>
+                {/* Details — flat rows */}
+                <div className="border-foreground/[0.08] divide-foreground/[0.07] mt-2 divide-y border-t text-sm">
+                  <div className="flex items-center justify-between gap-4 py-3.5">
+                    <span className="text-foreground/60 flex items-center gap-2"><Clock className="size-4" /> Transfer time</span>
+                    <span className="text-foreground/85 font-semibold tabular-nums">{formatEta(quote.etaSeconds)}</span>
                   </div>
-                  <div className="flex items-center justify-between gap-4 py-4">
-                    <span className="text-foreground/65 flex items-center gap-2"><Lock className="size-4" /> Network fees</span>
-                    <span className="text-foreground/80 font-semibold tabular-nums">{quote.feeUsd != null ? formatUsd(quote.feeUsd) : "Included"}</span>
+                  <div className="flex items-center justify-between gap-4 py-3.5">
+                    <span className="text-foreground/60 flex items-center gap-2"><Lock className="size-4" /> Total fee</span>
+                    <span className="text-foreground/85 font-semibold tabular-nums">
+                      {formatAmount(amountNum - quotedOut, quote.destSymbol)}
+                    </span>
                   </div>
                 </div>
 
-                {createError && !creating ? <ErrorNote title="Couldn't start the transfer" message={createError} onRetry={startManaged} /> : null}
+                {createError && !creating ? <div className="mt-4"><ErrorNote title="Couldn't start the transfer" message={createError} onRetry={startManaged} /></div> : null}
 
                 <button
                   type="button"
                   onClick={startManaged}
                   disabled={!ready || creating}
-                  className="bg-foreground text-background hover:bg-foreground/90 flex h-14 w-full items-center justify-center gap-2 rounded-full text-base font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-45"
+                  className="bg-foreground text-background hover:bg-foreground/90 mt-6 flex h-14 w-full items-center justify-center gap-2 rounded-full text-base font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-45"
                 >
                   {creating ? <Loader2 className="size-4 animate-spin" /> : null}
                   {!recipient ? "Enter recipient address" : creating ? "Starting…" : "Start"}
@@ -726,12 +739,16 @@ export function BridgeFlow() {
                   <h2 className="flex-1 text-base font-semibold">Deposit</h2>
                 </header>
                 <div className="space-y-5 p-5">
-                  <div className="border-border bg-muted/30 space-y-1 rounded-2xl border p-4">
-                    <p className="text-muted-foreground text-sm">Deposit to complete</p>
-                    <p className="text-sm leading-relaxed">
-                      Send <span className="font-medium">{formatAmount(activeRecord.sendAmount, activeRecord.live.sendSymbol)}</span> on{" "}
-                      {activeRecord.live.fromChainName} to the address below. We&apos;ll route it privately to {activeRecord.toLabel}. You&apos;ll receive{" "}
-                      <span className="font-medium">{formatAmount(activeRecord.receiveAmount, activeRecord.live.recvSymbol)}</span>.
+                  <div className="border-border bg-muted/30 space-y-2 rounded-2xl border p-4">
+                    <p className="text-base leading-snug">
+                      Send{" "}
+                      <span className="text-foreground font-semibold">{formatAmount(activeRecord.sendAmount, activeRecord.live.sendSymbol)}</span>{" "}
+                      on <span className="text-foreground font-semibold">{activeRecord.live.fromChainName}</span> below.
+                    </p>
+                    <p className="text-muted-foreground text-sm">
+                      Arrives privately as{" "}
+                      <span className="text-foreground/90 font-semibold">{formatAmount(activeRecord.receiveAmount, activeRecord.live.recvSymbol)}</span>{" "}
+                      at <span className="text-foreground/90 font-medium">{activeRecord.toLabel}</span>.
                     </p>
                   </div>
 
@@ -766,17 +783,47 @@ export function BridgeFlow() {
                     <Loader2 className="size-4 animate-spin" />
                     Watching for your deposit…
                   </div>
+
+                  <div className="border-border/60 text-muted-foreground flex flex-wrap items-center justify-center gap-1.5 border-t pt-4 text-xs">
+                    <ChainGlyph chainId={activeRecord.live.fromChainId} logoUrl={activeRecord.live.fromChainLogo} label={activeRecord.live.fromChainName} size={14} />
+                    <span>{activeRecord.live.fromChainName}</span>
+                    <span className="bg-brand/10 text-brand inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-medium">
+                      <Lock className="size-3" /> Private
+                    </span>
+                    <ChainGlyph chainId={activeRecord.live.toChainId} logoUrl={activeRecord.live.toChainLogo} label={activeRecord.live.toChainName} size={14} />
+                    <span>{activeRecord.live.toChainName}</span>
+                  </div>
                 </div>
               </div>
             ) : null}
 
             {/* ======================= STATUS: ROUTING ======================= */}
             {viewKey === "routing" && activeRecord?.live ? (
-              <div className="space-y-6 p-6">
+              <div className="space-y-5 p-5 sm:p-6">
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveRouteId(null);
+                      setView("pending");
+                    }}
+                    className="press text-foreground/60 hover:text-foreground -ml-1 flex cursor-pointer items-center gap-1.5 text-sm font-medium"
+                    aria-label="Back to activity"
+                  >
+                    <ArrowLeft className="size-4" /> Activity
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => copyAddress(`${window.location.origin}/tx/${activeRecord.live!.routeId}`)}
+                    className="press text-foreground/60 hover:text-foreground flex cursor-pointer items-center gap-1.5 text-sm font-medium"
+                  >
+                    {copied ? <Check className="size-4" /> : <Copy className="size-4" />} {copied ? "Copied" : "Copy link"}
+                  </button>
+                </div>
                 <div className="flex flex-col items-center text-center">
                   <Loader2 className="text-brand size-10 animate-spin" />
-                  <p className="mt-6 text-base font-medium">{stageLabel(stage)}</p>
-                  <RoutingStatus etaSeconds={activeRecord.live.etaSeconds} />
+                  <p className="mt-4 text-base font-medium">{stageLabel(stage)}</p>
+                  <RoutingStatus etaSeconds={activeRecord.live.etaSeconds} startedAt={new Date(activeRecord.date).getTime()} />
                 </div>
                 <ol className="border-border divide-border divide-y rounded-2xl border">
                   {PROGRESS.map((p, i) => {
@@ -873,7 +920,7 @@ export function BridgeFlow() {
           }}
           className={cn(
             glassSurfaceVariants({ tone: "ink", depth: "floating", blur: "sm" }),
-            "text-foreground focus-visible:ring-foreground/15 w-full cursor-pointer rounded-[2rem] p-5 text-left [-webkit-tap-highlight-color:transparent] focus-visible:outline-none focus-visible:ring-1 sm:p-6",
+            "text-foreground w-full cursor-pointer rounded-[2rem] p-4 text-left ring-1 ring-brand/35 shadow-lg shadow-brand/10 [-webkit-tap-highlight-color:transparent] transition-shadow hover:shadow-brand/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 sm:p-6",
           )}
         >
           <div className="flex items-center justify-between gap-3">
@@ -886,7 +933,7 @@ export function BridgeFlow() {
             </span>
           </div>
 
-          <div className="mt-8 flex items-center gap-4">
+          <div className="mt-4 flex items-center gap-4 sm:mt-8">
             <AssetGlyph
               symbol={toToken.symbol}
               tokenLogo={toToken.logoUrl}
@@ -903,10 +950,26 @@ export function BridgeFlow() {
                 {receiveUsd != null ? formatUsd(receiveUsd) : `on ${toChain.displayName}`}
               </p>
             </div>
-            <ChevronRight className="text-foreground/30 size-5 shrink-0" />
+            <span className="relative flex size-10 shrink-0 items-center justify-center">
+              {reduce ? null : (
+                <motion.span
+                  aria-hidden
+                  className="bg-brand/40 absolute inset-0 rounded-full"
+                  animate={{ scale: [1, 1.7], opacity: [0.55, 0] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
+                />
+              )}
+              <motion.span
+                className="bg-brand text-background relative flex size-10 items-center justify-center rounded-full shadow-lg shadow-brand/30"
+                animate={reduce ? undefined : { scale: [1, 1.12, 1] }}
+                transition={reduce ? undefined : { duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <ChevronRight className="size-5" />
+              </motion.span>
+            </span>
           </div>
 
-          <div className="mt-8 flex items-center justify-between gap-4 text-xs font-semibold">
+          <div className="mt-4 flex items-center justify-between gap-4 text-xs font-semibold sm:mt-8">
             <span className="bg-foreground/[0.045] text-foreground/60 rounded-full px-3 py-1.5">
               Private route
             </span>
@@ -921,8 +984,8 @@ export function BridgeFlow() {
         </div>
       ) : null}
 
-      {/* route footer for the active transfer */}
-      {showStatus && stage !== "FAILED" && activeRecord?.live ? (
+      {/* route footer for the active transfer (deposit view shows it inside the card) */}
+      {showStatus && stage !== "FAILED" && stage !== "AWAITING_DEPOSIT" && activeRecord?.live ? (
         <motion.div layout transition={sizeSpring} className="text-muted-foreground mt-4 flex flex-wrap items-center justify-center gap-1.5 text-xs">
           <ChainGlyph chainId={activeRecord.live.fromChainId} logoUrl={activeRecord.live.fromChainLogo} label={activeRecord.live.fromChainName} size={14} />
           <span>{activeRecord.live.fromChainName}</span>
@@ -967,6 +1030,12 @@ export function BridgeFlow() {
         onChainSelect={(id) => setToChainId(Number(id))}
         activeItemId={toToken?.address}
         loading={toTokensLoading}
+      />
+
+      <QrScanDialog
+        open={scanOpen}
+        onClose={() => setScanOpen(false)}
+        onResult={(value) => setRecipientAddr(normalizeScannedAddress(value))}
       />
     </div>
   );
