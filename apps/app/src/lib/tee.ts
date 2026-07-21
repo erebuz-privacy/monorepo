@@ -127,11 +127,33 @@ export type RouteRecord = {
   [key: string]: unknown;
 };
 
+const CHAIN_LOGO: Record<number, string> = {
+  // testnet
+  1301: "/chains/unichain.jpg",
+  1328: "/chains/sei.jpg",
+  4801: "/chains/world.jpg",
+  80002: "/chains/polygon.jpg",
+  84532: "/chains/base.jpg",
+  421614: "/chains/arbitrum.jpg",
+  11155111: "/chains/ethereum.webp",
+  11155420: "/chains/optimism.jpg",
+  // mainnet (ready when mainnet TEE goes live)
+  1: "/chains/ethereum.webp",
+  10: "/chains/optimism.jpg",
+  137: "/chains/polygon.jpg",
+  8453: "/chains/base.jpg",
+  42161: "/chains/arbitrum.jpg",
+};
+
 export const tee = {
   baseUrl: TEE_URL,
 
-  getChains(): Promise<TeeChain[]> {
-    return request<TeeChain[]>("/api/relay/chains");
+  async getChains(): Promise<TeeChain[]> {
+    const chains = await request<TeeChain[]>("/api/relay/chains");
+    return chains.map((c) => ({
+      ...c,
+      logoUrl: CHAIN_LOGO[c.chainId] ?? c.logoUrl,
+    }));
   },
 
   getTokens(chainId: number, search?: string): Promise<TeeToken[]> {
