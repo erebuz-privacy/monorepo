@@ -174,6 +174,17 @@ async function startServer() {
   });
 }
 
+// Keep the long-running TEE alive when the Railgun engine's *background* POI
+// refresh rejects (an async rejection from @railgun-community/engine not tied to
+// our awaited calls). Node treats an unhandledRejection as fatal, which was
+// crash-looping the whole service. Log and continue.
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled promise rejection (non-fatal) - keeping TEE alive', 'Process', reason);
+});
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught exception (non-fatal) - keeping TEE alive', 'Process', error);
+});
+
 // Start the application
 startServer().catch((error) => {
   logger.error('Failed to start server', 'Server', error);

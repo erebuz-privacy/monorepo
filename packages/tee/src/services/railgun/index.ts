@@ -674,6 +674,7 @@ export async function waitForShieldedBalance(params: {
         (await sdk.balanceForERC20Token(txidVersion, wallet as never, networkName, params.tokenAddress, true)) ?? 0n
       );
       params.onPoll?.({ total, spendable });
+      if (process.env.POI_DEBUG) console.error('[poi] bal total='+total+' spendable='+spendable+' min='+params.minAmount+' allValid='+allValid);
       // Proceed once the funds are POI-Valid (or the spendable bucket has caught up).
       if (spendable >= params.minAmount) return { total, spendable };
       if (allValid && total >= params.minAmount) return { total, spendable: total };
