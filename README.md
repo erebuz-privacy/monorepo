@@ -60,7 +60,11 @@ pnpm install
 
 pnpm landing        # run the landing site (apps/landing)
 pnpm app            # run wall8          (apps/app)
+pnpm docs           # run documentation site (apps/docs, port 3001)
+pnpm deck           # run investor deck (apps/deck, port 3002)
+pnpm tee            # run TEE service (packages/tee)
 
+pnpm dev            # run all workspace dev scripts in parallel
 pnpm build          # build every package in dependency order
 pnpm lint           # lint every package
 ```
