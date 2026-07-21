@@ -1,4 +1,4 @@
-import { Loader2, type LucideIcon } from "lucide-react";
+import { ChevronRight, Loader2, type LucideIcon } from "lucide-react";
 
 import { Badge } from "@erebuz/ui/components/badge";
 import { cn } from "@erebuz/ui/lib/utils";
@@ -29,11 +29,13 @@ export function OptionCard({
   loading?: boolean;
 }) {
   const body = (
-    <div className="flex items-start gap-3">
+    <div className="flex items-start gap-3.5">
       <span
         className={cn(
-          "flex size-10 shrink-0 items-center justify-center rounded-lg",
-          disabled ? "bg-muted text-muted-foreground" : "bg-primary text-primary-foreground"
+          "flex size-10 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset",
+          disabled
+            ? "bg-muted text-muted-foreground ring-border"
+            : "bg-brand/10 text-brand ring-brand/15"
         )}
       >
         {loading ? <Loader2 className="size-5 animate-spin" /> : <Icon className="size-5" />}
@@ -43,8 +45,11 @@ export function OptionCard({
           <span className="font-medium">{title}</span>
           {badge ? <Badge variant={badgeVariant}>{badge}</Badge> : null}
         </div>
-        <p className="text-muted-foreground mt-0.5 text-sm leading-relaxed">{description}</p>
+        <p className="text-muted-foreground mt-1 text-sm leading-relaxed">{description}</p>
       </div>
+      {!disabled ? (
+        <ChevronRight className="text-muted-foreground/60 group-hover:text-foreground mt-0.5 size-4 shrink-0 transition-colors" />
+      ) : null}
     </div>
   );
 
@@ -52,7 +57,7 @@ export function OptionCard({
     return (
       <div
         aria-disabled
-        className="border-border/60 bg-card/40 w-full cursor-not-allowed rounded-xl border p-4 text-left opacity-60"
+        className="border-border/60 bg-card/40 w-full cursor-not-allowed rounded-2xl border p-4 text-left opacity-60"
       >
         {body}
       </div>
@@ -64,7 +69,7 @@ export function OptionCard({
       type="button"
       onClick={onClick}
       disabled={loading}
-      className="group border-border bg-card hover:border-primary/60 hover:bg-accent/40 w-full rounded-xl border p-4 text-left transition-colors disabled:opacity-70"
+      className="press group border-border bg-card hover:border-brand/40 hover:bg-accent/40 w-full cursor-pointer rounded-2xl border p-4 text-left shadow-sm shadow-black/[0.03] disabled:opacity-70 dark:shadow-black/20"
     >
       {body}
     </button>

@@ -1,0 +1,118 @@
+/* apps/app/src/app/theme.css
+ *
+ * App-only "Apple-dark" refinements layered on top of @erebuz/ui/globals.css.
+ * Kept local to apps/app on purpose — the shared @erebuz/ui package is also
+ * consumed by apps/landing, so font/tracking/motion tweaks live here, not there.
+ *
+ * wall8 keeps its own OKLCH palette (deep cool charcoal + mint brand accent);
+ * this file only adds the apple-dark-web discipline: real system font, Apple
+ * optical tracking, and calm transform/opacity motion.
+ */
+
+:root {
+  /* Real San Francisco on Apple devices, graceful elsewhere. The shared theme's
+     `font-sans` / `font-mono` utilities read these vars, so overriding them here
+     re-fonts the whole app without touching the shared package. */
+  --font-geist-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", "Inter", system-ui, sans-serif;
+  --font-geist-mono:
+    ui-monospace, "SF Mono", "SFMono-Regular", Menlo, monospace;
+
+  /* Emil Kowalski's strong custom easings — the built-in CSS curves are too
+     weak to feel intentional. ease-out for enter/exit, in-out for on-screen
+     movement, drawer for sheet-like motion. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+html {
+  font-family: var(--font-geist-sans);
+  letter-spacing: -0.011em; /* Apple optical tightening */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Tighter optical tracking on large type. */
+h1,
+h2,
+.tracking-apple {
+  letter-spacing: -0.021em;
+}
+
+/* Calm, staggered list-row entrance — transform + opacity only. */
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.row-in {
+  animation: row-in 340ms var(--ease-out) both;
+}
+
+/* Page / flow enter — a light rise + fade so moving between screens reads as
+   content settling in, never a hard swap. transform + opacity only (GPU); no
+   blur, which is a paint cost that makes navigation feel laggy. */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-enter {
+  animation: page-enter 300ms var(--ease-out) both;
+}
+
+/* Tactile press feedback — instant, on-press, subtle (Emil / Apple: respond on
+   pointer-down). Add `press` to any pressable element. It owns a COMBINED
+   transition (transform + the usual hover properties) so it composes with hover
+   colour changes without a Tailwind `transition-colors` conflict — drop the
+   Tailwind transition utility on elements that use `press`. */
+.press {
+  transition-property: transform, background-color, border-color, color,
+    box-shadow, opacity;
+  transition-duration: 140ms;
+  transition-timing-function: var(--ease-out);
+}
+.press:active {
+  transform: scale(0.97);
+}
+
+/* Soft crossfade when a live value (e.g. the quoted amount) changes — key the
+   element by its value so it only re-animates on a real change. */
+@keyframes value-swap {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.value-swap {
+  animation: value-swap 200ms var(--ease-out);
+}
+
+/* Reduced motion: keep opacity (aids comprehension), drop movement + blur. */
+@media (prefers-reduced-motion: reduce) {
+  .row-in,
+  .page-enter {
+    animation: none;
+  }
+  .press {
+    transition: none;
+  }
+  .press:active {
+    transform: none;
+  }
+}

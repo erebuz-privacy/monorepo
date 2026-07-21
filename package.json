@@ -16,7 +16,8 @@
     "deck": "pnpm --filter @erebuz/deck dev",
     "sdk": "pnpm --filter @erebuz/sdk",
     "contracts": "pnpm --filter @erebuz/contracts",
-    "tee": "pnpm --filter @erebuz/tee dev"
+    "tee": "pnpm --filter @erebuz/tee dev",
+    "app:start": "pnpm --filter @erebuz/app start"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

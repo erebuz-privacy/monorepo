@@ -39,13 +39,31 @@ export type Contact = {
   color: string;
 };
 
-export type Holding = {
-  chainId: string;
-  tokenId: string;
-  amount: number;
-};
-
 export type TxStatus = "confirmed" | "pending" | "failed";
+
+/**
+ * Self-describing display data for a REAL (TEE) transfer. Seed/mock activity
+ * resolves its chains/tokens through the mock CHAINS/tokens maps; a live record
+ * can't (its chains are numeric TEE chainIds), so it carries everything it needs
+ * to render on its own. When present, ActivityRow + the detail view prefer it.
+ */
+export type ActivityLive = {
+  fromChainId: number;
+  fromChainName: string;
+  fromChainLogo?: string;
+  toChainId: number;
+  toChainName: string;
+  toChainLogo?: string;
+  sendSymbol: string;
+  sendLogo?: string;
+  recvSymbol: string;
+  routeId?: string;
+  /** Raw TEE route status (AWAITING_DEPOSIT, BRIDGING_IN, …, COMPLETED, FAILED).
+   *  Drives the granular in-flight UI; the coarse `Activity.status` drives the pill. */
+  stage?: string;
+  /** Deposit address to fund (set while the route is awaiting a deposit). */
+  depositAddress?: string;
+};
 
 export type Activity = {
   id: string;
@@ -60,6 +78,8 @@ export type Activity = {
   feeUsd: number;
   status: TxStatus;
   route: string[];
+  /** Set for real transfers routed through the TEE (see ActivityLive). */
+  live?: ActivityLive;
 };
 
 export const CHAINS: Chain[] = [
@@ -102,87 +122,6 @@ export const SEED_TOKENS: Token[] = [
     color: "#F5AC37",
     usd: 1,
     chains: ["ethereum", "polygon"],
-  },
-];
-
-export const SEED_CARDS: Card[] = [
-  {
-    id: "card-gnosis",
-    name: "Gnosis Pay",
-    address: "0x7f5c764cbc14f9669b88837ca1490cca17c31607",
-    chainId: "arbitrum",
-    tokenId: "usdc",
-    color: "#133629",
-  },
-  {
-    id: "card-coinbase",
-    name: "Coinbase Card",
-    address: "0x2c3abce7462f6e34f1c0a4f0d67e9b0a3c1b7f2e",
-    chainId: "base",
-    tokenId: "usdc",
-    color: "#0052FF",
-  },
-];
-
-export const SEED_CONTACTS: Contact[] = [
-  {
-    id: "c-alice",
-    name: "Alice",
-    handle: "alice.eth",
-    address: "0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b",
-    color: "#8B5CF6",
-  },
-  {
-    id: "c-bob",
-    name: "Bob",
-    handle: "bob.base.eth",
-    address: "0x9f8e7d6c5b4a39281706f5e4d3c2b1a0f9e8d7c6",
-    color: "#EC4899",
-  },
-  {
-    id: "c-carol",
-    name: "Carol",
-    address: "0x3c2b1a0f9e8d7c6b5a49382716051423f6e5d4c3",
-    color: "#14B8A6",
-  },
-];
-
-/** Unified private balance, broken down by chain + token. */
-export const HOLDINGS: Holding[] = [
-  { chainId: "base", tokenId: "usdc", amount: 642.18 },
-  { chainId: "arbitrum", tokenId: "usdc", amount: 310.5 },
-  { chainId: "polygon", tokenId: "usdt", amount: 180.0 },
-  { chainId: "ethereum", tokenId: "eth", amount: 0.031 },
-];
-
-export const SEED_ACTIVITY: Activity[] = [
-  {
-    id: "tx-1041",
-    date: "2026-07-06T14:22:00Z",
-    fromChainId: "base",
-    fromTokenId: "usdc",
-    toLabel: "Gnosis Pay",
-    toChainId: "arbitrum",
-    toTokenId: "usdc",
-    sendAmount: 100,
-    receiveAmount: 99.58,
-    feeUsd: 0.42,
-    status: "confirmed",
-    route: ["Base", "STRK20 pool", "Arbitrum"],
-  },
-  {
-    id: "tx-1039",
-    date: "2026-07-04T09:10:00Z",
-    fromChainId: "polygon",
-    fromTokenId: "usdt",
-    toLabel: "alice.eth",
-    toChainId: "ethereum",
-    toTokenId: "usdc",
-    sendAmount: 50,
-    receiveAmount: 49.71,
-    feeUsd: 0.29,
-    status: "confirmed",
-    route: ["Polygon", "STRK20 pool", "Ethereum"],
   },
 ];
 

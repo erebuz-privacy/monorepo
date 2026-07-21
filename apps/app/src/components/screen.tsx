@@ -16,7 +16,13 @@ export function Screen({
 }) {
   return (
     <div className="flex min-h-dvh flex-col items-center px-4 py-8 sm:py-10">
-      <div className={cn("w-full", width === "sm" ? "max-w-sm" : "max-w-md", className)}>
+      <div
+        className={cn(
+          "page-enter w-full",
+          width === "sm" ? "max-w-sm" : "max-w-md",
+          className
+        )}
+      >
         {children}
       </div>
     </div>

@@ -94,9 +94,9 @@ export function CardFormDialog({
                   type="button"
                   onClick={() => setChain(c.id)}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs font-medium transition-colors",
+                    "press flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs font-medium",
                     chainId === c.id
-                      ? "border-primary bg-accent"
+                      ? "border-brand bg-brand/10 text-brand"
                       : "border-border hover:bg-accent/40"
                   )}
                 >
@@ -116,9 +116,9 @@ export function CardFormDialog({
                   type="button"
                   onClick={() => setTokenId(t.id)}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs font-medium transition-colors",
+                    "press flex cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs font-medium",
                     tokenId === t.id
-                      ? "border-primary bg-accent"
+                      ? "border-brand bg-brand/10 text-brand"
                       : "border-border hover:bg-accent/40"
                   )}
                 >

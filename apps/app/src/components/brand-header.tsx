@@ -15,10 +15,10 @@ export function BrandHeader({
   return (
     <div className={cn("flex w-full items-center justify-between", className)}>
       <div className="flex items-center gap-2.5">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-neutral-950">
+        <span className="flex size-8 items-center justify-center rounded-xl bg-neutral-950 ring-1 ring-black/10 dark:ring-white/10">
           <Image src="/wall8-logo.svg" alt="wall8" width={18} height={18} priority unoptimized />
         </span>
-        <span className="text-lg font-semibold tracking-tight">wall8</span>
+        <span className="tracking-apple text-lg font-semibold">wall8</span>
       </div>
       {themeToggle ? <ThemeToggle /> : null}
     </div>

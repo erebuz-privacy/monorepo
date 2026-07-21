@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Check, Loader2, Search } from "lucide-react";
+import { ArrowLeft, Check, Search } from "lucide-react";
 
 import {
   Sheet,
@@ -11,6 +11,7 @@ import {
   SheetTitle,
 } from "@erebuz/ui/components/sheet";
 import { Input } from "@erebuz/ui/components/input";
+import { Skeleton } from "@erebuz/ui/components/skeleton";
 import { cn } from "@erebuz/ui/lib/utils";
 
 export type PickerItem = {
@@ -123,7 +124,7 @@ export function AssetPicker({
                       setStep("chain");
                       setQuery("");
                     }}
-                    className="hover:bg-accent -ml-1 flex items-center gap-1 rounded-lg py-0.5 pl-1 pr-2 text-xs font-medium transition-colors"
+                    className="press hover:bg-accent -ml-1 flex cursor-pointer items-center gap-1 rounded-lg py-0.5 pr-2 pl-1 text-xs font-medium"
                   >
                     <ArrowLeft className="size-3.5" /> Networks
                   </button>
@@ -168,7 +169,7 @@ export function AssetPicker({
                       type="button"
                       onClick={() => goToken(c.id)}
                       className={cn(
-                        "flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors",
+                        "press flex w-full cursor-pointer items-center gap-3 rounded-xl p-3 text-left",
                         c.id === activeChainId ? "bg-accent" : "hover:bg-accent/70"
                       )}
                     >
@@ -181,9 +182,17 @@ export function AssetPicker({
               </ul>
             )
           ) : loading ? (
-            <div className="text-muted-foreground flex items-center justify-center gap-2 p-8 text-sm">
-              <Loader2 className="size-4 animate-spin" /> Loading tokens…
-            </div>
+            <ul className="space-y-1 p-2">
+              {Array.from({ length: 7 }).map((_, i) => (
+                <li key={i} className="flex items-center gap-3 rounded-xl p-3">
+                  <Skeleton className="size-8 shrink-0 rounded-full" />
+                  <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-3.5 w-16" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </li>
+              ))}
+            </ul>
           ) : filteredItems.length === 0 ? (
             <p className="text-muted-foreground p-8 text-center text-sm">No matches</p>
           ) : (
@@ -204,7 +213,7 @@ export function AssetPicker({
                         setQuery("");
                       }}
                       className={cn(
-                        "flex w-full items-center gap-3 rounded-xl p-3 text-left transition-colors",
+                        "press flex w-full cursor-pointer items-center gap-3 rounded-xl p-3 text-left",
                         selected ? "bg-accent" : "hover:bg-accent/70"
                       )}
                     >

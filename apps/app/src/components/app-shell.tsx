@@ -8,13 +8,9 @@ import { Clock, Send, Settings } from "lucide-react";
 import { cn } from "@erebuz/ui/lib/utils";
 
 import { ConnectWallet } from "@/components/connect-wallet";
-import { GradientAvatar } from "@/components/crypto-icon";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { useApp } from "@/lib/store";
 
 const NAV = [
-  // Home is temporarily disabled - the quote screen ("/") is the landing screen.
-  // { href: "/home", label: "Home", icon: Home },
   { href: "/", label: "Send", icon: Send },
   { href: "/activity", label: "Activity", icon: Clock },
   { href: "/settings", label: "Settings", icon: Settings },
@@ -22,40 +18,29 @@ const NAV = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user } = useApp();
-  const firstName = user?.name?.split(" ")[0];
 
   return (
-    <div className="bg-background stage-grid flex min-h-dvh flex-col">
-      {/* top nav */}
-      <header className="border-border/60 flex h-16 shrink-0 items-center justify-between gap-3 border-b px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="flex size-8 items-center justify-center rounded-lg bg-neutral-950">
-            <Image
-              src="/wall8-logo.svg"
-              alt="wall8"
-              width={18}
-              height={18}
-              priority
-              unoptimized
-            />
+    <div className="bg-background flex min-h-dvh flex-col">
+      {/* translucent sticky top nav — 3-column grid keeps the nav dead-centre
+          regardless of how wide the logo / actions on either side are. */}
+      <header className="border-border/60 bg-background/80 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-30 grid h-16 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-b px-4 backdrop-blur-xl sm:px-6">
+        <Link href="/" className="press flex w-fit items-center gap-2 justify-self-start">
+          <span className="flex size-8 items-center justify-center rounded-xl bg-neutral-950 ring-1 ring-black/10 dark:ring-white/10">
+            <Image src="/wall8-logo.svg" alt="wall8" width={18} height={18} priority unoptimized />
           </span>
-          <span className="hidden text-lg font-semibold tracking-tight sm:inline">
-            wall8
-          </span>
+          <span className="tracking-apple hidden text-lg font-semibold sm:inline">wall8</span>
         </Link>
 
-        <nav className="bg-muted/60 flex items-center gap-1 rounded-full p-1">
+        <nav className="bg-muted/60 flex items-center gap-1 justify-self-center rounded-full p-1">
           {NAV.map(({ href, label, icon: Icon }) => {
-            const active =
-              pathname === href || pathname.startsWith(`${href}/`);
+            const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
             return (
               <Link
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                  "press flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium",
                   active
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -68,25 +53,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 justify-self-end">
           <ConnectWallet />
           <ThemeToggle />
-          <Link href="/settings" className="flex items-center gap-2 pl-1">
-            {firstName ? (
-              <span className="text-muted-foreground hidden text-sm font-medium sm:inline">
-                {firstName}
-              </span>
-            ) : null}
-            <GradientAvatar
-              seed={user?.email ?? "wall8"}
-              label={user?.name}
-              size={32}
-            />
-          </Link>
         </div>
       </header>
 
-      {/* pages own their own width + framing */}
       <main className="flex-1">{children}</main>
     </div>
   );
