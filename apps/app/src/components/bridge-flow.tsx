@@ -22,6 +22,7 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
+  Clock,
   Copy,
   KeyRound,
   Loader2,
@@ -88,6 +89,47 @@ function stageLabel(stage?: string): string {
   if (stage === "COMPLETED") return "Completed";
   if (stage === "FAILED") return "Failed";
   return PROGRESS.find((p) => p.status === stage)?.label ?? "Routing privately";
+}
+
+/**
+ * Live mm:ss elapsed timer + a reassurance notice once the route runs past its
+ * quoted estimate. Mounts when the routing view appears (deposit detected), so
+ * it starts from zero then; self-contained so only it re-renders each tick.
+ */
+function RoutingStatus({ etaSeconds }: { etaSeconds?: number }) {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    const start = Date.now();
+    const id = setInterval(() => setSeconds(Math.floor((Date.now() - start) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const mm = Math.floor(seconds / 60);
+  const ss = seconds % 60;
+  // A minute past the quoted estimate (min 2.5m) counts as "longer than usual".
+  const slow = seconds > Math.max(150, (etaSeconds ?? 120) + 60);
+  return (
+    <>
+      <div className="text-muted-foreground mt-2 flex items-center gap-1.5 text-sm">
+        <Clock className="size-3.5" />
+        <span className="tabular-nums">
+          {mm}:{ss.toString().padStart(2, "0")}
+        </span>{" "}
+        elapsed
+      </div>
+      {slow ? (
+        <div className="mt-4 flex items-start gap-2 rounded-2xl bg-amber-500/10 px-3 py-2.5 text-left text-sm text-amber-600 ring-1 ring-amber-500/20 ring-inset dark:text-amber-400">
+          <Clock className="mt-0.5 size-4 shrink-0" />
+          <span>
+            Taking longer than usual. Hang tight, your funds are safe.
+          </span>
+        </div>
+      ) : (
+        <p className="text-muted-foreground mt-2 max-w-xs text-sm">
+          This can take a few minutes. It&apos;ll keep updating in Activity.
+        </p>
+      )}
+    </>
+  );
 }
 
 type View = "form" | "method" | "pending";
@@ -285,6 +327,10 @@ export function BridgeFlow() {
   const quotedOut = quote ? fromSmallestUnit(quote.quotedOutputAmount, quote.destDecimals) : 0;
   const sendUsd = quote?.amountInUsd ?? null;
   const receiveUsd = quote?.quotedOutputUsd ?? null;
+  // The privacy pool the route goes through is the middle hop of quote.route,
+  // e.g. "Private pool (Arbitrum)". The TEE returns a single route (one pool),
+  // so there's nothing to choose between.
+  const pool = quote?.route?.[1] ?? "Private pool";
 
   const chainChips: ChainChip[] = useMemo(
     () => chains.map((c) => ({ id: String(c.chainId), label: c.displayName, icon: <ChainGlyph chainId={c.chainId} label={c.displayName} logoUrl={c.logoUrl} size={24} /> })),
@@ -351,6 +397,7 @@ export function BridgeFlow() {
           routeId: created.routeId,
           stage: created.status ?? "AWAITING_DEPOSIT",
           depositAddress: created.depositAddress,
+          etaSeconds: quote.etaSeconds,
         },
       };
       upsertActivity(entry);
@@ -525,15 +572,14 @@ export function BridgeFlow() {
                     bridge never changes height as the quote updates. */}
                 {amountNum > 0 && !quoteError ? (
                   <Popover>
-                    <PopoverTrigger className="press border-border bg-foreground/[0.02] hover:bg-accent/40 mt-3 flex w-full cursor-pointer items-center justify-between rounded-2xl border px-4 py-3 text-sm">
-                      <span className="flex items-center gap-2">
-                        <span className="bg-brand/10 text-brand ring-brand/20 inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset">
-                          <Lock className="size-3" />
-                          Private
+                    <PopoverTrigger className="press border-border bg-foreground/[0.02] hover:bg-accent/40 mt-3 flex w-full cursor-pointer items-center justify-between gap-2 rounded-2xl border px-4 py-3 text-sm">
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="bg-brand/10 text-brand ring-brand/20 inline-flex min-w-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset">
+                          <Lock className="size-3 shrink-0" />
+                          <span className="truncate">{pool}</span>
                         </span>
-                        <span className="text-muted-foreground">Quote details</span>
                       </span>
-                      <span className="text-muted-foreground flex items-center gap-1.5">
+                      <span className="text-muted-foreground flex shrink-0 items-center gap-1.5">
                         {quote ? (
                           <span className="tabular-nums">{formatEta(quote.etaSeconds)}</span>
                         ) : (
@@ -550,6 +596,9 @@ export function BridgeFlow() {
                           ) : (
                             <Skeleton className="h-4 w-24" />
                           )}
+                        </Row>
+                        <Row label="Pool">
+                          <span className="font-medium">{pool}</span>
                         </Row>
                         <Row label="Network gas">
                           <span className="text-brand font-medium">Covered</span>
@@ -755,7 +804,7 @@ export function BridgeFlow() {
                 <div className="flex flex-col items-center text-center">
                   <Loader2 className="text-brand size-10 animate-spin" />
                   <p className="mt-6 text-base font-medium">{stageLabel(stage)}</p>
-                  <p className="text-muted-foreground mt-1 max-w-xs text-sm">Keep going — this can take a few minutes across the bridge legs. It&apos;ll keep updating in Activity.</p>
+                  <RoutingStatus etaSeconds={activeRecord.live.etaSeconds} />
                 </div>
                 <ol className="border-border divide-border divide-y rounded-2xl border">
                   {PROGRESS.map((p, i) => {
