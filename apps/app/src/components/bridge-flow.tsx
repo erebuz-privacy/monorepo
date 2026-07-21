@@ -34,6 +34,7 @@ import {
 
 import { Button } from "@erebuz/ui/components/button";
 import { GradientHeading } from "@erebuz/ui/components/gradient-heading";
+import { Input } from "@erebuz/ui/components/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@erebuz/ui/components/popover";
 import { Skeleton } from "@erebuz/ui/components/skeleton";
 import { TextureButton } from "@erebuz/ui/components/texture-button";
@@ -49,7 +50,7 @@ import {
   InitialCircle,
   SymbolGlyph,
 } from "@/components/crypto-icon";
-import { DestinationDialog, type Destination } from "@/components/destination-dialog";
+// import { DestinationDialog, type Destination } from "@/components/destination-dialog";
 import { OptionCard } from "@/components/option-card";
 import { formatAmount, formatUsd, shortenAddress } from "@/lib/format";
 import { useApp } from "@/lib/store";
@@ -214,9 +215,8 @@ export function BridgeFlow() {
   const [fromTokenSel, setFromToken] = useState<TeeToken | null>(null);
   const [toTokenSel, setToToken] = useState<TeeToken | null>(null);
   const [amount, setAmount] = useState("");
-  const [dest, setDest] = useState<Destination | null>(null);
+  const [recipientAddr, setRecipientAddr] = useState("");
   const [picker, setPicker] = useState<"from" | "to" | null>(null);
-  const [destOpen, setDestOpen] = useState(false);
 
   const [quote, setQuote] = useState<TeeQuote | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -257,21 +257,10 @@ export function BridgeFlow() {
   const toChain = useMemo(() => chains.find((c) => c.chainId === toChainId) ?? null, [chains, toChainId]);
 
   const recipient = useMemo(() => {
-    if (!dest) return null;
-    if (dest.kind === "card") {
-      const c = cards.find((x) => x.id === dest.id);
-      return c
-        ? { address: c.address, label: c.name, sublabel: shortenAddress(c.address), icon: <InitialCircle label={c.name} color={c.color} /> }
-        : null;
-    }
-    if (dest.kind === "contact") {
-      const c = contacts.find((x) => x.id === dest.id);
-      return c
-        ? { address: c.address, label: c.name, sublabel: c.handle ?? shortenAddress(c.address), icon: <GradientAvatar seed={c.address} label={c.name} /> }
-        : null;
-    }
-    return { address: dest.address, label: shortenAddress(dest.address), sublabel: "Wallet address", icon: <GradientAvatar seed={dest.address} /> };
-  }, [dest, cards, contacts]);
+    const addr = recipientAddr.trim();
+    if (!addr) return null;
+    return { address: addr, label: shortenAddress(addr), sublabel: "Wallet address", icon: <GradientAvatar seed={addr} /> };
+  }, [recipientAddr]);
 
   const amountNum = Number(amount) || 0;
   const canQuote = Boolean(fromToken && toToken && fromChainId != null && toChainId != null && amountNum > 0);
@@ -350,7 +339,7 @@ export function BridgeFlow() {
 
   const resetForm = () => {
     setAmount("");
-    setDest(null);
+    setRecipientAddr("");
     setQuote(null);
     setQuoteError(null);
     setCreateError(null);
@@ -615,25 +604,13 @@ export function BridgeFlow() {
                   </Popover>
                 ) : null}
 
-                <button
-                  type="button"
-                  onClick={() => setDestOpen(true)}
-                  className="press border-border bg-card hover:bg-accent/40 mt-3 flex w-full cursor-pointer items-center gap-3 rounded-2xl border p-4 text-left shadow-sm shadow-black/[0.03] dark:shadow-black/20"
-                >
-                  {recipient ? (
-                    recipient.icon
-                  ) : (
-                    <span className="bg-muted flex size-9 items-center justify-center rounded-full">
-                      <Plus className="text-muted-foreground size-4" />
-                    </span>
-                  )}
-                  <span className="min-w-0 flex-1">
-                    <span className="text-muted-foreground block text-xs">Recipient</span>
-                    <span className="block truncate text-sm font-medium">{recipient ? recipient.label : "Choose recipient"}</span>
-                    {recipient ? <span className="text-muted-foreground block truncate text-xs">{recipient.sublabel}</span> : null}
-                  </span>
-                  <ChevronDown className="text-muted-foreground size-4 shrink-0" />
-                </button>
+                <label className="text-muted-foreground mt-3 block text-xs font-medium">Recipient address</label>
+                <Input
+                  value={recipientAddr}
+                  onChange={(e) => setRecipientAddr(e.target.value)}
+                  placeholder="0x… or any chain address"
+                  className="mt-1.5"
+                />
 
                 <TextureButton variant="brand" size="lg" className="mt-4" disabled={!ready} onClick={() => setView("method")}>
                   {quoteLoading ? <Loader2 className="size-4 animate-spin" /> : null}
@@ -936,7 +913,6 @@ export function BridgeFlow() {
         activeItemId={toToken?.address}
         loading={toTokensLoading}
       />
-      <DestinationDialog open={destOpen} onOpenChange={setDestOpen} onSelect={setDest} />
     </div>
   );
 }
