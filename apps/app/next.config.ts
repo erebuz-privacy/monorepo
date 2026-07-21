@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname, "../.."),
   },
+  // Must match turbopack.root — `vercel build` otherwise pins this to apps/app
+  // and Turbopack can't resolve the workspace-hoisted next package.
+  outputFileTracingRoot: path.join(__dirname, "../.."),
   // Lower memory use when running the webpack dev server (`dev:light`).
   experimental: {
     webpackMemoryOptimizations: true,
