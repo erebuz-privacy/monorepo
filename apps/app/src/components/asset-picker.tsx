@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Check, Search } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Check, Globe2, X } from "lucide-react";
 
+import { AnimatedSearchInput } from "@erebuz/ui/components/animated-search";
+import { glassSurfaceVariants } from "@erebuz/ui/components/glass-surface";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@erebuz/ui/components/sheet";
-import { Input } from "@erebuz/ui/components/input";
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@erebuz/ui/components/dialog";
 import { Skeleton } from "@erebuz/ui/components/skeleton";
 import { cn } from "@erebuz/ui/lib/utils";
 
@@ -24,17 +25,18 @@ export type PickerItem = {
 
 export type ChainChip = { id: string; label: string; icon?: React.ReactNode };
 
-type Step = "chain" | "token";
+type Mode = "tokens" | "networks";
 
 /**
- * Two-step asset picker rendered as a right-side drawer: pick a network first,
- * then a token on that network. Reduces the 60+ chain set to one clear choice
- * at a time instead of a crowded chip row.
+ * Search-first Superbridge-style selector with a persistent network dock.
+ * The network grid is only exposed from the globe control, keeping the default
+ * token-picking flow direct and visually quiet.
  */
 export function AssetPicker({
   open,
   onOpenChange,
   title,
+  description,
   items,
   onSelect,
   searchPlaceholder = "Search tokens…",
@@ -59,189 +61,252 @@ export function AssetPicker({
   activeItemId?: string;
   loading?: boolean;
 }) {
-  const [step, setStep] = useState<Step>("chain");
+  const [mode, setMode] = useState<Mode>("tokens");
   const [query, setQuery] = useState("");
 
-  const hasChainStep = Boolean(chains && chains.length && onChainSelect);
+  const activeChain = chains?.find((chain) => chain.id === activeChainId);
+  const terms = useMemo(
+    () => query.toLowerCase().split(/\s+/).filter(Boolean),
+    [query],
+  );
+  const filteredChains = useMemo(
+    () =>
+      (chains ?? []).filter((chain) =>
+        terms.every((term) => chain.label.toLowerCase().includes(term)),
+      ),
+    [chains, terms],
+  );
+  const filteredItems = useMemo(
+    () =>
+      items.filter((item) => {
+        const haystack = `${item.label} ${item.sublabel ?? ""}`.toLowerCase();
+        return terms.every((term) => haystack.includes(term));
+      }),
+    [items, terms],
+  );
 
-  // Reset to the network step each time the drawer opens.
-  useEffect(() => {
-    if (open) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setStep(hasChainStep ? "chain" : "token");
-      setQuery("");
-    }
-  }, [open, hasChainStep]);
-
-  const activeChain = chains?.find((c) => c.id === activeChainId);
-
-  const filteredChains = useMemo(() => {
-    if (!chains) return [];
-    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-    if (!terms.length) return chains;
-    return chains.filter((c) => terms.every((t) => c.label.toLowerCase().includes(t)));
-  }, [chains, query]);
-
-  const filteredItems = useMemo(() => {
-    const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-    if (!terms.length) return items;
-    return items.filter((it) => {
-      const hay = `${it.label} ${it.sublabel ?? ""}`.toLowerCase();
-      return terms.every((t) => hay.includes(t));
-    });
-  }, [items, query]);
-
-  const onChain = step === "chain" && hasChainStep;
-
-  const goToken = (chainId: string) => {
-    onChainSelect?.(chainId);
-    setStep("token");
+  const chooseChain = (id: string) => {
+    onChainSelect?.(id);
+    setMode("tokens");
     setQuery("");
   };
 
   return (
-    <Sheet
+    <Dialog
       open={open}
-      onOpenChange={(o) => {
-        onOpenChange(o);
-        if (!o) setQuery("");
+      onOpenChange={(next) => {
+        onOpenChange(next);
+        if (!next) {
+          setMode("tokens");
+          setQuery("");
+        }
       }}
     >
-      <SheetContent className="gap-0 p-0">
-        <SheetHeader className="pr-12">
-          {onChain ? (
-            <>
-              <SheetTitle className="text-lg">{title}</SheetTitle>
-              <SheetDescription>Choose a network</SheetDescription>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center gap-2">
-                {hasChainStep ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep("chain");
-                      setQuery("");
-                    }}
-                    className="press hover:bg-accent -ml-1 flex cursor-pointer items-center gap-1 rounded-lg py-0.5 pr-2 pl-1 text-xs font-medium"
-                  >
-                    <ArrowLeft className="size-3.5" /> Networks
-                  </button>
-                ) : null}
-              </div>
-              <SheetTitle className="text-lg">Select token</SheetTitle>
-              {activeChain ? (
-                <SheetDescription className="flex items-center gap-1.5">
-                  on {activeChain.icon} {activeChain.label}
-                </SheetDescription>
-              ) : null}
-            </>
+      <DialogContent
+        showCloseButton={false}
+        className="text-foreground !top-1/2 !left-1/2 flex h-[min(82dvh,760px)] w-[calc(100vw-1rem)] !max-w-[740px] !-translate-x-1/2 !-translate-y-1/2 flex-col gap-3 overflow-visible border-0 bg-transparent p-0 shadow-none ring-0 [animation:none!important] sm:w-[min(92vw,740px)]"
+      >
+        <DialogTitle className="sr-only">{title}</DialogTitle>
+        <DialogDescription className="sr-only">
+          {description ?? "Choose a network and asset"}
+        </DialogDescription>
+
+        <div
+          className={cn(
+            glassSurfaceVariants({ tone: "ink", depth: "floating", blur: "sm" }),
+            "border-foreground/12 bg-background/88 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.65rem] sm:rounded-[2rem]",
           )}
-        </SheetHeader>
+        >
+          <div className="border-foreground/[0.08] flex items-center gap-2 border-b p-3 sm:gap-3 sm:p-4">
+            {mode === "tokens" && activeChain ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("networks");
+                  setQuery("");
+                }}
+                className={cn(
+                  glassSurfaceVariants({ tone: "clear", depth: "flat", blur: "none", interactive: true }),
+                  "press flex h-12 shrink-0 items-center gap-2 rounded-2xl px-2.5 text-sm font-semibold sm:px-3",
+                )}
+                aria-label={`Change network. Current network ${activeChain.label}`}
+              >
+                <span className="[&>*]:size-7">{activeChain.icon}</span>
+                <span className="hidden max-w-28 truncate sm:block">{activeChain.label}</span>
+              </button>
+            ) : null}
 
-        <div className="px-5 py-4">
-          <div className="relative">
-            <Search className="text-muted-foreground pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2" />
-            <Input
+            <AnimatedSearchInput
+              aria-label={mode === "tokens" ? "Search tokens" : "Search networks"}
+              autoComplete="off"
               autoFocus
+              blobTranslucent
+              className="min-w-0 max-w-none flex-1"
+              onChange={(event) => setQuery(event.target.value)}
+              onClear={() => setQuery("")}
+              placeholder={mode === "tokens" ? searchPlaceholder : "Search networks…"}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={onChain ? "Search networks…" : searchPlaceholder}
-              className="h-11 pl-9"
             />
-          </div>
-        </div>
 
-        <div className="border-border flex-1 overflow-y-auto border-t">
-          {onChain ? (
-            filteredChains.length === 0 ? (
-              <p className="text-muted-foreground p-8 text-center text-sm">No networks</p>
-            ) : (
-              <ul className="p-2">
-                {filteredChains.map((c, i) => (
-                  <li
-                    key={c.id}
-                    className="animate-in fade-in-0 slide-in-from-bottom-1 fill-mode-both"
-                    style={{ animationDelay: `${Math.min(i, 14) * 18}ms`, animationDuration: "200ms" }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => goToken(c.id)}
-                      className={cn(
-                        "press flex w-full cursor-pointer items-center gap-3 rounded-xl p-3 text-left",
-                        c.id === activeChainId ? "bg-accent" : "hover:bg-accent/70"
-                      )}
-                    >
-                      {c.icon}
-                      <span className="flex-1 truncate text-sm font-semibold">{c.label}</span>
-                      {c.id === activeChainId ? <Check className="text-brand size-4 shrink-0" /> : null}
-                    </button>
-                  </li>
-                ))}
+            <DialogClose className="press border-foreground/[0.07] bg-foreground/[0.05] text-foreground/45 hover:bg-foreground/10 hover:text-foreground flex size-12 shrink-0 items-center justify-center rounded-full border transition-colors">
+              <X className="size-5" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+          </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 sm:px-5">
+          {mode === "networks" ? (
+            filteredChains.length ? (
+              <ul className="grid grid-cols-2 gap-2 py-4 sm:grid-cols-3">
+                {filteredChains.map((chain) => {
+                  const selected = chain.id === activeChainId;
+                  return (
+                    <li key={chain.id}>
+                      <button
+                        type="button"
+                        onClick={() => chooseChain(chain.id)}
+                        className={cn(
+                          "press flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors sm:p-4",
+                          selected
+                            ? "border-emerald-300/30 bg-emerald-300/10"
+                            : "border-foreground/[0.07] bg-foreground/[0.025] hover:border-foreground/15 hover:bg-foreground/[0.055]",
+                        )}
+                      >
+                        <span className="shrink-0 [&>*]:size-10">{chain.icon}</span>
+                        <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                          {chain.label}
+                        </span>
+                        {selected ? <Check className="size-4 text-emerald-300" /> : null}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
+            ) : (
+              <Empty label="No networks found" />
             )
           ) : loading ? (
-            <ul className="space-y-1 p-2">
-              {Array.from({ length: 7 }).map((_, i) => (
-                <li key={i} className="flex items-center gap-3 rounded-xl p-3">
-                  <Skeleton className="size-8 shrink-0 rounded-full" />
-                  <div className="flex-1 space-y-1.5">
-                    <Skeleton className="h-3.5 w-16" />
-                    <Skeleton className="h-3 w-24" />
+            <ul className="divide-foreground/[0.06] divide-y">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <li key={index} className="flex items-center gap-4 px-2 py-5">
+                  <Skeleton className="size-12 shrink-0 rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-36" />
                   </div>
                 </li>
               ))}
             </ul>
-          ) : filteredItems.length === 0 ? (
-            <p className="text-muted-foreground p-8 text-center text-sm">No matches</p>
-          ) : (
-            <ul className="p-2">
-              {filteredItems.map((it, i) => {
-                const selected = it.id === activeItemId;
+          ) : filteredItems.length ? (
+            <ul className="divide-foreground/[0.06] divide-y">
+              {filteredItems.map((item) => {
+                const selected = item.id === activeItemId;
                 return (
-                  <li
-                    key={it.id}
-                    className="animate-in fade-in-0 slide-in-from-bottom-1 fill-mode-both"
-                    style={{ animationDelay: `${Math.min(i, 14) * 22}ms`, animationDuration: "220ms" }}
-                  >
+                  <li key={item.id}>
                     <button
                       type="button"
                       onClick={() => {
-                        onSelect(it.id);
+                        onSelect(item.id);
                         onOpenChange(false);
                         setQuery("");
                       }}
-                      className={cn(
-                        "press flex w-full cursor-pointer items-center gap-3 rounded-xl p-3 text-left",
-                        selected ? "bg-accent" : "hover:bg-accent/70"
-                      )}
+                      className="group press flex w-full items-center gap-4 px-2 py-4 text-left sm:py-5"
                     >
-                      {it.icon}
+                      <span className="shrink-0 transition-transform duration-200 group-hover:scale-105 [&>*]:size-12">
+                        {item.icon}
+                      </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold">{it.label}</span>
-                        {it.sublabel ? (
-                          <span className="text-muted-foreground block truncate text-xs">
-                            {it.sublabel}
+                        <span className="text-foreground block truncate text-base font-semibold tracking-tight">
+                          {item.label}
+                        </span>
+                        {item.sublabel ? (
+                          <span className="text-foreground/38 mt-1 block truncate text-sm">
+                            {item.sublabel}
                           </span>
                         ) : null}
                       </span>
-                      {it.right ? (
-                        <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
-                          {it.right}
+                      {item.right ? (
+                        <span className="bg-foreground/[0.05] text-foreground/45 shrink-0 rounded-full px-2.5 py-1 text-xs tabular-nums">
+                          {item.right}
                         </span>
                       ) : null}
-                      {selected ? <Check className="text-brand size-4 shrink-0" /> : null}
+                      {selected ? (
+                        <span className="flex size-7 items-center justify-center rounded-full bg-emerald-300/12 text-emerald-300">
+                          <Check className="size-4" />
+                        </span>
+                      ) : null}
                     </button>
                   </li>
                 );
               })}
             </ul>
+          ) : (
+            <Empty label="No tokens found" />
           )}
+          </div>
         </div>
 
-        {footer && !onChain ? <div className="border-border border-t p-3">{footer}</div> : null}
-      </SheetContent>
-    </Sheet>
+        {chains?.length ? (
+          <div
+            className={cn(
+              glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" }),
+              "border-foreground/12 bg-background/72 shrink-0 rounded-[1.5rem] p-3 sm:rounded-[1.75rem] sm:p-4",
+            )}
+          >
+            <div className="no-scrollbar flex gap-2 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("networks");
+                  setQuery("");
+                }}
+                className={cn(
+                  "press flex size-14 shrink-0 items-center justify-center rounded-2xl border sm:size-16",
+                  mode === "networks"
+                    ? "border-emerald-300/35 bg-emerald-300/10 text-emerald-200"
+                    : "border-foreground/10 bg-foreground/[0.035] text-foreground/55 hover:bg-foreground/[0.07]",
+                )}
+                aria-label="Browse all networks"
+              >
+                <Globe2 className="size-6" />
+              </button>
+              {chains.map((chain) => {
+                const selected = chain.id === activeChainId && mode === "tokens";
+                return (
+                  <button
+                    type="button"
+                    key={chain.id}
+                    onClick={() => chooseChain(chain.id)}
+                    className={cn(
+                      "press relative flex size-14 shrink-0 items-center justify-center rounded-2xl border sm:size-16",
+                      selected
+                        ? "border-emerald-500/40 bg-foreground/10 shadow-[0_0_30px_rgba(110,231,183,0.12)] dark:border-emerald-200/40"
+                        : "border-foreground/10 bg-foreground/[0.035] hover:bg-foreground/[0.07]",
+                    )}
+                    aria-label={chain.label}
+                    title={chain.label}
+                  >
+                    <span className="[&>*]:size-8 sm:[&>*]:size-9">{chain.icon}</span>
+                    {selected ? (
+                      <span className="absolute -bottom-1.5 size-1.5 rounded-full bg-emerald-200 shadow-[0_0_10px_rgba(110,231,183,0.8)]" />
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
+        {footer ? <div className="border-foreground/[0.07] border-t p-3">{footer}</div> : null}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Empty({ label }: { label: string }) {
+  return (
+    <div className="text-foreground/38 flex min-h-48 items-center justify-center text-sm">
+      {label}
+    </div>
   );
 }
