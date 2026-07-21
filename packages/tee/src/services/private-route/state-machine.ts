@@ -7,7 +7,7 @@
 // Railgun not configured) leave the route unchanged for the next tick; only hard
 // failures mark it FAILED.
 
-import { getAddress, type Address } from 'viem';
+import { getAddress, encodeFunctionData, type Address } from 'viem';
 import { logger } from '../../managers/log';
 import { PrivateRouteModel, type PrivateRoute, type PrivateRouteStatus } from '../../database/models/private-route';
 import { getRelayDepositAddress, getRelayStatus, isRelayFilled, isRelayFailed, resolveCurrency, RELAY_NATIVE } from '../relay';
@@ -185,6 +185,33 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
     case 'BRIDGING_OUT': {
       if (CCTP) {
         const hubUsdc = cctpUsdc(hubChainId) as Address;
+        // Same-chain delivery: when the destination IS the hub chain there is no
+        // CCTP hop (CCTP cannot send within a single domain, which left routes
+        // wedged in BRIDGING_OUT waiting for an attestation that never comes).
+        // Transfer the unshielded USDC straight from the hub SA to the recipient.
+        if (route.destChainId === hubChainId) {
+          const bal = await chainManager.getTokenBalance(hubChainId, getAddress(route.hubAccount!), hubUsdc);
+          if (bal <= 0n) return void (await set(id, 'COMPLETED'));
+          const data = encodeFunctionData({
+            abi: [
+              {
+                type: 'function',
+                name: 'transfer',
+                stateMutability: 'nonpayable',
+                inputs: [
+                  { name: 'to', type: 'address' },
+                  { name: 'amount', type: 'uint256' },
+                ],
+                outputs: [{ type: 'bool' }],
+              },
+            ],
+            functionName: 'transfer',
+            args: [getAddress(route.userDestinationAddress), bal],
+          });
+          const { txHash } = await executeBatch(hubChainId, id, [{ to: hubUsdc, data }]);
+          await set(id, 'COMPLETED', { leg2RequestId: txHash });
+          return;
+        }
         if (!route.leg2RequestId) {
           // Not burned yet: wait for the unshielded USDC on the hub SA, then
           // CCTP-burn it to the recipient on the destination chain.
