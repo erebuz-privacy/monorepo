@@ -8,27 +8,39 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@erebuz/ui/components/dialog";
+import { GradientHeading } from "@erebuz/ui/components/gradient-heading";
 import { Separator } from "@erebuz/ui/components/separator";
 
 import { ActivityRow } from "@/components/activity-row";
-import { RouteTrail } from "@/components/crypto-icon";
+import { ChainGlyph, RouteTrail } from "@/components/crypto-icon";
+import { ChevronLeft, ChevronRight, Lock } from "lucide-react";
 import { formatAmount, formatUsd } from "@/lib/format";
 import { chainById, type Activity } from "@/lib/mock-data";
 import { useApp } from "@/lib/store";
 
+const PAGE_SIZE = 8;
+
 export default function ActivityPage() {
   const { activity, tokenById } = useApp();
   const [selected, setSelected] = useState<Activity | null>(null);
+  const [page, setPage] = useState(0);
 
-  const fromToken = selected ? tokenById(selected.fromTokenId) : null;
-  const toToken = selected ? tokenById(selected.toTokenId) : null;
-  const fromChain = selected ? chainById(selected.fromChainId) : null;
-  const toChain = selected ? chainById(selected.toChainId) : null;
+  const pageCount = Math.max(1, Math.ceil(activity.length / PAGE_SIZE));
+  const cur = Math.min(page, pageCount - 1);
+  const pageItems = activity.slice(cur * PAGE_SIZE, cur * PAGE_SIZE + PAGE_SIZE);
+
+  const live = selected?.live;
+  const fromToken = selected && !live ? tokenById(selected.fromTokenId) : null;
+  const toToken = selected && !live ? tokenById(selected.toTokenId) : null;
+  const fromChain = selected && !live ? chainById(selected.fromChainId) : null;
+  const toChain = selected && !live ? chainById(selected.toChainId) : null;
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
+    <div className="page-enter mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
       <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Activity</h1>
+        <GradientHeading as="h1" size="md" weight="semi">
+          Activity
+        </GradientHeading>
         <p className="text-muted-foreground mt-1 text-sm">
           Your private transfers
         </p>
@@ -39,18 +51,47 @@ export default function ActivityPage() {
           <p className="text-muted-foreground text-sm">No transfers yet.</p>
         </div>
       ) : (
-        <div className="border-border divide-border overflow-hidden rounded-2xl border divide-y">
-          {activity.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setSelected(item)}
-              className="hover:bg-accent/40 block w-full px-4 text-left transition-colors"
-            >
-              <ActivityRow item={item} />
-            </button>
-          ))}
-        </div>
+        <>
+          <div className="border-border divide-border overflow-hidden rounded-2xl border divide-y shadow-sm shadow-black/[0.03] dark:shadow-xl dark:shadow-black/20">
+            {pageItems.map((item, i) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setSelected(item)}
+                style={{ animationDelay: `${Math.min(i, 12) * 45}ms` }}
+                className="row-in press hover:bg-accent/40 block w-full cursor-pointer px-4 text-left"
+              >
+                <ActivityRow item={item} />
+              </button>
+            ))}
+          </div>
+
+          {pageCount > 1 ? (
+            <div className="mt-4 flex items-center justify-between">
+              <button
+                type="button"
+                disabled={cur === 0}
+                onClick={() => setPage(cur - 1)}
+                className="press border-border hover:bg-accent inline-flex cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium disabled:pointer-events-none disabled:opacity-40"
+              >
+                <ChevronLeft className="size-3.5" />
+                Prev
+              </button>
+              <span className="text-muted-foreground text-xs tabular-nums">
+                Page {cur + 1} of {pageCount}
+              </span>
+              <button
+                type="button"
+                disabled={cur >= pageCount - 1}
+                onClick={() => setPage(cur + 1)}
+                className="press border-border hover:bg-accent inline-flex cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium disabled:pointer-events-none disabled:opacity-40"
+              >
+                Next
+                <ChevronRight className="size-3.5" />
+              </button>
+            </div>
+          ) : null}
+        </>
       )}
 
       <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
@@ -63,14 +104,14 @@ export default function ActivityPage() {
               <Row label="To">{selected.toLabel}</Row>
               <Row label="You sent">
                 <span className="tabular-nums">
-                  {formatAmount(selected.sendAmount, fromToken?.symbol)} ·{" "}
-                  {fromChain?.name}
+                  {formatAmount(selected.sendAmount, live?.sendSymbol ?? fromToken?.symbol)} ·{" "}
+                  {live?.fromChainName ?? fromChain?.name}
                 </span>
               </Row>
               <Row label="They received">
                 <span className="tabular-nums">
-                  ≈ {formatAmount(selected.receiveAmount, toToken?.symbol)} ·{" "}
-                  {toChain?.name}
+                  ≈ {formatAmount(selected.receiveAmount, live?.recvSymbol ?? toToken?.symbol)} ·{" "}
+                  {live?.toChainName ?? toChain?.name}
                 </span>
               </Row>
               <Row label="Fee">
@@ -82,14 +123,27 @@ export default function ActivityPage() {
                 <span className="text-brand font-medium">Confidential</span>
               </Row>
               <Row label="Reference">
-                <span className="text-muted-foreground text-xs">
-                  {selected.id}
+                <span className="text-muted-foreground text-xs tabular-nums">
+                  {live?.routeId ?? selected.id}
                 </span>
               </Row>
 
               <Separator />
               <p className="text-muted-foreground text-xs">Route</p>
-              <RouteTrail route={selected.route} />
+              {live ? (
+                <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
+                  <ChainGlyph chainId={live.fromChainId} logoUrl={live.fromChainLogo} label={live.fromChainName} size={16} />
+                  <span className="text-foreground">{live.fromChainName}</span>
+                  <span className="bg-brand/10 text-brand inline-flex items-center gap-1 rounded-full px-1.5 py-0.5">
+                    <Lock className="size-3" />
+                    Private
+                  </span>
+                  <ChainGlyph chainId={live.toChainId} logoUrl={live.toChainLogo} label={live.toChainName} size={16} />
+                  <span className="text-foreground">{live.toChainName}</span>
+                </div>
+              ) : (
+                <RouteTrail route={selected.route} />
+              )}
             </div>
           ) : null}
         </DialogContent>

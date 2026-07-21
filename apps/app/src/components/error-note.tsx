@@ -42,7 +42,7 @@ export function ErrorNote({
             <button
               type="button"
               onClick={onRetry}
-              className="text-foreground hover:bg-accent border-border mt-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors"
+              className="press text-foreground hover:bg-accent border-border mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium"
             >
               <RotateCw className="size-3" />
               {retryLabel}

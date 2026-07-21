@@ -10,9 +10,6 @@ import {
 } from "react";
 
 import {
-  SEED_ACTIVITY,
-  SEED_CARDS,
-  SEED_CONTACTS,
   SEED_TOKENS,
   colorFromString,
   type Activity,
@@ -21,30 +18,26 @@ import {
   type Token,
 } from "./mock-data";
 
-export type Custody = "managed" | "self";
-export type User = { name: string; email: string };
-
-type Auth = { authed: boolean; custody: Custody | null; user: User | null };
-
 type Snapshot = {
-  auth: Auth;
   customTokens: Token[];
   cards: Card[];
   contacts: Contact[];
   activity: Activity[];
 };
 
-const STORAGE_KEY = "wall8:v1";
+// v3: no seed/demo data and no auth — cards, contacts and activity all start
+// empty and fill from the user's own actions. Identity is the connected wallet.
+// Bumped so stale storage (seed data / mock user) is dropped.
+const STORAGE_KEY = "wall8:v3";
 
 const DEFAULTS: Snapshot = {
-  auth: { authed: false, custody: null, user: null },
   customTokens: [],
-  cards: SEED_CARDS,
-  contacts: SEED_CONTACTS,
-  activity: SEED_ACTIVITY,
+  cards: [],
+  contacts: [],
+  activity: [],
 };
 
-type AppContextValue = Auth & {
+type AppContextValue = {
   hydrated: boolean;
   tokens: Token[];
   cards: Card[];
@@ -52,12 +45,10 @@ type AppContextValue = Auth & {
   activity: Activity[];
   tokenById: (id: string) => Token | undefined;
   tokensForChain: (chainId: string) => Token[];
-  // auth
-  login: (user: User, custody: Custody) => void;
-  chooseCustody: (custody: Custody) => void;
-  logout: () => void;
   // data
   recordSend: (activity: Activity) => void;
+  /** Insert a new activity, or merge into the existing one with the same id. */
+  upsertActivity: (activity: Activity) => void;
   importToken: (input: {
     address: string;
     chainId: string;
@@ -119,21 +110,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [tokens]
   );
 
-  const login = useCallback(
-    (user: User, custody: Custody) =>
-      setData((d) => ({ ...d, auth: { authed: true, custody, user } })),
-    []
-  );
-  const chooseCustody = useCallback(
-    (custody: Custody) =>
-      setData((d) => ({ ...d, auth: { ...d.auth, custody } })),
-    []
-  );
-  const logout = useCallback(() => setData(DEFAULTS), []);
-
   const recordSend = useCallback(
     (entry: Activity) =>
       setData((d) => ({ ...d, activity: [entry, ...d.activity] })),
+    []
+  );
+
+  const upsertActivity = useCallback(
+    (entry: Activity) =>
+      setData((d) => {
+        const i = d.activity.findIndex((a) => a.id === entry.id);
+        if (i === -1) return { ...d, activity: [entry, ...d.activity] };
+        const next = d.activity.slice();
+        next[i] = { ...next[i], ...entry };
+        return { ...d, activity: next };
+      }),
     []
   );
 
@@ -224,7 +215,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<AppContextValue>(
     () => ({
-      ...data.auth,
       hydrated,
       tokens,
       cards: data.cards,
@@ -232,10 +222,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       activity: data.activity,
       tokenById,
       tokensForChain,
-      login,
-      chooseCustody,
-      logout,
       recordSend,
+      upsertActivity,
       importToken,
       addCard,
       updateCard,
@@ -250,10 +238,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       tokens,
       tokenById,
       tokensForChain,
-      login,
-      chooseCustody,
-      logout,
       recordSend,
+      upsertActivity,
       importToken,
       addCard,
       updateCard,

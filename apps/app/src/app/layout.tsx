@@ -1,21 +1,11 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk, JetBrains_Mono } from "next/font/google";
 import "@erebuz/ui/globals.css";
+import "./theme.css";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { TxTracker } from "@/components/tx-tracker";
 import { Web3Provider } from "@/components/web3-provider";
 import { AppProvider } from "@/lib/store";
-import { RouteDraftProvider } from "@/lib/route-draft";
-
-const geistSans = Hanken_Grotesk({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = JetBrains_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "wall8 | Private Transfers",
@@ -28,11 +18,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    // System font stack (SF on Apple devices) is applied via ./theme.css — no
+    // next/font, so the UI reads native/Apple rather than "AI template".
+    <html lang="en" suppressHydrationWarning className="h-full antialiased">
       <body
         className="bg-background text-foreground min-h-dvh font-sans"
         suppressHydrationWarning
@@ -47,7 +35,9 @@ export default function RootLayout({
         >
           <Web3Provider>
             <AppProvider>
-              <RouteDraftProvider>{children}</RouteDraftProvider>
+              {/* Polls any locally-recorded pending transfer, app-wide. */}
+              <TxTracker />
+              {children}
             </AppProvider>
           </Web3Provider>
         </ThemeProvider>

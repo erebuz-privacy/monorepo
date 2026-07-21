@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { KeyRound, LogOut, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 
-import { Button } from "@erebuz/ui/components/button";
-import { cn } from "@erebuz/ui/lib/utils";
+import { GradientHeading } from "@erebuz/ui/components/gradient-heading";
 
 import {
   CardFormDialog,
@@ -20,22 +18,14 @@ import { shortenAddress } from "@/lib/format";
 import { chainById } from "@/lib/mock-data";
 import { useApp } from "@/lib/store";
 
-function SectionHeader({
-  title,
-  onAdd,
-}: {
-  title: string;
-  onAdd: () => void;
-}) {
+function SectionHeader({ title, onAdd }: { title: string; onAdd: () => void }) {
   return (
-    <div className="flex items-center justify-between px-1 pb-2 pt-6">
-      <h2 className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-        {title}
-      </h2>
+    <div className="flex items-center justify-between px-1 pt-7 pb-2">
+      <h2 className="text-muted-foreground text-sm font-medium">{title}</h2>
       <button
         type="button"
         onClick={onAdd}
-        className="text-primary flex items-center gap-1 text-xs font-medium"
+        className="press text-brand hover:text-brand/80 flex cursor-pointer items-center gap-1 text-xs font-medium"
       >
         <Plus className="size-3.5" />
         Add
@@ -45,12 +35,7 @@ function SectionHeader({
 }
 
 export default function SettingsPage() {
-  const router = useRouter();
   const {
-    user,
-    custody,
-    chooseCustody,
-    logout,
     cards,
     contacts,
     tokenById,
@@ -67,14 +52,7 @@ export default function SettingsPage() {
   const [contactOpen, setContactOpen] = useState(false);
   const [editContactId, setEditContactId] = useState<string | null>(null);
 
-  const handleLogout = () => {
-    logout();
-    router.replace("/welcome");
-  };
-
-  const editingCard = editCardId
-    ? cards.find((c) => c.id === editCardId)
-    : undefined;
+  const editingCard = editCardId ? cards.find((c) => c.id === editCardId) : undefined;
   const cardInitial: CardFormValue | undefined = editingCard
     ? {
         name: editingCard.name,
@@ -84,9 +62,7 @@ export default function SettingsPage() {
       }
     : undefined;
 
-  const editingContact = editContactId
-    ? contacts.find((c) => c.id === editContactId)
-    : undefined;
+  const editingContact = editContactId ? contacts.find((c) => c.id === editContactId) : undefined;
   const contactInitial: ContactFormValue | undefined = editingContact
     ? {
         name: editingContact.name,
@@ -96,74 +72,15 @@ export default function SettingsPage() {
     : undefined;
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+    <div className="page-enter mx-auto w-full max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
+      <header className="mb-2">
+        <GradientHeading as="h1" size="md" weight="semi">
+          Settings
+        </GradientHeading>
         <p className="text-muted-foreground mt-1 text-sm">
-          Account, security, cards and contacts
+          Your cards and contacts
         </p>
       </header>
-
-      {/* account */}
-      <section className="border-border rounded-xl border p-4">
-        <div className="flex items-center gap-3">
-          <GradientAvatar
-            seed={user?.email ?? "wall8"}
-            label={user?.name}
-            size={44}
-          />
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium">{user?.name}</p>
-            <p className="text-muted-foreground truncate text-xs">
-              {user?.email}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* security */}
-      <h2 className="text-muted-foreground px-1 pb-2 pt-6 text-xs font-medium uppercase tracking-wide">
-        Security
-      </h2>
-      <section className="border-border rounded-xl border p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            {custody === "self" ? (
-              <KeyRound className="text-muted-foreground size-4" />
-            ) : (
-              <ShieldCheck className="text-brand size-4" />
-            )}
-            <p className="font-medium">
-              {custody === "self" ? "Self-custody" : "Managed wallet"}
-            </p>
-          </div>
-          {custody === "managed" ? (
-            <span className="text-brand text-xs font-medium">Gasless</span>
-          ) : null}
-        </div>
-        <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-          {custody === "self"
-            ? "You hold the private keys and pay your own gas."
-            : "Keys stay inside a TEE enclave and every transfer's gas is sponsored for you."}
-        </p>
-        <div className="bg-muted mt-4 grid grid-cols-2 gap-1 rounded-lg p-1">
-          {(["managed", "self"] as const).map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => chooseCustody(c)}
-              className={cn(
-                "rounded-md py-1.5 text-sm font-medium transition-colors",
-                custody === c
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {c === "managed" ? "Managed" : "Self-custody"}
-            </button>
-          ))}
-        </div>
-      </section>
 
       {/* cards */}
       <SectionHeader
@@ -173,10 +90,10 @@ export default function SettingsPage() {
           setCardOpen(true);
         }}
       />
-      <section className="border-border divide-border divide-y rounded-xl border">
+      <section className="border-border divide-border divide-y rounded-2xl border shadow-sm shadow-black/[0.03] dark:shadow-xl dark:shadow-black/20">
         {cards.length === 0 ? (
-          <p className="text-muted-foreground p-4 text-center text-sm">
-            No cards yet.
+          <p className="text-muted-foreground p-6 text-center text-sm">
+            No cards yet. Add a deposit address you send to often.
           </p>
         ) : (
           cards.map((c) => {
@@ -198,7 +115,7 @@ export default function SettingsPage() {
                     setEditCardId(c.id);
                     setCardOpen(true);
                   }}
-                  className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-md p-2"
+                  className="press text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer rounded-md p-2"
                 >
                   <Pencil className="size-4" />
                 </button>
@@ -206,7 +123,7 @@ export default function SettingsPage() {
                   type="button"
                   aria-label="Delete card"
                   onClick={() => removeCard(c.id)}
-                  className="text-muted-foreground hover:text-destructive hover:bg-accent rounded-md p-2"
+                  className="press text-muted-foreground hover:text-destructive hover:bg-accent cursor-pointer rounded-md p-2"
                 >
                   <Trash2 className="size-4" />
                 </button>
@@ -224,10 +141,10 @@ export default function SettingsPage() {
           setContactOpen(true);
         }}
       />
-      <section className="border-border divide-border divide-y rounded-xl border">
+      <section className="border-border divide-border divide-y rounded-2xl border shadow-sm shadow-black/[0.03] dark:shadow-xl dark:shadow-black/20">
         {contacts.length === 0 ? (
-          <p className="text-muted-foreground p-4 text-center text-sm">
-            No contacts yet.
+          <p className="text-muted-foreground p-6 text-center text-sm">
+            No contacts yet. Save an address when you send, or add one here.
           </p>
         ) : (
           contacts.map((c) => (
@@ -246,7 +163,7 @@ export default function SettingsPage() {
                   setEditContactId(c.id);
                   setContactOpen(true);
                 }}
-                className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-md p-2"
+                className="press text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer rounded-md p-2"
               >
                 <Pencil className="size-4" />
               </button>
@@ -254,7 +171,7 @@ export default function SettingsPage() {
                 type="button"
                 aria-label="Delete contact"
                 onClick={() => removeContact(c.id)}
-                className="text-muted-foreground hover:text-destructive hover:bg-accent rounded-md p-2"
+                className="press text-muted-foreground hover:text-destructive hover:bg-accent cursor-pointer rounded-md p-2"
               >
                 <Trash2 className="size-4" />
               </button>
@@ -262,15 +179,6 @@ export default function SettingsPage() {
           ))
         )}
       </section>
-
-      <Button
-        variant="ghost"
-        className="text-destructive hover:text-destructive mt-8 w-full"
-        onClick={handleLogout}
-      >
-        <LogOut className="size-4" />
-        Log out
-      </Button>
 
       <CardFormDialog
         open={cardOpen}
