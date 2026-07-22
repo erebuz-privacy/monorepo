@@ -13,6 +13,12 @@ import {
   DialogTitle,
 } from "@erebuz/ui/components/dialog";
 import { Skeleton } from "@erebuz/ui/components/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@erebuz/ui/components/tooltip";
 import { cn } from "@erebuz/ui/lib/utils";
 
 export type PickerItem = {
@@ -154,7 +160,9 @@ export function AssetPicker({
             </DialogClose>
           </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-3 sm:px-5">
+        {/* min-h keeps the body a comfortable size even for a 1-item list; the
+            networks grid is taller so this only floors the sparse token case. */}
+        <div className="min-h-[15rem] flex-1 overflow-y-auto px-3 sm:px-5">
           {mode === "networks" ? (
             filteredChains.length ? (
               <ul className="grid auto-rows-fr grid-cols-2 gap-2 py-4 sm:grid-cols-3">
@@ -255,47 +263,61 @@ export function AssetPicker({
               "border-foreground/12 bg-background/72 shrink-0 rounded-[1.5rem] p-3 sm:rounded-[1.75rem] sm:p-4",
             )}
           >
-            <div className="no-scrollbar flex gap-2 overflow-x-auto">
-              <button
-                type="button"
-                onClick={() => {
-                  setMode("networks");
-                  setQuery("");
-                }}
-                className={cn(
-                  "press flex size-16 shrink-0 items-center justify-center rounded-2xl border sm:size-[72px]",
-                  mode === "networks"
-                    ? "border-emerald-300/35 bg-emerald-300/10 text-emerald-200"
-                    : "border-foreground/10 bg-foreground/[0.035] text-foreground/55 hover:bg-foreground/[0.07]",
-                )}
-                aria-label="Browse all networks"
-              >
-                <Globe2 className="size-7 sm:size-8" />
-              </button>
-              {chains.map((chain) => {
-                const selected = chain.id === activeChainId && mode === "tokens";
-                return (
-                  <button
-                    type="button"
-                    key={chain.id}
-                    onClick={() => chooseChain(chain.id)}
-                    className={cn(
-                      "press relative flex size-16 shrink-0 items-center justify-center rounded-2xl border sm:size-[72px]",
-                      selected
-                        ? "border-emerald-500/40 bg-foreground/10 shadow-[0_0_30px_rgba(110,231,183,0.12)] dark:border-emerald-200/40"
-                        : "border-foreground/10 bg-foreground/[0.035] hover:bg-foreground/[0.07]",
-                    )}
-                    aria-label={chain.label}
-                    title={chain.label}
-                  >
-                    <span className="[&>*]:size-10 sm:[&>*]:size-11">{chain.icon}</span>
-                    {selected ? (
-                      <span className="absolute -bottom-1.5 size-1.5 rounded-full bg-emerald-200 shadow-[0_0_10px_rgba(110,231,183,0.8)]" />
-                    ) : null}
-                  </button>
-                );
-              })}
-            </div>
+            <TooltipProvider delay={120}>
+              <div className="no-scrollbar flex gap-2 overflow-x-auto">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMode("networks");
+                          setQuery("");
+                        }}
+                        className={cn(
+                          "press flex size-[72px] shrink-0 items-center justify-center rounded-2xl border sm:size-20",
+                          mode === "networks"
+                            ? "border-emerald-300/35 bg-emerald-300/10 text-emerald-200"
+                            : "border-foreground/10 bg-foreground/[0.035] text-foreground/55 hover:bg-foreground/[0.07]",
+                        )}
+                        aria-label="Browse all networks"
+                      >
+                        <Globe2 className="size-9 sm:size-10" />
+                      </button>
+                    }
+                  />
+                  <TooltipContent>All networks</TooltipContent>
+                </Tooltip>
+                {chains.map((chain) => {
+                  const selected = chain.id === activeChainId && mode === "tokens";
+                  return (
+                    <Tooltip key={chain.id}>
+                      <TooltipTrigger
+                        render={
+                          <button
+                            type="button"
+                            onClick={() => chooseChain(chain.id)}
+                            className={cn(
+                              "press relative flex size-[72px] shrink-0 items-center justify-center rounded-2xl border sm:size-20",
+                              selected
+                                ? "border-emerald-500/40 bg-foreground/10 shadow-[0_0_30px_rgba(110,231,183,0.12)] dark:border-emerald-200/40"
+                                : "border-foreground/10 bg-foreground/[0.035] hover:bg-foreground/[0.07]",
+                            )}
+                            aria-label={chain.label}
+                          >
+                            <span className="[&>*]:size-14 sm:[&>*]:size-16">{chain.icon}</span>
+                            {selected ? (
+                              <span className="absolute -bottom-1.5 size-1.5 rounded-full bg-emerald-200 shadow-[0_0_10px_rgba(110,231,183,0.8)]" />
+                            ) : null}
+                          </button>
+                        }
+                      />
+                      <TooltipContent>{chain.label}</TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </TooltipProvider>
           </div>
         ) : null}
 
