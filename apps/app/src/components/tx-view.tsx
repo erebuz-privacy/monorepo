@@ -10,6 +10,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { ArrowLeft, Check, Clock, Copy, Loader2, XCircle } from "lucide-react";
 
 import { glassSurfaceVariants } from "@erebuz/ui/components/glass-surface";
+import { Skeleton } from "@erebuz/ui/components/skeleton";
 import { cn } from "@erebuz/ui/lib/utils";
 
 import { AssetGlyph } from "@/components/crypto-icon";
@@ -38,6 +39,8 @@ export function TxView({ id }: { id: string }) {
   const [copied, setCopied] = useState<"addr" | "link" | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const inFlight = useRef(false);
+  // Fallback anchor for the elapsed timer when the server createdAt is unusable.
+  const [firstSeen] = useState(() => Date.now());
   const { chains } = useChains();
 
   const poll = useCallback(async () => {
@@ -82,9 +85,38 @@ export function TxView({ id }: { id: string }) {
   };
 
   if (loading && !record && !notFound) {
+    // Skeleton mirrors the real layout (header + summary card + status card) so the
+    // page doesn't jump when data arrives.
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="text-foreground/40 size-6 animate-spin" />
+      <div className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 pb-12 pt-6">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-5 w-28 rounded-full" />
+          <Skeleton className="h-5 w-20 rounded-full" />
+        </div>
+        <div className={cn(CARD, "p-5 sm:p-6")}>
+          <Skeleton className="mb-4 h-6 w-40 rounded-lg" />
+          <div className="flex items-center gap-4 py-3">
+            <Skeleton className="size-[46px] shrink-0 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-3 w-24 rounded" />
+              <Skeleton className="h-6 w-32 rounded" />
+            </div>
+          </div>
+          <div className="border-foreground/[0.08] border-t" />
+          <div className="flex items-center gap-4 py-3">
+            <Skeleton className="size-[46px] shrink-0 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-3 w-24 rounded" />
+              <Skeleton className="h-6 w-32 rounded" />
+            </div>
+          </div>
+        </div>
+        <div className={cn(CARD, "flex flex-col items-center gap-4 p-6")}>
+          <Skeleton className="size-9 rounded-full" />
+          <Skeleton className="h-5 w-48 rounded-lg" />
+          <Skeleton className="h-7 w-28 rounded-full" />
+          <Skeleton className="mt-2 h-40 w-full rounded-2xl" />
+        </div>
       </div>
     );
   }
@@ -120,8 +152,18 @@ export function TxView({ id }: { id: string }) {
   const activeIdx = PROGRESS.findIndex((p) => p.status === status);
   const deposit = record.leg1DepositAddress ?? record.depositAddress ?? null;
 
-  const createdMs = record.createdAt ? new Date(String(record.createdAt)).getTime() : 0;
-  const elapsed = createdMs ? Math.max(0, Math.floor((now - createdMs) / 1000)) : 0;
+  // Elapsed from the server createdAt — but a private route settles in minutes, so
+  // anything negative or absurdly large means the server timestamp is bad (e.g. a
+  // TEE timezone skew serializing createdAt hours off). In that case fall back to
+  // counting from when this page first loaded the route, so we never show a wildly
+  // wrong "hours elapsed". (The real fix is a correct server createdAt.)
+  const createdMs = record.createdAt ? new Date(String(record.createdAt)).getTime() : NaN;
+  const serverElapsed = Number.isFinite(createdMs) ? (now - createdMs) / 1000 : -1;
+  const SANE_MAX = 2 * 3600; // 2h — no route legitimately runs this long
+  const elapsed =
+    serverElapsed >= 0 && serverElapsed <= SANE_MAX
+      ? Math.floor(serverElapsed)
+      : Math.floor((now - firstSeen) / 1000);
   const mm = Math.floor(elapsed / 60);
   const ss = elapsed % 60;
 
