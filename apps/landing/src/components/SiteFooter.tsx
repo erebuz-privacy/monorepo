@@ -4,6 +4,7 @@ const SOCIAL_URLS: Record<string, string> = {
   X: "https://x.com/0xerebuz",
   GitHub: "https://github.com/erebuz-privacy",
   Deck: "https://deck.erebuz.com",
+  Docs: "https://docs.erebuz.com/",
 };
 
 const LOGO_MASK = {

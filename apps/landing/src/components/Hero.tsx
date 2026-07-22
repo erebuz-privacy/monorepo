@@ -1,5 +1,5 @@
 import { DotMountain } from "./DotMountain";
-import { SoonButton } from "./SoonButton";
+import { DocsButton } from "./DocsButton";
 import { WaitlistButton } from "./Waitlist";
 
 function Arrow() {
@@ -33,7 +33,7 @@ export function Hero() {
           Get access
           <Arrow />
         </WaitlistButton>
-        <SoonButton className="px-6 py-3.5">Read the docs</SoonButton>
+        <DocsButton className="px-6 py-3.5">Read the docs</DocsButton>
       </div>
     </section>
   );

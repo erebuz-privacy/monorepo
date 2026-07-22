@@ -1,5 +1,5 @@
 import { Section } from "./Section";
-import { SoonButton } from "./SoonButton";
+import { DocsButton } from "./DocsButton";
 
 function Arrow() {
   return (
@@ -32,7 +32,7 @@ export function Sdk() {
             ))}
           </div>
           <div className="mt-auto p-6 sm:p-8">
-            <SoonButton className="px-6 py-3.5">Read the SDK docs</SoonButton>
+            <DocsButton className="px-6 py-3.5">Read the SDK docs</DocsButton>
           </div>
         </div>
 
