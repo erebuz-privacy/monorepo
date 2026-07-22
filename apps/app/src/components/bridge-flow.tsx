@@ -992,13 +992,13 @@ export function BridgeFlow() {
 
       {/* Testnet-only helper: point users without test funds at the faucet guide. */}
       {viewKey === "form" && TEST_MODE ? (
-        <p className="text-foreground/70 mt-1 px-4 text-center text-sm leading-relaxed">
+        <p className="text-foreground/45 mt-1 px-4 text-center text-xs leading-relaxed">
           No testnet USDC or ETH?{" "}
           <a
             href="https://docs.erebuz.com/testnet/quickstart"
             target="_blank"
             rel="noopener noreferrer"
-            className="press text-brand hover:text-brand/80 font-semibold underline decoration-brand/50 underline-offset-2 transition-colors"
+            className="press text-brand hover:text-brand/80 font-medium underline decoration-brand/40 underline-offset-2 transition-colors"
           >
             Get started
           </a>
