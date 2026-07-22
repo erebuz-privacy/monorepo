@@ -9,11 +9,14 @@ contracts and shared packages.
 erebuz-monorepo/
 ├── apps/
 │   ├── landing/    # Marketing site        (Next.js + Tailwind + shadcn/ui)
-│   └── app/        # wall8 — the product    (Next.js + Tailwind + shadcn/ui)
+│   ├── app/        # wall8 — the product    (Next.js + Tailwind + shadcn/ui)
+│   ├── docs/       # Documentation         (Next.js + Fumadocs)
+│   └── deck/       # Investor deck         (Next.js + Bolt Slides)
 ├── contracts/      # Smart contracts        (Hardhat, tests use @erebuz/sdk)
 └── packages/
     ├── ui/         # @erebuz/ui — shared shadcn/ui component library
-    └── sdk/        # @erebuz/sdk — shared types & helpers
+    ├── sdk/        # @erebuz/sdk — shared types & helpers
+    └── tee/        # @erebuz/tee — TEE service
 ```
 
 Two shared layers keep things in sync:
