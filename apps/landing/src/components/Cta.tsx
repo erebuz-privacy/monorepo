@@ -11,7 +11,7 @@ export function Cta() {
           Privacy is infrastructure.
         </h2>
         <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-neutral-400">
-          Erebuz is launching soon. Get early access to the SDK and ship private,
+          Enable private cross-chain transfers with Erebuz. Get early access to the SDK and ship private,
           compliant transactions in days.
         </p>
         <div className="mx-auto mt-9 flex w-full max-w-sm flex-col justify-center gap-3 sm:w-auto sm:max-w-none sm:flex-row">
