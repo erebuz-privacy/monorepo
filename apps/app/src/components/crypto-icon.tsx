@@ -105,6 +105,8 @@ const WEB3_NETWORK_BY_CHAIN_ID: Record<number, string> = {
   137: "polygon",
   8453: "base",
   42161: "arbitrum-one",
+  // Arc has no local logo asset; use the web3icons brand (testnet reuses it).
+  5042002: "arc",
 };
 
 /**

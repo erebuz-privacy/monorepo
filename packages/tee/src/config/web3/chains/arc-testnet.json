@@ -1,0 +1,16 @@
+{
+  "id": 5042002,
+  "address": "0x0000000000000000000000000000000000000000",
+  "name": "Arc Testnet",
+  "url": "https://rpc.testnet.arc.io",
+  "tokens": [
+    {
+      "address": "0x3600000000000000000000000000000000000000",
+      "symbol": "USDC",
+      "decimals": 6,
+      "name": "USD Coin"
+    }
+  ],
+  "modules": [],
+  "nexus": true
+}
