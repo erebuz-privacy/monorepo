@@ -453,21 +453,13 @@ export function BridgeFlow() {
     <div className="page-enter mx-auto flex w-full max-w-xl flex-col items-center gap-2.5 px-4 pb-8 pt-3 sm:gap-4 sm:pb-12 sm:pt-9">
       {viewKey === "form" ? (
         <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-1">
-          <div
-            className={cn(
-              glassSurfaceVariants({ tone: "ink", depth: "raised", blur: "sm" }),
-              "text-foreground/80 flex items-center gap-2 justify-self-start rounded-full px-4 py-2.5 text-sm font-semibold",
-            )}
-          >
+          {/* Passive status labels: FLAT (no shadow) + muted, so they read as
+              chrome, not controls. Only the Activity button is raised+interactive. */}
+          <div className="text-foreground/55 border-foreground/[0.08] flex items-center gap-2 justify-self-start rounded-full border bg-transparent px-3.5 py-2 text-sm font-medium">
             <ShieldCheck className="size-4" />
             {TEST_MODE ? "Testnet" : "Private route"}
           </div>
-          <h1
-            className={cn(
-              glassSurfaceVariants({ tone: "ink", depth: "raised", blur: "sm" }),
-              "text-foreground/80 flex items-center gap-2 justify-self-center rounded-full px-4 py-2.5 text-sm font-semibold whitespace-nowrap",
-            )}
-          >
+          <h1 className="text-foreground/55 border-foreground/[0.08] flex items-center gap-2 justify-self-center rounded-full border bg-transparent px-3.5 py-2 text-sm font-medium whitespace-nowrap">
             <Lock className="size-4" />
             Send privately
           </h1>
@@ -475,8 +467,8 @@ export function BridgeFlow() {
             type="button"
             onClick={() => setView("pending")}
             className={cn(
-              glassSurfaceVariants({ tone: "ink", depth: "raised", blur: "sm" }),
-              "press text-foreground/80 flex cursor-pointer items-center gap-2 justify-self-end rounded-full px-4 py-2.5 text-sm font-semibold",
+              glassSurfaceVariants({ tone: "ink", depth: "raised", blur: "sm", interactive: true }),
+              "press text-foreground flex cursor-pointer items-center gap-2 justify-self-end rounded-full px-4 py-2.5 text-sm font-semibold",
             )}
           >
             Activity
