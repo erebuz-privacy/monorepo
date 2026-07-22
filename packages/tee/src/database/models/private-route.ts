@@ -67,6 +67,18 @@ type PrivateRouteRow = {
   updated_at: string;
 };
 
+/**
+ * Parse a SQLite timestamp as UTC. `datetime('now')` / CURRENT_TIMESTAMP return
+ * UTC wall-clock as "YYYY-MM-DD HH:MM:SS" with no timezone; `new Date()` would
+ * (mis)read that as LOCAL time, skewing it by the host's UTC offset. If the value
+ * already carries an explicit offset/Z, pass it through unchanged.
+ */
+function parseSqliteUtc(s: string | null | undefined): Date {
+  if (!s) return new Date(NaN);
+  if (/[zZ]$|[+-]\d{2}:?\d{2}$/.test(s)) return new Date(s);
+  return new Date(`${s.replace(' ', 'T')}Z`);
+}
+
 function rowToPrivateRoute(row: PrivateRouteRow): PrivateRoute {
   return {
     id: row.id,
@@ -90,8 +102,8 @@ function rowToPrivateRoute(row: PrivateRouteRow): PrivateRoute {
     shieldTx: row.shield_tx,
     unshieldTx: row.unshield_tx,
     error: row.error,
-    createdAt: new Date(row.created_at),
-    updatedAt: new Date(row.updated_at),
+    createdAt: parseSqliteUtc(row.created_at),
+    updatedAt: parseSqliteUtc(row.updated_at),
   };
 }
 

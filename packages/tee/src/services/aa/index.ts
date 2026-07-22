@@ -26,6 +26,8 @@ import {
   keccak256,
   toHex,
   pad,
+  parseEventLogs,
+  decodeErrorResult,
   type Address,
   type Hex,
 } from 'viem';
@@ -125,8 +127,17 @@ function buildInit(chainId: number, routeId: string): { initData: Hex; salt: Hex
   return { initData, salt, owner };
 }
 
+// The counterfactual account address is a pure function of (chainId, routeId) via
+// buildInit's deterministic initData+salt, so it never changes for a route. Cache
+// it to avoid re-calling the factory's computeAccountAddress on every monitor tick
+// (a wasteful RPC round-trip that gets throttled on tight public RPCs like Arc's).
+const hubAddressCache = new Map<string, Address>();
+
 /** Compute the TEE-owned hub account address for a route (counterfactual, no deploy). */
 export async function deriveHubAddress(chainId: number, routeId: string): Promise<Address> {
+  const cacheKey = `${chainId}:${routeId}`;
+  const cached = hubAddressCache.get(cacheKey);
+  if (cached) return cached;
   // EOA-hub fallback: on chains without the Nexus AA stack (e.g. the Sepolia test
   // hub), the hub account IS the TEE's EOA — funds bridge to it, and the shield
   // step executes directly from the EOA (see state-machine RECEIVED_ON_HUB). This
@@ -147,7 +158,9 @@ export async function deriveHubAddress(chainId: number, routeId: string): Promis
     functionName: 'computeAccountAddress',
     args: [initData, salt],
   })) as Address;
-  return getAddress(address);
+  const derived = getAddress(address);
+  hubAddressCache.set(cacheKey, derived);
+  return derived;
 }
 
 // ERC-7579 execution mode (bytes32, MSB-first):
@@ -266,8 +279,14 @@ export async function executeBatch(chainId: number, routeId: string, calls: Call
       (userOp.maxFeePerGas as bigint);
     const required = (maxCost * 12n) / 10n; // 20% buffer
     const balance = await publicClient.getBalance({ address: sender });
-    if (balance < required) {
-      const topUp = required - balance;
+    // On unified-gas chains (Arc: USDC IS native), the account's "native" balance is
+    // the USDC we intend to CCTP-burn — it is NOT spare gas money. If we skipped the
+    // top-up here, the EntryPoint would prefund gas out of that balance and the batch's
+    // depositForBurn(full amount) would then revert "transfer amount exceeds balance".
+    // So add gas ON TOP of the deposit unconditionally; the extra keeps the full amount
+    // burnable and the relayer is refunded the unused portion as handleOps beneficiary.
+    const topUp = chain.unifiedGasToken ? required : balance < required ? required - balance : 0n;
+    if (topUp > 0n) {
       logger.info(`AA gas top-up ${topUp} wei -> ${sender} on chain ${chainId}`, 'AA');
       const fundTx = await walletClient.sendTransaction({
         account: walletClient.account!,
@@ -298,7 +317,33 @@ export async function executeBatch(chainId: number, routeId: string, calls: Call
     account: walletClient.account!,
     chain: chain.getViemChain(),
   });
-  await publicClient.waitForTransactionReceipt({ hash: txHash });
+  const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+
+  // handleOps succeeds at the tx level even when the inner UserOp REVERTS — the
+  // EntryPoint catches it and emits UserOperationEvent{success:false} plus a
+  // UserOperationRevertReason. Treating that as success would advance the route
+  // with a phantom (e.g. a CCTP burn that never actually burned). So assert the op
+  // succeeded, surfacing the decoded revert reason when it didn't.
+  const events = parseEventLogs({ abi: entryPoint07Abi, logs: receipt.logs });
+  const opEvent = events.find(
+    (e) => e.eventName === 'UserOperationEvent' && (e.args as { userOpHash?: Hex }).userOpHash === userOpHash
+  );
+  if (opEvent && (opEvent.args as { success?: boolean }).success === false) {
+    const revert = events.find(
+      (e) => e.eventName === 'UserOperationRevertReason' && (e.args as { userOpHash?: Hex }).userOpHash === userOpHash
+    );
+    const reasonBytes = revert ? (revert.args as { revertReason?: Hex }).revertReason : undefined;
+    let reason = reasonBytes ?? '(no reason)';
+    try {
+      if (reasonBytes && reasonBytes !== '0x') {
+        const decoded = decodeErrorResult({ data: reasonBytes });
+        reason = `${decoded.errorName}(${(decoded.args ?? []).join(', ')})`;
+      }
+    } catch {
+      /* keep raw bytes */
+    }
+    throw new Error(`UserOp reverted on chain ${chainId} (tx ${txHash}): ${reason}`);
+  }
   logger.info(`AA handleOps confirmed: ${txHash}`, 'AA');
   return { txHash };
 }

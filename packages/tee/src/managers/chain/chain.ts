@@ -5,6 +5,57 @@ import * as chains from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 import { logger } from '../log';
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * True for JSON-RPC rate-limit responses (e.g. Arc's `-32011 "request limit
+ * reached"`). These come back as HTTP-200 JSON-RPC errors, so viem's built-in
+ * transport retry (which only fires on 4xx/5xx + network errors) never catches
+ * them — we retry them ourselves below.
+ */
+function isRateLimited(err: unknown): boolean {
+  const e = err as { code?: number; details?: string; message?: string; cause?: { code?: number; details?: string; message?: string } };
+  const blob = `${e?.details ?? ''} ${e?.message ?? ''} ${e?.cause?.details ?? ''} ${e?.cause?.message ?? ''}`.toLowerCase();
+  return (
+    e?.code === -32011 ||
+    e?.cause?.code === -32011 ||
+    blob.includes('request limit') ||
+    blob.includes('rate limit') ||
+    blob.includes('too many requests') ||
+    blob.includes('-32011') ||
+    blob.includes('429')
+  );
+}
+
+/**
+ * viem HTTP transport that transparently retries rate-limited RPC calls with
+ * exponential backoff + jitter. Lets a tight public RPC (e.g. Arc's) sustain the
+ * multi-call bursts an AA UserOp needs, without a keyed endpoint.
+ */
+function retryingHttp(url: string, { retries = 6, baseMs = 600 }: { retries?: number; baseMs?: number } = {}) {
+  const inner = http(url, { timeout: 20_000 });
+  return (params: Parameters<ReturnType<typeof http>>[0]) => {
+    const transport = inner(params);
+    const originalRequest = transport.request;
+    const request = (async (args: unknown, opts?: unknown) => {
+      let lastErr: unknown;
+      for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+          return await (originalRequest as (a: unknown, o?: unknown) => Promise<unknown>)(args, opts);
+        } catch (err) {
+          lastErr = err;
+          if (!isRateLimited(err) || attempt === retries) throw err;
+          // Deterministic jitter (no Math.random) keyed off the attempt.
+          const jitter = (attempt * 137) % 250;
+          await sleep(baseMs * 2 ** attempt + jitter);
+        }
+      }
+      throw lastErr;
+    }) as typeof originalRequest;
+    return { ...transport, request };
+  };
+}
+
 /**
  * Get chain by ID from viem/chains
  */
@@ -61,6 +112,14 @@ export interface ChainConfig {
   modules: DeployedModule[];
   /** When true, the loader injects the canonical Nexus contracts (see nexus-contracts.ts). */
   nexus?: boolean;
+  /**
+   * When true, the native gas token IS the USDC being moved (e.g. Arc, where USDC
+   * is native with a unified native/ERC-20 balance). Gas paid by a UserOp therefore
+   * eats into the same balance we want to CCTP-burn, so the AA layer must top the
+   * account up with gas UNCONDITIONALLY (on top of the deposit) rather than skipping
+   * the top-up when the "native" balance looks sufficient.
+   */
+  unifiedGasToken?: boolean;
   contracts?: Contract[];
 }
 
@@ -75,6 +134,7 @@ export class Chain {
   public readonly tokens: ChainToken[];
   public readonly modules: DeployedModule[];
   public readonly contracts: Contract[];
+  public readonly unifiedGasToken: boolean;
 
   // Singleton instances per chain
   private publicClient: PublicClient | null = null;
@@ -89,6 +149,7 @@ export class Chain {
     this.tokens = config.tokens;
     this.modules = config.modules;
     this.contracts = config.contracts ?? [];
+    this.unifiedGasToken = config.unifiedGasToken ?? false;
   }
 
   /**
@@ -139,7 +200,7 @@ export class Chain {
     const chain = this.getViemChain();
 
     return createPublicClient({
-      transport: http(this.url),
+      transport: retryingHttp(this.url),
       chain,
     });
   }
@@ -160,7 +221,7 @@ export class Chain {
     const account = privateKeyToAccount(privateKey as `0x${string}`);
 
     return createWalletClient({
-      transport: http(this.url),
+      transport: retryingHttp(this.url),
       chain,
       account,
     });
