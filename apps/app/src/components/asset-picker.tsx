@@ -110,7 +110,7 @@ export function AssetPicker({
     >
       <DialogContent
         showCloseButton={false}
-        className="text-foreground !top-1/2 !left-1/2 flex max-h-[min(82dvh,760px)] w-[calc(100vw-1rem)] !max-w-[740px] !-translate-x-1/2 !-translate-y-1/2 flex-col gap-3 overflow-visible border-0 bg-transparent p-0 shadow-none ring-0 [animation:none!important] sm:w-[min(92vw,740px)]"
+        className="text-foreground !top-1/2 !left-1/2 flex max-h-[min(82dvh,760px)] w-[calc(100vw-1rem)] !max-w-[740px] !-translate-x-1/2 !-translate-y-1/2 flex-col gap-3 overflow-visible border-0 bg-transparent p-0 opacity-100 shadow-none ring-0 transition-opacity duration-200 ease-out [animation:none!important] data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 sm:w-[min(92vw,740px)]"
       >
         <DialogTitle className="sr-only">{title}</DialogTitle>
         <DialogDescription className="sr-only">
@@ -120,7 +120,7 @@ export function AssetPicker({
         <div
           className={cn(
             glassSurfaceVariants({ tone: "ink", depth: "floating", blur: "sm" }),
-            "border-foreground/12 bg-background/88 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.65rem] sm:rounded-[2rem]",
+            "pop-in border-foreground/12 bg-background/88 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.65rem] sm:rounded-[2rem]",
           )}
         >
           <div className="border-foreground/[0.08] flex items-center gap-2 border-b p-3 sm:gap-3 sm:p-4">
@@ -260,7 +260,7 @@ export function AssetPicker({
           <div
             className={cn(
               glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" }),
-              "border-foreground/12 bg-background/72 shrink-0 rounded-[1.5rem] p-3 sm:rounded-[1.75rem] sm:p-4",
+              "pop-in border-foreground/12 bg-background/72 shrink-0 rounded-[1.5rem] p-3 sm:rounded-[1.75rem] sm:p-4",
             )}
           >
             <TooltipProvider delay={120}>
