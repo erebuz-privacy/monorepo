@@ -53,7 +53,11 @@ export function TxTracker() {
             const status: Activity["status"] =
               stage === "COMPLETED" ? "confirmed" : stage === "FAILED" ? "failed" : "pending";
             if (rec.status === status && rec.live.stage === stage) return; // no change
-            upsertActivity({ ...rec, status, live: { ...rec.live, stage } });
+            // Stamp the routing-start the first time the deposit is detected (stage
+            // leaves AWAITING_DEPOSIT) so the elapsed timer excludes the wait to fund.
+            const startedAt =
+              rec.live.startedAt ?? (stage !== "AWAITING_DEPOSIT" ? Date.now() : undefined);
+            upsertActivity({ ...rec, status, live: { ...rec.live, stage, startedAt } });
           })
           .catch(() => {
             /* transient — retry next tick */

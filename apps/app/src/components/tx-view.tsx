@@ -9,8 +9,16 @@ import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { ArrowLeft, Check, Clock, Copy, Loader2, XCircle } from "lucide-react";
 
-import { AssetGlyph, PrivateRouteTrail } from "@/components/crypto-icon";
+import { glassSurfaceVariants } from "@erebuz/ui/components/glass-surface";
+import { cn } from "@erebuz/ui/lib/utils";
+
+import { AssetGlyph } from "@/components/crypto-icon";
 import { formatAmount, shortenAddress } from "@/lib/format";
+
+const CARD = cn(
+  glassSurfaceVariants({ tone: "ink", depth: "floating", blur: "sm" }),
+  "border-foreground/12 bg-background/88 rounded-3xl",
+);
 import { useChains } from "@/lib/tee-data";
 import { fromSmallestUnit, tee, type RouteRecord } from "@/lib/tee";
 
@@ -135,7 +143,7 @@ export function TxView({ id }: { id: string }) {
       </div>
 
       {/* summary */}
-      <div className="border-foreground/[0.1] rounded-3xl border p-5 sm:p-6">
+      <div className={cn(CARD, "p-5 sm:p-6")}>
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-foreground text-lg font-semibold">Private transfer</h1>
           <span className="text-foreground/40 font-mono text-xs">{id.replace(/^route_/, "").slice(0, 8)}</span>
@@ -159,21 +167,11 @@ export function TxView({ id }: { id: string }) {
             </div>
           </div>
         </div>
-
-        <PrivateRouteTrail
-          className="border-foreground/[0.08] mt-3 border-t pt-4"
-          fromChainId={record.sourceChainId}
-          fromName={fromName}
-          fromLogo={fromChain?.logoUrl}
-          toChainId={record.destChainId}
-          toName={toName}
-          toLogo={toChain?.logoUrl}
-        />
       </div>
 
       {/* state */}
       {isAwaiting ? (
-        <div className="border-foreground/[0.1] flex flex-col items-center gap-4 rounded-3xl border p-5 text-center sm:p-6">
+        <div className={cn(CARD, "flex flex-col items-center gap-4 p-5 text-center sm:p-6")}>
           <p className="text-sm">
             Send <span className="text-foreground font-semibold">{formatAmount(sendAmt, "USDC")}</span> on{" "}
             <span className="text-foreground font-semibold">{fromName}</span> to the address below.
@@ -201,7 +199,7 @@ export function TxView({ id }: { id: string }) {
           <p className="text-foreground/40 text-xs">Unfunded intents are cancelled after 5 minutes.</p>
         </div>
       ) : isDone ? (
-        <div className="border-foreground/[0.1] flex flex-col items-center gap-3 rounded-3xl border p-6 text-center">
+        <div className={cn(CARD, "flex flex-col items-center gap-3 p-6 text-center")}>
           <div className="bg-brand/12 text-brand ring-brand/20 flex size-14 items-center justify-center rounded-full ring-1 ring-inset">
             <Check className="size-7" />
           </div>
@@ -212,7 +210,7 @@ export function TxView({ id }: { id: string }) {
           </p>
         </div>
       ) : isFailed ? (
-        <div className="border-foreground/[0.1] flex flex-col items-center gap-3 rounded-3xl border p-6 text-center">
+        <div className={cn(CARD, "flex flex-col items-center gap-3 p-6 text-center")}>
           <div className="bg-destructive/12 text-destructive flex size-14 items-center justify-center rounded-full">
             <XCircle className="size-7" />
           </div>
@@ -222,7 +220,7 @@ export function TxView({ id }: { id: string }) {
           </p>
         </div>
       ) : (
-        <div className="border-foreground/[0.1] rounded-3xl border p-5 sm:p-6">
+        <div className={cn(CARD, "p-5 sm:p-6")}>
           <div className="flex flex-col items-center text-center">
             <Loader2 className="text-brand size-9 animate-spin" />
             <p className="mt-3 text-base font-medium">{PROGRESS[activeIdx]?.label ?? "Routing privately"}</p>
