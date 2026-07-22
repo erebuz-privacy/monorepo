@@ -65,6 +65,10 @@ export type ActivityLive = {
   depositAddress?: string;
   /** Quoted end-to-end estimate (seconds) — used to flag a slow route. */
   etaSeconds?: number;
+  /** ms timestamp when routing actually began (deposit detected, i.e. the stage
+   *  first left AWAITING_DEPOSIT). The elapsed timer counts from here, NOT from
+   *  intent creation, so the pre-deposit wait isn't counted. */
+  startedAt?: number;
 };
 
 export type Activity = {

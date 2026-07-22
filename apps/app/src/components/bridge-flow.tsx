@@ -47,7 +47,6 @@ import {
   AssetGlyph,
   ChainGlyph,
   GradientAvatar,
-  PrivateRouteTrail,
   SymbolGlyph,
 } from "@/components/crypto-icon";
 import { formatAmount, formatUsd, shortenAddress } from "@/lib/format";
@@ -58,7 +57,7 @@ import { fromSmallestUnit, tee, type CreatedRoute, type TeeQuote, type TeeToken 
 
 export const TEST_MODE = process.env.NEXT_PUBLIC_TEST_MODE === "true";
 const DEFAULT_FROM_CHAIN = TEST_MODE ? 84532 : 8453; // Base Sepolia : Base
-const DEFAULT_TO_CHAIN = TEST_MODE ? 11155111 : 1; // Ethereum Sepolia : Ethereum
+const DEFAULT_TO_CHAIN = TEST_MODE ? 5042002 : 1; // Arc Testnet : Ethereum
 const DEFAULT_SYMBOL = "USDC";
 const REFRESH_MS = 20_000;
 
@@ -165,7 +164,7 @@ function RouteAssetRow({
     <button
       type="button"
       onClick={onClick}
-      className="group flex min-h-24 w-full cursor-pointer items-center gap-4 px-5 py-3.5 text-left [-webkit-tap-highlight-color:transparent] focus-visible:outline-none sm:min-h-28 sm:py-5"
+      className="press group flex min-h-24 w-full cursor-pointer items-center gap-4 rounded-[1.4rem] px-5 py-3.5 text-left [-webkit-tap-highlight-color:transparent] focus-visible:outline-none sm:min-h-28 sm:py-5"
     >
       {symbol ? (
         <AssetGlyph
@@ -424,6 +423,17 @@ export function BridgeFlow() {
   const stage = activeRecord?.live?.stage ?? "AWAITING_DEPOSIT";
   const showStatus = !!activeRouteId && !!activeRecord;
 
+  // Reflect the viewed transfer in the URL (shareable /tx/<id>); a refresh then
+  // loads the real /tx page. We only rewrite the bar (replaceState) so the live
+  // in-page state isn't torn down. Returns to "/" when not viewing a transfer.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const target = showStatus && activeRouteId ? `/tx/${activeRouteId}` : "/";
+    if (window.location.pathname !== target) {
+      window.history.replaceState(window.history.state, "", target);
+    }
+  }, [showStatus, activeRouteId]);
+
   const pending = useMemo(() => activity.filter((a) => a.status === "pending"), [activity]);
 
   // ---- which view + its morph key ----
@@ -452,22 +462,27 @@ export function BridgeFlow() {
   return (
     <div className="page-enter mx-auto flex w-full max-w-xl flex-col items-center gap-2.5 px-4 pb-8 pt-3 sm:gap-4 sm:pb-12 sm:pt-9">
       {viewKey === "form" ? (
-        <div className="flex w-full items-center justify-between px-1">
-          <div
-            className={cn(
-              glassSurfaceVariants({ tone: "ink", depth: "raised", blur: "sm" }),
-              "text-foreground/80 flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold",
-            )}
-          >
-            <ShieldCheck className="size-4" />
+        <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-1">
+          {/* Passive status labels: legible but FLAT (no shadow, no hover) so they
+              read as chrome, not controls. Only the Activity button is raised +
+              interactive — the drop shadow + hover is what marks it as clickable. */}
+          <div className="text-foreground/75 border-foreground/12 bg-foreground/[0.06] flex items-center gap-2 justify-self-start rounded-full border px-3.5 py-2 text-sm font-medium backdrop-blur-sm">
+            <ShieldCheck className="text-foreground/50 size-4" />
             {TEST_MODE ? "Testnet" : "Private route"}
           </div>
+          {/* Prominent centerpiece — brand accent (colour + weight + size) draws the
+              eye, but it stays FLAT (no raised shadow / hover) so it isn't mistaken
+              for the clickable Activity button. */}
+          <h1 className="text-foreground border-brand/35 bg-brand/12 ring-brand/10 flex items-center gap-2 justify-self-center rounded-full border px-4 py-2 text-base font-semibold tracking-tight whitespace-nowrap ring-1 backdrop-blur-sm">
+            <Lock className="text-brand size-[18px]" />
+            Send privately
+          </h1>
           <button
             type="button"
             onClick={() => setView("pending")}
             className={cn(
-              glassSurfaceVariants({ tone: "ink", depth: "raised", blur: "sm" }),
-              "press text-foreground/80 flex cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold",
+              glassSurfaceVariants({ tone: "ink", depth: "raised", blur: "sm", interactive: true }),
+              "press text-foreground flex cursor-pointer items-center gap-2 justify-self-end rounded-full px-4 py-2.5 text-sm font-semibold",
             )}
           >
             Activity
@@ -479,17 +494,6 @@ export function BridgeFlow() {
               <Clock className="size-4" />
             )}
           </button>
-        </div>
-      ) : null}
-
-      {viewKey === "form" ? (
-        <div className="w-full px-1 text-center">
-          <h1 className="text-foreground text-lg font-semibold tracking-tight sm:text-xl">
-            Send privately
-          </h1>
-          <p className="text-muted-foreground mt-0.5 hidden text-sm sm:block">
-            Move USDC across chains with no on-chain link between sender and recipient.
-          </p>
         </div>
       ) : null}
 
@@ -795,16 +799,6 @@ export function BridgeFlow() {
                     <Loader2 className="size-4 animate-spin" />
                     Watching for your deposit…
                   </div>
-
-                  <PrivateRouteTrail
-                    className="border-border/60 border-t pt-4"
-                    fromChainId={activeRecord.live.fromChainId}
-                    fromName={activeRecord.live.fromChainName}
-                    fromLogo={activeRecord.live.fromChainLogo}
-                    toChainId={activeRecord.live.toChainId}
-                    toName={activeRecord.live.toChainName}
-                    toLogo={activeRecord.live.toChainLogo}
-                  />
                 </div>
               </div>
             ) : null}
@@ -835,7 +829,10 @@ export function BridgeFlow() {
                 <div className="flex flex-col items-center text-center">
                   <Loader2 className="text-brand size-10 animate-spin" />
                   <p className="mt-4 text-base font-medium">{stageLabel(stage)}</p>
-                  <RoutingStatus etaSeconds={activeRecord.live.etaSeconds} startedAt={new Date(activeRecord.date).getTime()} />
+                  <RoutingStatus
+                    etaSeconds={activeRecord.live.etaSeconds}
+                    startedAt={activeRecord.live.startedAt ?? new Date(activeRecord.date).getTime()}
+                  />
                 </div>
                 <ol className="border-border divide-border divide-y rounded-2xl border">
                   {PROGRESS.map((p, i) => {
@@ -996,18 +993,19 @@ export function BridgeFlow() {
         </div>
       ) : null}
 
-      {/* route footer for the active transfer (deposit view shows it inside the card) */}
-      {showStatus && stage !== "FAILED" && stage !== "AWAITING_DEPOSIT" && activeRecord?.live ? (
-        <motion.div layout transition={sizeSpring} className="mt-4">
-          <PrivateRouteTrail
-            fromChainId={activeRecord.live.fromChainId}
-            fromName={activeRecord.live.fromChainName}
-            fromLogo={activeRecord.live.fromChainLogo}
-            toChainId={activeRecord.live.toChainId}
-            toName={activeRecord.live.toChainName}
-            toLogo={activeRecord.live.toChainLogo}
-          />
-        </motion.div>
+      {/* Testnet-only helper: point users without test funds at the faucet guide. */}
+      {viewKey === "form" && TEST_MODE ? (
+        <p className="text-foreground/70 mt-1 px-4 text-center text-sm leading-relaxed">
+          No testnet USDC or ETH?{" "}
+          <a
+            href="https://docs.erebuz.com/testnet/quickstart"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="press text-brand hover:text-brand/80 font-semibold underline decoration-brand/50 underline-offset-2 transition-colors"
+          >
+            Get started
+          </a>
+        </p>
       ) : null}
 
       {/* asset + recipient pickers (portaled; only meaningful on the form) */}

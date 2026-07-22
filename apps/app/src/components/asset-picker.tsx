@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
-import { Check, Globe2, X } from "lucide-react";
+import { ArrowLeft, Check, X } from "lucide-react";
 
 import { AnimatedSearchInput } from "@erebuz/ui/components/animated-search";
 import { glassSurfaceVariants } from "@erebuz/ui/components/glass-surface";
@@ -85,6 +86,11 @@ export function AssetPicker({
     [items, terms],
   );
 
+  // First 6 chains shown as large tiles; overflow shown in a 3×3 grid "more" tile.
+  // The globe tile opens the full networks browse view.
+  const displayChains = useMemo(() => (chains ?? []).slice(0, 6), [chains]);
+  const overflowChains = useMemo(() => (chains ?? []).slice(6, 9), [chains]);
+
   const chooseChain = (id: string) => {
     onChainSelect?.(id);
     setMode("tokens");
@@ -104,7 +110,7 @@ export function AssetPicker({
     >
       <DialogContent
         showCloseButton={false}
-        className="text-foreground !top-1/2 !left-1/2 flex h-[min(82dvh,760px)] w-[calc(100vw-1rem)] !max-w-[740px] !-translate-x-1/2 !-translate-y-1/2 flex-col gap-3 overflow-visible border-0 bg-transparent p-0 shadow-none ring-0 [animation:none!important] sm:w-[min(92vw,740px)]"
+        className="text-foreground !top-1/2 !left-1/2 flex max-h-[min(82dvh,760px)] w-[calc(100vw-1rem)] !max-w-[640px] !-translate-x-1/2 !-translate-y-1/2 flex-col gap-3 overflow-visible border-0 bg-transparent p-0 opacity-100 shadow-none ring-0 transition-opacity duration-200 ease-out [animation:none!important] data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 sm:w-[min(92vw,640px)]"
       >
         <DialogTitle className="sr-only">{title}</DialogTitle>
         <DialogDescription className="sr-only">
@@ -114,11 +120,23 @@ export function AssetPicker({
         <div
           className={cn(
             glassSurfaceVariants({ tone: "ink", depth: "floating", blur: "sm" }),
-            "border-foreground/12 bg-background/88 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.65rem] sm:rounded-[2rem]",
+            "pop-in border-foreground/12 bg-background/88 flex flex-col overflow-hidden rounded-[1.65rem] sm:rounded-[2rem]",
           )}
         >
           <div className="border-foreground/[0.08] flex items-center gap-2 border-b p-3 sm:gap-3 sm:p-4">
-            {mode === "tokens" && activeChain ? (
+            {mode === "networks" ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("tokens");
+                  setQuery("");
+                }}
+                className="press border-foreground/[0.07] bg-foreground/[0.05] text-foreground/55 hover:bg-foreground/10 hover:text-foreground flex size-12 shrink-0 items-center justify-center rounded-full border transition-colors"
+                aria-label="Back to tokens"
+              >
+                <ArrowLeft className="size-5" />
+              </button>
+            ) : mode === "tokens" && activeChain ? (
               <button
                 type="button"
                 onClick={() => {
@@ -131,8 +149,8 @@ export function AssetPicker({
                 )}
                 aria-label={`Change network. Current network ${activeChain.label}`}
               >
-                <span className="[&>*]:size-7">{activeChain.icon}</span>
-                <span className="hidden max-w-28 truncate sm:block">{activeChain.label}</span>
+                <span className="inline-flex size-7 overflow-hidden rounded-[6px] [&>*]:w-full [&>*]:h-full">{activeChain.icon}</span>
+                <span className="text-nowrap">{activeChain.label}</span>
               </button>
             ) : null}
 
@@ -154,29 +172,45 @@ export function AssetPicker({
             </DialogClose>
           </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-3 sm:px-5">
+        {/* FIXED body height (not content-driven) so the panel NEVER resizes:
+            loading, a 1-item list, a long list, and the networks tile grid all live
+            in this same scrollable box. This is what kills the open/select "expand
+            then shrink" flicker — content swaps in place, the panel size is constant. */}
+        <div className="h-[20rem] overflow-y-auto px-3 sm:px-5">
           {mode === "networks" ? (
             filteredChains.length ? (
-              <ul className="grid grid-cols-2 gap-2 py-4 sm:grid-cols-3">
+              <ul className="grid grid-cols-3 gap-x-3 gap-y-6 py-6 sm:grid-cols-5">
                 {filteredChains.map((chain) => {
                   const selected = chain.id === activeChainId;
                   return (
-                    <li key={chain.id}>
+                    <li key={chain.id} className="h-full">
                       <button
                         type="button"
                         onClick={() => chooseChain(chain.id)}
-                        className={cn(
-                          "press flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors sm:p-4",
-                          selected
-                            ? "border-emerald-300/30 bg-emerald-300/10"
-                            : "border-foreground/[0.07] bg-foreground/[0.025] hover:border-foreground/15 hover:bg-foreground/[0.055]",
-                        )}
+                        className="group press flex w-full flex-col items-center gap-2 text-center"
+                        aria-label={chain.label}
                       >
-                        <span className="shrink-0 [&>*]:size-10">{chain.icon}</span>
-                        <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                        <span
+                          className={cn(
+                            "relative aspect-square w-full max-w-20 overflow-hidden rounded-[1.15rem] ring-1 ring-inset transition-all duration-200 group-hover:scale-105 sm:rounded-[1.35rem]",
+                            selected
+                              ? "ring-2 ring-emerald-400/70 shadow-[0_0_30px_rgba(110,231,183,0.18)]"
+                              : "ring-foreground/10 group-hover:ring-foreground/20",
+                          )}
+                        >
+                          <span className="flex size-full items-center justify-center bg-foreground/[0.04] [&>*]:size-full [&>*]:object-cover">
+                            {chain.icon}
+                          </span>
+
+                        </span>
+                        <span
+                          className={cn(
+                            "block w-full text-sm font-semibold leading-tight text-balance",
+                            selected ? "text-emerald-200" : "text-foreground/85",
+                          )}
+                        >
                           {chain.label}
                         </span>
-                        {selected ? <Check className="size-4 text-emerald-300" /> : null}
                       </button>
                     </li>
                   );
@@ -187,7 +221,7 @@ export function AssetPicker({
             )
           ) : loading ? (
             <ul className="divide-foreground/[0.06] divide-y">
-              {Array.from({ length: 6 }).map((_, index) => (
+              {Array.from({ length: 4 }).map((_, index) => (
                 <li key={index} className="flex items-center gap-4 px-2 py-5">
                   <Skeleton className="size-12 shrink-0 rounded-full" />
                   <div className="flex-1 space-y-2">
@@ -210,13 +244,13 @@ export function AssetPicker({
                         onOpenChange(false);
                         setQuery("");
                       }}
-                      className="group press flex w-full items-center gap-4 px-2 py-4 text-left sm:py-5"
+                      className="group press flex w-full items-center gap-4 px-2 py-5 text-left sm:py-6"
                     >
-                      <span className="shrink-0 transition-transform duration-200 group-hover:scale-105 [&>*]:size-12">
+                      <span className="shrink-0 inline-flex size-12 overflow-hidden transition-transform duration-200 group-hover:scale-105 [&>*]:w-full [&>*]:h-full">
                         {item.icon}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="text-foreground block truncate text-base font-semibold tracking-tight">
+                        <span className="text-foreground block truncate text-xl font-semibold tracking-tight">
                           {item.label}
                         </span>
                         {item.sublabel ? (
@@ -250,49 +284,91 @@ export function AssetPicker({
           <div
             className={cn(
               glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" }),
-              "border-foreground/12 bg-background/72 shrink-0 rounded-[1.5rem] p-3 sm:rounded-[1.75rem] sm:p-4",
+              "pop-in border-foreground/12 bg-background/72 shrink-0 rounded-[1.5rem] p-3 sm:rounded-[1.75rem] sm:p-4",
             )}
           >
-            <div className="no-scrollbar flex gap-2 overflow-x-auto">
+            <div className="no-scrollbar flex items-start gap-2.5 overflow-x-auto sm:gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  setMode("networks");
-                  setQuery("");
-                }}
-                className={cn(
-                  "press flex size-14 shrink-0 items-center justify-center rounded-2xl border sm:size-16",
-                  mode === "networks"
-                    ? "border-emerald-300/35 bg-emerald-300/10 text-emerald-200"
-                    : "border-foreground/10 bg-foreground/[0.035] text-foreground/55 hover:bg-foreground/[0.07]",
-                )}
-                aria-label="Browse all networks"
+                className="press relative flex size-14 shrink-0 items-center justify-center sm:size-16"
               >
-                <Globe2 className="size-6" />
+                <span
+                  className={cn(
+                    "flex size-full items-center justify-center rounded-[1.15rem] ring-1 ring-inset transition-colors sm:rounded-[1.35rem]",
+                    mode === "networks"
+                      ? "bg-emerald-300/12 text-emerald-200 ring-emerald-300/40"
+                      : "bg-foreground/[0.05] text-foreground/55 ring-foreground/10 hover:bg-foreground/[0.08]",
+                  )}
+                >
+                  <Image src="/globe.svg" alt="" width={28} height={28} className="size-7 invert dark:invert-0" />
+                </span>
               </button>
-              {chains.map((chain) => {
+
+              {displayChains.map((chain) => {
                 const selected = chain.id === activeChainId && mode === "tokens";
                 return (
                   <button
                     type="button"
                     key={chain.id}
                     onClick={() => chooseChain(chain.id)}
-                    className={cn(
-                      "press relative flex size-14 shrink-0 items-center justify-center rounded-2xl border sm:size-16",
-                      selected
-                        ? "border-emerald-500/40 bg-foreground/10 shadow-[0_0_30px_rgba(110,231,183,0.12)] dark:border-emerald-200/40"
-                        : "border-foreground/10 bg-foreground/[0.035] hover:bg-foreground/[0.07]",
-                    )}
+                    className="press relative flex size-14 shrink-0 items-center justify-center sm:size-16"
                     aria-label={chain.label}
                     title={chain.label}
                   >
-                    <span className="[&>*]:size-8 sm:[&>*]:size-9">{chain.icon}</span>
+                    <span
+                      className={cn(
+                        "size-full overflow-hidden rounded-[1.15rem] ring-1 ring-inset transition-shadow sm:rounded-[1.35rem]",
+                        selected
+                          ? "ring-2 ring-emerald-400/70 shadow-[0_0_30px_rgba(110,231,183,0.18)]"
+                          : "ring-foreground/10",
+                      )}
+                    >
+                      <span className="flex size-full items-center justify-center bg-foreground/[0.04] [&>*]:size-full [&>*]:object-cover">
+                        {chain.icon}
+                      </span>
+                    </span>
                     {selected ? (
-                      <span className="absolute -bottom-1.5 size-1.5 rounded-full bg-emerald-200 shadow-[0_0_10px_rgba(110,231,183,0.8)]" />
+                      <span className="absolute -bottom-2 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.8)]" />
                     ) : null}
                   </button>
                 );
               })}
+
+              {overflowChains.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("networks");
+                    setQuery("");
+                  }}
+                  className="press relative flex size-14 shrink-0 items-center justify-center sm:size-16"
+                  aria-label="More networks"
+                  title="More networks"
+                >
+                  <span className="flex size-full items-center justify-center rounded-[1.15rem] bg-foreground/[0.05] ring-1 ring-inset ring-foreground/[0.08] transition-colors hover:bg-foreground/[0.09] sm:rounded-[1.35rem]">
+                    {/* Grid sizes to the count: ≤4 overflow chains use a 2×2 so the
+                        few logos fill the tile instead of hiding in a sparse 3×3. */}
+                    <span
+                      className={cn(
+                        "grid size-full",
+                        overflowChains.length <= 4
+                          ? "grid-cols-2 grid-rows-2 gap-1 p-2 sm:gap-1.5 sm:p-2.5"
+                          : "grid-cols-3 grid-rows-3 gap-[3px] p-1.5 sm:gap-1 sm:p-2",
+                      )}
+                    >
+                      {overflowChains.map((c) => (
+                        <span
+                          key={c.id}
+                          className="flex items-center justify-center overflow-hidden rounded-[5px] bg-foreground/[0.06] [&>*]:size-full [&>*]:object-cover sm:rounded-md"
+                        >
+                          {c.icon}
+                        </span>
+                      ))}
+                    </span>
+                  </span>
+                </button>
+              ) : null}
+
             </div>
           </div>
         ) : null}

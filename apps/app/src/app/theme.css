@@ -73,6 +73,24 @@ h2,
   animation: page-enter 300ms var(--ease-out) both;
 }
 
+/* Popup / dialog content entrance — a soft scale-up + rise + fade so panels
+   settle in rather than snapping. Used on surfaces whose wrapper owns the
+   centering transform (so the keyframe must NOT touch translate on that wrapper);
+   apply it to the INNER card instead, which is transform-free. */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.pop-in {
+  animation: pop-in 220ms var(--ease-out) both;
+}
+
 /* Tactile press feedback — instant, on-press, subtle (Emil / Apple: respond on
    pointer-down). Add `press` to any pressable element. It owns a COMBINED
    transition (transform + the usual hover properties) so it composes with hover
@@ -105,7 +123,8 @@ h2,
 /* Reduced motion: keep opacity (aids comprehension), drop movement + blur. */
 @media (prefers-reduced-motion: reduce) {
   .row-in,
-  .page-enter {
+  .page-enter,
+  .pop-in {
     animation: none;
   }
   .press {
