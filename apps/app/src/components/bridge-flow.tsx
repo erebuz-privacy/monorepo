@@ -452,22 +452,25 @@ export function BridgeFlow() {
   return (
     <div className="page-enter mx-auto flex w-full max-w-xl flex-col items-center gap-2.5 px-4 pb-8 pt-3 sm:gap-4 sm:pb-12 sm:pt-9">
       {viewKey === "form" ? (
-        <div className="flex w-full items-center justify-between px-1">
+        <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-1">
           <div
             className={cn(
               glassSurfaceVariants({ tone: "ink", depth: "raised", blur: "sm" }),
-              "text-foreground/80 flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold",
+              "text-foreground/80 flex items-center gap-2 justify-self-start rounded-full px-4 py-2.5 text-sm font-semibold",
             )}
           >
             <ShieldCheck className="size-4" />
             {TEST_MODE ? "Testnet" : "Private route"}
           </div>
+          <h1 className="text-foreground justify-self-center text-center text-base font-semibold tracking-tight sm:text-lg">
+            Send privately
+          </h1>
           <button
             type="button"
             onClick={() => setView("pending")}
             className={cn(
               glassSurfaceVariants({ tone: "ink", depth: "raised", blur: "sm" }),
-              "press text-foreground/80 flex cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold",
+              "press text-foreground/80 flex cursor-pointer items-center gap-2 justify-self-end rounded-full px-4 py-2.5 text-sm font-semibold",
             )}
           >
             Activity
@@ -479,17 +482,6 @@ export function BridgeFlow() {
               <Clock className="size-4" />
             )}
           </button>
-        </div>
-      ) : null}
-
-      {viewKey === "form" ? (
-        <div className="w-full px-1 text-center">
-          <h1 className="text-foreground text-lg font-semibold tracking-tight sm:text-xl">
-            Send privately
-          </h1>
-          <p className="text-muted-foreground mt-0.5 hidden text-sm sm:block">
-            Move USDC across chains with no on-chain link between sender and recipient.
-          </p>
         </div>
       ) : null}
 
