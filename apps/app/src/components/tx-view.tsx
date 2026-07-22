@@ -7,9 +7,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
-import { ArrowLeft, Check, Clock, Copy, Loader2, Lock, XCircle } from "lucide-react";
+import { ArrowLeft, Check, Clock, Copy, Loader2, XCircle } from "lucide-react";
 
-import { AssetGlyph, ChainGlyph } from "@/components/crypto-icon";
+import { AssetGlyph, PrivateRouteTrail } from "@/components/crypto-icon";
 import { formatAmount, shortenAddress } from "@/lib/format";
 import { useChains } from "@/lib/tee-data";
 import { fromSmallestUnit, tee, type RouteRecord } from "@/lib/tee";
@@ -160,15 +160,15 @@ export function TxView({ id }: { id: string }) {
           </div>
         </div>
 
-        <div className="border-foreground/[0.08] mt-3 flex flex-wrap items-center justify-center gap-1.5 border-t pt-4 text-xs text-muted-foreground">
-          <ChainGlyph chainId={record.sourceChainId} logoUrl={fromChain?.logoUrl} label={fromName} size={14} />
-          <span>{fromName}</span>
-          <span className="bg-brand/10 text-brand inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-medium">
-            <Lock className="size-3" /> Private
-          </span>
-          <ChainGlyph chainId={record.destChainId} logoUrl={toChain?.logoUrl} label={toName} size={14} />
-          <span>{toName}</span>
-        </div>
+        <PrivateRouteTrail
+          className="border-foreground/[0.08] mt-3 border-t pt-4"
+          fromChainId={record.sourceChainId}
+          fromName={fromName}
+          fromLogo={fromChain?.logoUrl}
+          toChainId={record.destChainId}
+          toName={toName}
+          toLogo={toChain?.logoUrl}
+        />
       </div>
 
       {/* state */}

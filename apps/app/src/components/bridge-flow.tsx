@@ -47,6 +47,7 @@ import {
   AssetGlyph,
   ChainGlyph,
   GradientAvatar,
+  PrivateRouteTrail,
   SymbolGlyph,
 } from "@/components/crypto-icon";
 import { formatAmount, formatUsd, shortenAddress } from "@/lib/format";
@@ -481,6 +482,17 @@ export function BridgeFlow() {
         </div>
       ) : null}
 
+      {viewKey === "form" ? (
+        <div className="w-full px-1 text-center">
+          <h1 className="text-foreground text-lg font-semibold tracking-tight sm:text-xl">
+            Send privately
+          </h1>
+          <p className="text-muted-foreground mt-0.5 hidden text-sm sm:block">
+            Move USDC across chains with no on-chain link between sender and recipient.
+          </p>
+        </div>
+      ) : null}
+
       <motion.div
         layout
         transition={sizeSpring}
@@ -784,15 +796,15 @@ export function BridgeFlow() {
                     Watching for your deposit…
                   </div>
 
-                  <div className="border-border/60 text-muted-foreground flex flex-wrap items-center justify-center gap-1.5 border-t pt-4 text-xs">
-                    <ChainGlyph chainId={activeRecord.live.fromChainId} logoUrl={activeRecord.live.fromChainLogo} label={activeRecord.live.fromChainName} size={14} />
-                    <span>{activeRecord.live.fromChainName}</span>
-                    <span className="bg-brand/10 text-brand inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-medium">
-                      <Lock className="size-3" /> Private
-                    </span>
-                    <ChainGlyph chainId={activeRecord.live.toChainId} logoUrl={activeRecord.live.toChainLogo} label={activeRecord.live.toChainName} size={14} />
-                    <span>{activeRecord.live.toChainName}</span>
-                  </div>
+                  <PrivateRouteTrail
+                    className="border-border/60 border-t pt-4"
+                    fromChainId={activeRecord.live.fromChainId}
+                    fromName={activeRecord.live.fromChainName}
+                    fromLogo={activeRecord.live.fromChainLogo}
+                    toChainId={activeRecord.live.toChainId}
+                    toName={activeRecord.live.toChainName}
+                    toLogo={activeRecord.live.toChainLogo}
+                  />
                 </div>
               </div>
             ) : null}
@@ -986,15 +998,15 @@ export function BridgeFlow() {
 
       {/* route footer for the active transfer (deposit view shows it inside the card) */}
       {showStatus && stage !== "FAILED" && stage !== "AWAITING_DEPOSIT" && activeRecord?.live ? (
-        <motion.div layout transition={sizeSpring} className="text-muted-foreground mt-4 flex flex-wrap items-center justify-center gap-1.5 text-xs">
-          <ChainGlyph chainId={activeRecord.live.fromChainId} logoUrl={activeRecord.live.fromChainLogo} label={activeRecord.live.fromChainName} size={14} />
-          <span>{activeRecord.live.fromChainName}</span>
-          <span className="bg-brand/10 text-brand inline-flex items-center gap-1 rounded-full px-1.5 py-0.5">
-            <Lock className="size-3" />
-            Private
-          </span>
-          <ChainGlyph chainId={activeRecord.live.toChainId} logoUrl={activeRecord.live.toChainLogo} label={activeRecord.live.toChainName} size={14} />
-          <span>{activeRecord.live.toChainName}</span>
+        <motion.div layout transition={sizeSpring} className="mt-4">
+          <PrivateRouteTrail
+            fromChainId={activeRecord.live.fromChainId}
+            fromName={activeRecord.live.fromChainName}
+            fromLogo={activeRecord.live.fromChainLogo}
+            toChainId={activeRecord.live.toChainId}
+            toName={activeRecord.live.toChainName}
+            toLogo={activeRecord.live.toChainLogo}
+          />
         </motion.div>
       ) : null}
 
