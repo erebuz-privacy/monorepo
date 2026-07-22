@@ -1,21 +1,21 @@
 import { Section } from "./Section";
 
 const CHAINS = [
-  { name: "Ethereum", img: "/protocols/ethereum.webp" },
-  { name: "Arbitrum", img: "/protocols/arbitrum.jpg" },
-  { name: "Base", img: "/protocols/base.jpg" },
-  { name: "Polygon", img: "/protocols/polygon.jpg" },
+  { name: "Ethereum", img: "/protocols/chains/ethereum.webp" },
+  { name: "Arbitrum", img: "/protocols/chains/arbitrum.jpg" },
+  { name: "Base", img: "/protocols/chains/base.jpg" },
+  { name: "Polygon", img: "/protocols/chains/polygon.jpg" },
   { name: "StarkNet", img: "/protocols/starknet.png" },
-  { name: "Optimism", img: "/protocols/optimism.jpg" },
-  { name: "Linea", img: "/protocols/linea.png" },
-  { name: "Mantle", img: "/protocols/mantle.jpg" },
-  { name: "Gnosis", img: "/protocols/gnosis.jpg" },
-  { name: "Fuel", img: "/protocols/fuel.jpg" },
-  { name: "Manta", img: "/protocols/manta.jpg" },
-  { name: "Hyperliquid", img: "/protocols/hyperliquid.jpg" },
-  { name: "MegaETH", img: "/protocols/megaeth.jpg" },
-  { name: "Unichain", img: "/protocols/unichain.jpg" },
-  { name: "World", img: "/protocols/world.jpg" },
+  { name: "Optimism", img: "/protocols/chains/optimism.jpg" },
+  { name: "Linea", img: "/protocols/chains/linea.png" },
+  { name: "Mantle", img: "/protocols/chains/mantle.jpg" },
+  { name: "Gnosis", img: "/protocols/chains/gnosis.jpg" },
+  { name: "Fuel", img: "/protocols/chains/fuel.jpg" },
+  { name: "Manta", img: "/protocols/chains/manta.jpg" },
+  { name: "Hyperliquid", img: "/protocols/chains/hyperliquid.jpg" },
+  { name: "MegaETH", img: "/protocols/chains/megaeth.jpg" },
+  { name: "Unichain", img: "/protocols/chains/unichain.jpg" },
+  { name: "World", img: "/protocols/chains/world.jpg" },
 ];
 
 export function Chains() {
