@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, useState } from "react";
-import { Check, Globe2, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 
 import { AnimatedSearchInput } from "@erebuz/ui/components/animated-search";
 import { glassSurfaceVariants } from "@erebuz/ui/components/glass-surface";
@@ -13,12 +14,6 @@ import {
   DialogTitle,
 } from "@erebuz/ui/components/dialog";
 import { Skeleton } from "@erebuz/ui/components/skeleton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@erebuz/ui/components/tooltip";
 import { cn } from "@erebuz/ui/lib/utils";
 
 export type PickerItem = {
@@ -91,6 +86,11 @@ export function AssetPicker({
     [items, terms],
   );
 
+  // First 6 chains shown; overflow shown in a 3×3 grid "more" tile.
+  // Only the overflow button opens the full networks browse view.
+  const displayChains = useMemo(() => (chains ?? []).slice(0, 6), [chains]);
+  const overflowChains = useMemo(() => (chains ?? []).slice(6, 9), [chains]);
+
   const chooseChain = (id: string) => {
     onChainSelect?.(id);
     setMode("tokens");
@@ -110,7 +110,7 @@ export function AssetPicker({
     >
       <DialogContent
         showCloseButton={false}
-        className="text-foreground !top-1/2 !left-1/2 flex max-h-[min(82dvh,760px)] w-[calc(100vw-1rem)] !max-w-[740px] !-translate-x-1/2 !-translate-y-1/2 flex-col gap-3 overflow-visible border-0 bg-transparent p-0 opacity-100 shadow-none ring-0 transition-opacity duration-200 ease-out [animation:none!important] data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 sm:w-[min(92vw,740px)]"
+        className="text-foreground !top-1/2 !left-1/2 flex max-h-[min(82dvh,760px)] w-[calc(100vw-1rem)] !max-w-[640px] !-translate-x-1/2 !-translate-y-1/2 flex-col gap-3 overflow-visible border-0 bg-transparent p-0 opacity-100 shadow-none ring-0 transition-opacity duration-200 ease-out [animation:none!important] data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 sm:w-[min(92vw,640px)]"
       >
         <DialogTitle className="sr-only">{title}</DialogTitle>
         <DialogDescription className="sr-only">
@@ -267,61 +267,80 @@ export function AssetPicker({
               "pop-in border-foreground/12 bg-background/72 shrink-0 rounded-[1.5rem] p-3 sm:rounded-[1.75rem] sm:p-4",
             )}
           >
-            <TooltipProvider delay={120}>
-              <div className="no-scrollbar flex gap-2 overflow-x-auto">
-                <Tooltip>
-                  <TooltipTrigger
-                    render={
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMode("networks");
-                          setQuery("");
-                        }}
-                        className={cn(
-                          "press flex size-[72px] shrink-0 items-center justify-center rounded-2xl border sm:size-20",
-                          mode === "networks"
-                            ? "border-emerald-300/35 bg-emerald-300/10 text-emerald-200"
-                            : "border-foreground/10 bg-foreground/[0.035] text-foreground/55 hover:bg-foreground/[0.07]",
-                        )}
-                        aria-label="Browse all networks"
-                      >
-                        <Globe2 className="size-9 sm:size-10" />
-                      </button>
-                    }
-                  />
-                  <TooltipContent>All networks</TooltipContent>
-                </Tooltip>
-                {chains.map((chain) => {
-                  const selected = chain.id === activeChainId && mode === "tokens";
-                  return (
-                    <Tooltip key={chain.id}>
-                      <TooltipTrigger
-                        render={
-                          <button
-                            type="button"
-                            onClick={() => chooseChain(chain.id)}
-                            className={cn(
-                              "press relative flex size-[72px] shrink-0 items-center justify-center rounded-2xl border sm:size-20",
-                              selected
-                                ? "border-emerald-500/40 bg-foreground/10 shadow-[0_0_30px_rgba(110,231,183,0.12)] dark:border-emerald-200/40"
-                                : "border-foreground/10 bg-foreground/[0.035] hover:bg-foreground/[0.07]",
-                            )}
-                            aria-label={chain.label}
-                          >
-                            <span className="[&>*]:size-14 sm:[&>*]:size-16">{chain.icon}</span>
-                            {selected ? (
-                              <span className="absolute -bottom-1.5 size-1.5 rounded-full bg-emerald-200 shadow-[0_0_10px_rgba(110,231,183,0.8)]" />
-                            ) : null}
-                          </button>
-                        }
-                      />
-                      <TooltipContent>{chain.label}</TooltipContent>
-                    </Tooltip>
-                  );
-                })}
-              </div>
-            </TooltipProvider>
+            <div className="no-scrollbar flex items-start gap-2.5 overflow-x-auto sm:gap-3">
+              <button
+                type="button"
+                className="press relative flex size-14 shrink-0 items-center justify-center sm:size-16"
+              >
+                <span
+                  className={cn(
+                    "flex size-full items-center justify-center rounded-[1.15rem] ring-1 ring-inset transition-colors sm:rounded-[1.35rem]",
+                    mode === "networks"
+                      ? "bg-emerald-300/12 text-emerald-200 ring-emerald-300/40"
+                      : "bg-foreground/[0.05] text-foreground/55 ring-foreground/10 hover:bg-foreground/[0.08]",
+                  )}
+                >
+                  <Image src="/globe.svg" alt="" width={28} height={28} className="size-7 invert dark:invert-0" />
+                </span>
+              </button>
+
+              {displayChains.map((chain) => {
+                const selected = chain.id === activeChainId && mode === "tokens";
+                return (
+                  <button
+                    type="button"
+                    key={chain.id}
+                    onClick={() => chooseChain(chain.id)}
+                    className="press relative flex size-14 shrink-0 items-center justify-center sm:size-16"
+                    aria-label={chain.label}
+                    title={chain.label}
+                  >
+                    <span
+                      className={cn(
+                        "size-full overflow-hidden rounded-[1.15rem] ring-1 ring-inset transition-shadow sm:rounded-[1.35rem]",
+                        selected
+                          ? "ring-2 ring-emerald-400/70 shadow-[0_0_30px_rgba(110,231,183,0.18)]"
+                          : "ring-foreground/10",
+                      )}
+                    >
+                      <span className="flex size-full items-center justify-center bg-foreground/[0.04] [&>*]:size-full [&>*]:object-cover">
+                        {chain.icon}
+                      </span>
+                    </span>
+                    {selected ? (
+                      <span className="absolute -bottom-2 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.8)]" />
+                    ) : null}
+                  </button>
+                );
+              })}
+
+              {overflowChains.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("networks");
+                    setQuery("");
+                  }}
+                  className="press relative flex size-14 shrink-0 items-center justify-center sm:size-16"
+                  aria-label="More networks"
+                  title="More networks"
+                >
+                  <span className="flex size-full items-center justify-center rounded-[1.15rem] bg-foreground/[0.05] ring-1 ring-inset ring-foreground/[0.08] transition-colors hover:bg-foreground/[0.09] sm:rounded-[1.35rem]">
+                    <span className="grid size-full grid-cols-3 grid-rows-3 gap-[3px] p-1.5 sm:gap-1 sm:p-2">
+                      {overflowChains.map((c) => (
+                        <span
+                          key={c.id}
+                          className="flex items-center justify-center overflow-hidden rounded-[4px] bg-foreground/[0.06] [&>*]:size-full [&>*]:object-cover sm:rounded-[5px]"
+                        >
+                          {c.icon}
+                        </span>
+                      ))}
+                    </span>
+                  </span>
+                </button>
+              ) : null}
+
+            </div>
           </div>
         ) : null}
 

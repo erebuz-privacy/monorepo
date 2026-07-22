@@ -139,6 +139,7 @@ const CHAIN_LOGO: Record<number, string> = {
   421614: "/chains/arbitrum.jpg",
   11155111: "/chains/ethereum.jpg",
   11155420: "/chains/optimism.jpg",
+  5042002: "/chains/Arc.jpg",
   // mainnet (ready when mainnet TEE goes live)
   1: "/chains/ethereum.jpg",
   10: "/chains/optimism.jpg",
