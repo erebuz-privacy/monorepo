@@ -104,7 +104,7 @@ export function AssetPicker({
     >
       <DialogContent
         showCloseButton={false}
-        className="text-foreground !top-1/2 !left-1/2 flex h-[min(82dvh,760px)] w-[calc(100vw-1rem)] !max-w-[740px] !-translate-x-1/2 !-translate-y-1/2 flex-col gap-3 overflow-visible border-0 bg-transparent p-0 shadow-none ring-0 [animation:none!important] sm:w-[min(92vw,740px)]"
+        className="text-foreground !top-1/2 !left-1/2 flex max-h-[min(82dvh,760px)] w-[calc(100vw-1rem)] !max-w-[740px] !-translate-x-1/2 !-translate-y-1/2 flex-col gap-3 overflow-visible border-0 bg-transparent p-0 shadow-none ring-0 [animation:none!important] sm:w-[min(92vw,740px)]"
       >
         <DialogTitle className="sr-only">{title}</DialogTitle>
         <DialogDescription className="sr-only">
@@ -157,26 +157,28 @@ export function AssetPicker({
         <div className="min-h-0 flex-1 overflow-y-auto px-3 sm:px-5">
           {mode === "networks" ? (
             filteredChains.length ? (
-              <ul className="grid grid-cols-2 gap-2 py-4 sm:grid-cols-3">
+              <ul className="grid auto-rows-fr grid-cols-2 gap-2 py-4 sm:grid-cols-3">
                 {filteredChains.map((chain) => {
                   const selected = chain.id === activeChainId;
                   return (
-                    <li key={chain.id}>
+                    <li key={chain.id} className="h-full">
                       <button
                         type="button"
                         onClick={() => chooseChain(chain.id)}
                         className={cn(
-                          "press flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors sm:p-4",
+                          "press flex h-full w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors sm:p-4",
                           selected
                             ? "border-emerald-300/30 bg-emerald-300/10"
                             : "border-foreground/[0.07] bg-foreground/[0.025] hover:border-foreground/15 hover:bg-foreground/[0.055]",
                         )}
                       >
-                        <span className="shrink-0 [&>*]:size-10">{chain.icon}</span>
+                        <span className="flex size-10 shrink-0 items-center justify-center [&>*]:size-10">
+                          {chain.icon}
+                        </span>
                         <span className="min-w-0 flex-1 truncate text-sm font-semibold">
                           {chain.label}
                         </span>
-                        {selected ? <Check className="size-4 text-emerald-300" /> : null}
+                        {selected ? <Check className="size-4 shrink-0 text-emerald-300" /> : null}
                       </button>
                     </li>
                   );
@@ -261,14 +263,14 @@ export function AssetPicker({
                   setQuery("");
                 }}
                 className={cn(
-                  "press flex size-14 shrink-0 items-center justify-center rounded-2xl border sm:size-16",
+                  "press flex size-16 shrink-0 items-center justify-center rounded-2xl border sm:size-[72px]",
                   mode === "networks"
                     ? "border-emerald-300/35 bg-emerald-300/10 text-emerald-200"
                     : "border-foreground/10 bg-foreground/[0.035] text-foreground/55 hover:bg-foreground/[0.07]",
                 )}
                 aria-label="Browse all networks"
               >
-                <Globe2 className="size-6" />
+                <Globe2 className="size-7 sm:size-8" />
               </button>
               {chains.map((chain) => {
                 const selected = chain.id === activeChainId && mode === "tokens";
@@ -278,7 +280,7 @@ export function AssetPicker({
                     key={chain.id}
                     onClick={() => chooseChain(chain.id)}
                     className={cn(
-                      "press relative flex size-14 shrink-0 items-center justify-center rounded-2xl border sm:size-16",
+                      "press relative flex size-16 shrink-0 items-center justify-center rounded-2xl border sm:size-[72px]",
                       selected
                         ? "border-emerald-500/40 bg-foreground/10 shadow-[0_0_30px_rgba(110,231,183,0.12)] dark:border-emerald-200/40"
                         : "border-foreground/10 bg-foreground/[0.035] hover:bg-foreground/[0.07]",
@@ -286,7 +288,7 @@ export function AssetPicker({
                     aria-label={chain.label}
                     title={chain.label}
                   >
-                    <span className="[&>*]:size-8 sm:[&>*]:size-9">{chain.icon}</span>
+                    <span className="[&>*]:size-10 sm:[&>*]:size-11">{chain.icon}</span>
                     {selected ? (
                       <span className="absolute -bottom-1.5 size-1.5 rounded-full bg-emerald-200 shadow-[0_0_10px_rgba(110,231,183,0.8)]" />
                     ) : null}
