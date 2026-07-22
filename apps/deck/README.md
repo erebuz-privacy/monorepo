@@ -19,7 +19,7 @@ One prompt in — your agent builds a deck where every slide is a live, responsi
 
 ## Why we made this
 
-AI for slides is awesome, but the outputs tend to be slop: generic layouts, walls of bullets, nothing you'd be proud to present.
+AI-powered presentation decks are powerful, but the outputs often lack polish. We built Bolt Slides to prove that AI can create stunning, compelling presentations.
 
 And also: why are slides still *static*? Agents can build *anything*. What would it look like if you (tastefully) turned them loose on slides?
 
