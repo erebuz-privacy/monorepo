@@ -607,8 +607,8 @@ export function BridgeFlow() {
             {viewKey === "route" && quote && fromChain && toChain && fromToken && toToken ? (
               <div className="p-4 sm:p-6">
                 <header className="mb-5 flex items-center gap-3">
-                  <span className="flex size-11 items-center justify-center rounded-full bg-emerald-500/12 ring-1 ring-emerald-500/20 ring-inset">
-                    <SymbolGlyph symbol="RAIL" size={30} />
+                  <span className="flex size-11 items-center justify-center overflow-hidden rounded-full ring-1 ring-emerald-500/20 ring-inset">
+                    <SymbolGlyph symbol="RAIL" size={44} className="size-full" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-foreground/40 text-xs font-medium">Via</p>

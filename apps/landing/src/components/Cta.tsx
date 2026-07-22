@@ -1,5 +1,5 @@
 import { DotMountain } from "./DotMountain";
-import { SoonButton } from "./SoonButton";
+import { DocsButton } from "./DocsButton";
 import { WaitlistButton } from "./Waitlist";
 
 export function Cta() {
@@ -18,7 +18,7 @@ export function Cta() {
           <WaitlistButton className="inline-flex items-center justify-center rounded-none bg-white px-8 py-4 text-[15px] font-semibold text-black transition-transform hover:scale-[1.02]">
             Get access
           </WaitlistButton>
-          <SoonButton className="px-8 py-4">Read the docs</SoonButton>
+          <DocsButton className="px-8 py-4">Read the docs</DocsButton>
         </div>
       </div>
     </section>

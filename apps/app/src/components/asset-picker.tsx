@@ -86,7 +86,7 @@ export function AssetPicker({
     [items, terms],
   );
 
-  // First 6 chains shown as large tiles; overflow shown in a 3×3 grid "more" tile.
+  // First 6 chains shown as compact tiles; overflow shown in a 3×3 grid "more" tile.
   // The globe tile opens the full networks browse view.
   const displayChains = useMemo(() => (chains ?? []).slice(0, 6), [chains]);
   const overflowChains = useMemo(() => (chains ?? []).slice(6, 9), [chains]);
@@ -198,8 +198,10 @@ export function AssetPicker({
                               : "ring-foreground/10 group-hover:ring-foreground/20",
                           )}
                         >
-                          <span className="flex size-full items-center justify-center bg-foreground/[0.04] [&>*]:size-full [&>*]:object-cover">
-                            {chain.icon}
+                          <span className="bg-foreground/[0.04] flex size-full items-center justify-center">
+                            <span className="inline-flex size-9 items-center justify-center overflow-hidden rounded-[0.7rem] sm:size-10 [&>*]:size-full [&>*]:object-cover">
+                              {chain.icon}
+                            </span>
                           </span>
 
                         </span>
@@ -323,8 +325,10 @@ export function AssetPicker({
                           : "ring-foreground/10",
                       )}
                     >
-                      <span className="flex size-full items-center justify-center bg-foreground/[0.04] [&>*]:size-full [&>*]:object-cover">
-                        {chain.icon}
+                      <span className="bg-foreground/[0.04] flex size-full items-center justify-center">
+                        <span className="inline-flex size-8 items-center justify-center overflow-hidden rounded-[0.65rem] sm:size-9 [&>*]:size-full [&>*]:object-cover">
+                          {chain.icon}
+                        </span>
                       </span>
                     </span>
                     {selected ? (
