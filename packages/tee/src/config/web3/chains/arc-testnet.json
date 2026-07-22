@@ -12,5 +12,6 @@
     }
   ],
   "modules": [],
-  "nexus": true
+  "nexus": true,
+  "unifiedGasToken": true
 }

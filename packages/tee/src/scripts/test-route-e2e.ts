@@ -36,6 +36,44 @@ function arg(name: string, fallback: string): string {
 }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** True for transient RPC failures worth retrying (rate limits, coalesce, timeouts). */
+function isTransientRpcError(e: unknown): boolean {
+  const s = JSON.stringify(
+    (e as { info?: unknown; error?: unknown; shortMessage?: string; message?: string }) ?? {}
+  ).toLowerCase();
+  const m = ((e as { shortMessage?: string; message?: string })?.shortMessage || (e as { message?: string })?.message || '').toLowerCase();
+  const blob = `${s} ${m}`;
+  return (
+    blob.includes('request limit') ||
+    blob.includes('-32011') ||
+    blob.includes('could not coalesce') ||
+    blob.includes('rate limit') ||
+    blob.includes('429') ||
+    blob.includes('too many requests') ||
+    blob.includes('timeout') ||
+    blob.includes('etimedout') ||
+    blob.includes('econnreset')
+  );
+}
+
+/** Retry a public-RPC call through transient rate-limits with exponential backoff. */
+async function withRetry<T>(label: string, fn: () => Promise<T>, tries = 8, baseMs = 4000): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i < tries; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastErr = e;
+      if (!isTransientRpcError(e) || i === tries - 1) throw e;
+      const wait = baseMs * (i + 1);
+      const em = (e as { shortMessage?: string; message?: string })?.shortMessage || (e as { message?: string })?.message || String(e);
+      console.log(`  (${label} rate-limited, retry ${i + 1}/${tries} in ${wait / 1000}s) ${em}`);
+      await sleep(wait);
+    }
+  }
+  throw lastErr;
+}
+
 async function bal(chainId: number, addr: string, usdc: string): Promise<string> {
   try {
     return (Number(await chainManager.getTokenBalance(chainId, getAddress(addr), getAddress(usdc))) / 1e6).toFixed(6);
@@ -82,12 +120,15 @@ async function main() {
   const provider = new ethers.JsonRpcProvider(process.env[`RPC_${sourceChainId}`] || (chainManager.getChain(sourceChainId) as unknown as { url: string }).url);
   const wallet = new ethers.Wallet(pk, provider);
   const usdc = new ethers.Contract(srcUsdc, ['function transfer(address,uint256) returns (bool)', 'function balanceOf(address) view returns (uint256)'], wallet);
-  const saBalBefore: bigint = await usdc.balanceOf(sourceSA);
+  const saBalBefore: bigint = await withRetry('balanceOf', () => usdc.balanceOf(sourceSA));
   if (saBalBefore < amount) {
     console.log(`→ funding source SA with ${amountHuman} USDC ...`);
-    const tx = await usdc.transfer(sourceSA, amount);
-    await tx.wait();
-    console.log(`  funded: ${tx.hash}\n`);
+    const hash = await withRetry('fund', async () => {
+      const tx = await usdc.transfer(sourceSA, amount);
+      await tx.wait();
+      return tx.hash as string;
+    });
+    console.log(`  funded: ${hash}\n`);
   } else {
     console.log(`source SA already holds ${ethers.formatUnits(saBalBefore, 6)} USDC\n`);
   }
@@ -96,7 +137,7 @@ async function main() {
 
   // 3) Drive to terminal.
   const maxTicks = Number(arg('ticks', '300'));
-  const intervalMs = Number(arg('interval', '6')) * 1000;
+  const intervalMs = Number(arg('interval', '20')) * 1000;
   let lastStatus = '';
   for (let i = 0; i < maxTicks; i++) {
     const route = await PrivateRouteModel.findById(routeId);
