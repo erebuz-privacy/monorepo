@@ -460,8 +460,11 @@ export function BridgeFlow() {
             <ShieldCheck className="text-foreground/50 size-4" />
             {TEST_MODE ? "Testnet" : "Private route"}
           </div>
-          <h1 className="text-foreground/75 border-foreground/12 bg-foreground/[0.06] flex items-center gap-2 justify-self-center rounded-full border px-3.5 py-2 text-sm font-medium whitespace-nowrap backdrop-blur-sm">
-            <Lock className="text-foreground/50 size-4" />
+          {/* Prominent centerpiece — brand accent (colour + weight + size) draws the
+              eye, but it stays FLAT (no raised shadow / hover) so it isn't mistaken
+              for the clickable Activity button. */}
+          <h1 className="text-foreground border-brand/35 bg-brand/12 ring-brand/10 flex items-center gap-2 justify-self-center rounded-full border px-4 py-2 text-base font-semibold tracking-tight whitespace-nowrap ring-1 backdrop-blur-sm">
+            <Lock className="text-brand size-[18px]" />
             Send privately
           </h1>
           <button
