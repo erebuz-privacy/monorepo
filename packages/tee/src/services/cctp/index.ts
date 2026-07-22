@@ -43,6 +43,9 @@ const CCTP_CHAINS: Record<number, CctpChainInfo> = {
   1301: { domain: 10, usdc: '0x31d0220469e10c4E71834a79b1f276d740d3768F', name: 'Unichain Sepolia', testnet: true },
   4801: { domain: 14, usdc: '0x66145f38cBAC35Ca6F1Dfb4914dF98F1614aeA88', name: 'World Chain Sepolia', testnet: true },
   1328: { domain: 16, usdc: '0x4fCF1784B31630811181f670Aea7A7bEF803eaED', name: 'Sei Atlantic-2', testnet: true, instantFinality: true },
+  // Arc: Circle's L1. USDC is the native gas token (fund the relayer with USDC, not
+  // ETH); ERC-20 USDC interface at 0x3600… (6dp). Deterministic finality => standard.
+  5042002: { domain: 26, usdc: '0x3600000000000000000000000000000000000000', name: 'Arc Testnet', testnet: true, instantFinality: true },
   // ---- mainnet ----
   1: { domain: 0, usdc: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', name: 'Ethereum', testnet: false },
   8453: { domain: 6, usdc: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', name: 'Base', testnet: false },
