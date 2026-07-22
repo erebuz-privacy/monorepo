@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { NetworkIcon, TokenIcon } from "@web3icons/react/dynamic";
-import { ArrowRight, Lock } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { cn } from "@erebuz/ui/lib/utils";
 
@@ -378,81 +378,6 @@ function Strk20Chip() {
         className="h-3 w-auto"
       />
     </span>
-  );
-}
-
-/**
- * Circle CCTP attribution chip. CCTP (Circle's Cross-Chain Transfer Protocol) is
- * the native burn-and-mint bridge that moves USDC into and out of the private
- * pool. We show the protocol name with a green circular glyph (a nod to Circle's
- * brand) rather than Circle's actual logo mark, which Circle's brand policy
- * reserves for authorized use. To swap in an official asset later, replace the
- * glyph <span> with an <Image src="/circle-cctp.svg" />.
- */
-export function CctpBadge({
-  compact,
-  className,
-}: {
-  compact?: boolean;
-  className?: string;
-}) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-1.5 py-0.5 font-medium text-emerald-700 dark:text-emerald-400",
-        className
-      )}
-      title="Bridged via Circle CCTP (native USDC burn & mint)"
-    >
-      <span
-        className="inline-block size-2.5 shrink-0 rounded-full bg-emerald-500 ring-2 ring-emerald-500/25"
-        aria-hidden
-      />
-      {compact ? "CCTP" : "Circle CCTP"}
-    </span>
-  );
-}
-
-/**
- * The full private-route trail as scannable hops:
- *   source chain → (Circle CCTP) → Railgun private pool → (Circle CCTP) → dest chain
- * Both CCTP bridge legs (in and out) and the privacy hop are made explicit. Shared
- * by the send flow and the shareable /tx view so every surface tells the same story.
- */
-export function PrivateRouteTrail({
-  fromChainId,
-  fromName,
-  fromLogo,
-  toChainId,
-  toName,
-  toLogo,
-  className,
-}: {
-  fromChainId?: number;
-  fromName: string;
-  fromLogo?: string | null;
-  toChainId?: number;
-  toName: string;
-  toLogo?: string | null;
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "text-muted-foreground flex flex-wrap items-center justify-center gap-1.5 text-xs",
-        className
-      )}
-    >
-      <ChainGlyph chainId={fromChainId} label={fromName} logoUrl={fromLogo} size={14} />
-      <span className="text-foreground/80 font-medium">{fromName}</span>
-      <CctpBadge compact />
-      <span className="bg-brand/10 text-brand inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-medium">
-        <Lock className="size-3" /> Railgun
-      </span>
-      <CctpBadge compact />
-      <ChainGlyph chainId={toChainId} label={toName} logoUrl={toLogo} size={14} />
-      <span className="text-foreground/80 font-medium">{toName}</span>
-    </div>
   );
 }
 

@@ -47,7 +47,6 @@ import {
   AssetGlyph,
   ChainGlyph,
   GradientAvatar,
-  PrivateRouteTrail,
   SymbolGlyph,
 } from "@/components/crypto-icon";
 import { formatAmount, formatUsd, shortenAddress } from "@/lib/format";
@@ -424,6 +423,17 @@ export function BridgeFlow() {
   const stage = activeRecord?.live?.stage ?? "AWAITING_DEPOSIT";
   const showStatus = !!activeRouteId && !!activeRecord;
 
+  // Reflect the viewed transfer in the URL (shareable /tx/<id>); a refresh then
+  // loads the real /tx page. We only rewrite the bar (replaceState) so the live
+  // in-page state isn't torn down. Returns to "/" when not viewing a transfer.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const target = showStatus && activeRouteId ? `/tx/${activeRouteId}` : "/";
+    if (window.location.pathname !== target) {
+      window.history.replaceState(window.history.state, "", target);
+    }
+  }, [showStatus, activeRouteId]);
+
   const pending = useMemo(() => activity.filter((a) => a.status === "pending"), [activity]);
 
   // ---- which view + its morph key ----
@@ -789,16 +799,6 @@ export function BridgeFlow() {
                     <Loader2 className="size-4 animate-spin" />
                     Watching for your deposit…
                   </div>
-
-                  <PrivateRouteTrail
-                    className="border-border/60 border-t pt-4"
-                    fromChainId={activeRecord.live.fromChainId}
-                    fromName={activeRecord.live.fromChainName}
-                    fromLogo={activeRecord.live.fromChainLogo}
-                    toChainId={activeRecord.live.toChainId}
-                    toName={activeRecord.live.toChainName}
-                    toLogo={activeRecord.live.toChainLogo}
-                  />
                 </div>
               </div>
             ) : null}
@@ -829,7 +829,10 @@ export function BridgeFlow() {
                 <div className="flex flex-col items-center text-center">
                   <Loader2 className="text-brand size-10 animate-spin" />
                   <p className="mt-4 text-base font-medium">{stageLabel(stage)}</p>
-                  <RoutingStatus etaSeconds={activeRecord.live.etaSeconds} startedAt={new Date(activeRecord.date).getTime()} />
+                  <RoutingStatus
+                    etaSeconds={activeRecord.live.etaSeconds}
+                    startedAt={activeRecord.live.startedAt ?? new Date(activeRecord.date).getTime()}
+                  />
                 </div>
                 <ol className="border-border divide-border divide-y rounded-2xl border">
                   {PROGRESS.map((p, i) => {
@@ -1003,20 +1006,6 @@ export function BridgeFlow() {
             Get started
           </a>
         </p>
-      ) : null}
-
-      {/* route footer for the active transfer (deposit view shows it inside the card) */}
-      {showStatus && stage !== "FAILED" && stage !== "AWAITING_DEPOSIT" && activeRecord?.live ? (
-        <motion.div layout transition={sizeSpring} className="mt-4">
-          <PrivateRouteTrail
-            fromChainId={activeRecord.live.fromChainId}
-            fromName={activeRecord.live.fromChainName}
-            fromLogo={activeRecord.live.fromChainLogo}
-            toChainId={activeRecord.live.toChainId}
-            toName={activeRecord.live.toChainName}
-            toLogo={activeRecord.live.toChainLogo}
-          />
-        </motion.div>
       ) : null}
 
       {/* asset + recipient pickers (portaled; only meaningful on the form) */}
