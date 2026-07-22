@@ -165,7 +165,7 @@ function RouteAssetRow({
     <button
       type="button"
       onClick={onClick}
-      className="group flex min-h-24 w-full cursor-pointer items-center gap-4 px-5 py-3.5 text-left [-webkit-tap-highlight-color:transparent] focus-visible:outline-none sm:min-h-28 sm:py-5"
+      className="press group flex min-h-24 w-full cursor-pointer items-center gap-4 rounded-[1.4rem] px-5 py-3.5 text-left [-webkit-tap-highlight-color:transparent] focus-visible:outline-none sm:min-h-28 sm:py-5"
     >
       {symbol ? (
         <AssetGlyph
@@ -988,6 +988,21 @@ export function BridgeFlow() {
         <div className="border-foreground/[0.08] bg-background/20 text-foreground/45 flex size-11 items-center justify-center rounded-full border backdrop-blur-sm">
           <Loader2 className="size-4 animate-spin" />
         </div>
+      ) : null}
+
+      {/* Testnet-only helper: point users without test funds at the faucet guide. */}
+      {viewKey === "form" && TEST_MODE ? (
+        <p className="text-foreground/45 mt-1 px-4 text-center text-xs leading-relaxed">
+          No testnet USDC or ETH?{" "}
+          <a
+            href="https://docs.erebuz.com/testnet/quickstart"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="press text-brand hover:text-brand/80 font-medium underline decoration-brand/40 underline-offset-2 transition-colors"
+          >
+            Get started
+          </a>
+        </p>
       ) : null}
 
       {/* route footer for the active transfer (deposit view shows it inside the card) */}

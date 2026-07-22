@@ -22,16 +22,15 @@ export function ThemeToggle({ className }: { className?: string }) {
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label="Toggle theme"
       className={cn(
-        "text-muted-foreground hover:text-foreground hover:bg-accent flex size-9 items-center justify-center rounded-full transition-colors",
+        "press text-muted-foreground hover:text-foreground hover:bg-accent flex size-9 cursor-pointer items-center justify-center rounded-full",
         className
       )}
     >
       {mounted ? (
-        isDark ? (
-          <Sun className="size-4" />
-        ) : (
-          <Moon className="size-4" />
-        )
+        // Re-key by theme so the icon fades/rotates in on every toggle.
+        <span key={isDark ? "dark" : "light"} className="value-swap flex">
+          {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+        </span>
       ) : (
         <span className="size-4" />
       )}
