@@ -3,14 +3,16 @@ title: Quickstart
 description: Quote a transfer, create it, and track it to completion.
 ---
 
-Erebuz provides an HTTP API for private cross-chain transfers. Set `BASE_URL` to your deployment (locally, `http://localhost:3000`). Every response is JSON of the form `{ "success": boolean, "data": ... }`.
+Set `BASE_URL` to your deployment (locally, `http://localhost:3000`). Every response is JSON with a `success` boolean and `data` or `error`.
+
+In its current CCTP configuration, only **USDC to USDC** routes are supported (same-asset, any CCTP-supported source chain to any CCTP-supported destination chain). Cross-token routes are planned for a future release.
 
 <Steps>
 <Step>
 
 ## Quote
 
-Ask what the recipient receives for a given input. Nothing moves and no address is allocated, so this is safe to call on every keystroke.
+Preview what the recipient receives. No state is changed and no deposit address is allocated, so this is safe to call on every keystroke.
 
 ```bash
 curl -X POST $BASE_URL/api/private-route/quote \
@@ -20,18 +22,18 @@ curl -X POST $BASE_URL/api/private-route/quote \
     "destChainId": 137,
     "amount": "100",
     "tokenSymbol": "USDC",
-    "destTokenSymbol": "USDT"
+    "destTokenSymbol": "USDC"
   }'
 ```
 
-The `data` holds `quotedOutputAmount` and `feeAmount` (smallest units of the destination token), the USD values, `etaSeconds`, and a `route` for display. Re-quote every 15 to 20 seconds; the price is live.
+Response `data` includes `quotedOutputAmount`, `feeAmount`, `bridgeFeeAmount`, `privacyFeeAmount` (all in destination token smallest units), USD values, `etaSeconds`, and `route` for display. Re-quote every 15 to 20 seconds; the price is live.
 
 </Step>
 <Step>
 
 ## Create
 
-Commit the transfer. This allocates the deposit address to fund.
+Commit the transfer. Same request body as quote plus `userDestinationAddress`.
 
 ```bash
 curl -X POST $BASE_URL/api/private-route \
@@ -41,12 +43,12 @@ curl -X POST $BASE_URL/api/private-route \
     "destChainId": 137,
     "amount": "100",
     "tokenSymbol": "USDC",
-    "destTokenSymbol": "USDT",
+    "destTokenSymbol": "USDC",
     "userDestinationAddress": "0xRecipient"
   }'
 ```
 
-Send the input amount to `depositAddress` on the source chain. Keep the returned `routeId` to track the transfer.
+Send USDC to `depositAddress` on the source chain. Keep the returned `routeId` to track the transfer.
 
 </Step>
 <Step>
@@ -66,11 +68,11 @@ Status moves `AWAITING_DEPOSIT` to `COMPLETED` (or `FAILED`). See [Reference](/d
 
 ## Populate the selectors
 
-To build a token and chain picker, list what Relay can bridge:
+To build a token and chain picker, list what the service supports:
 
 ```bash
 curl $BASE_URL/api/relay/chains
 curl "$BASE_URL/api/relay/tokens?chainId=42161&search=USDC"
 ```
 
-`tokenSymbol` and `destTokenSymbol` can differ, so a transfer can change both chain and token (for example USDC on Base to USDT on Polygon). Omit `destTokenSymbol` to keep the same token.
+The Circle Faucet at [faucet.circle.com](https://faucet.circle.com) drips test USDC on every CCTP-supported testnet.

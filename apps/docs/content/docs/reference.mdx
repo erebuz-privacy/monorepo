@@ -23,24 +23,29 @@ Response `data`:
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `symbol`, `destSymbol` | string | Source and destination token |
+| `symbol`, `destSymbol` | string | Source and destination token (always `USDC` in CCTP mode) |
+| `sourceChainId`, `destChainId`, `hubChainId` | number | Chain identifiers |
 | `amount` | string | Input, source token units |
 | `quotedOutputAmount` | string | Delivered output, destination token units |
-| `feeAmount` | string | Fee, destination token units |
-| `amountInUsd`, `quotedOutputUsd`, `feeUsd` | number \| null | USD values when priced |
-| `etaSeconds` | number | Rough end-to-end estimate |
+| `feeAmount` | string | Service fee, destination token units |
+| `bridgeFeeAmount` | string | CCTP bridge fee, destination token units |
+| `privacyFeeAmount` | string | Railgun unshield fee, destination token units |
+| `amountInUsd`, `quotedOutputUsd`, `feeUsd`, `bridgeFeeUsd`, `privacyFeeUsd` | number \| null | USD values when priced |
+| `etaSeconds` | number | Rough end-to-end estimate (~120s for CCTP) |
 | `route` | string[] | Display hops |
 
 ## POST /api/private-route
 
-Create a transfer. Same request as `quote`, plus `userDestinationAddress` (where the recipient is paid).
+Create a transfer. Same request as `quote`, plus `userDestinationAddress` (where the recipient is paid on the destination chain).
 
 Response `data` adds:
 
 | Field | Type | Notes |
 | --- | --- | --- |
 | `routeId` | string | Track the transfer with this |
-| `depositAddress` | string | Send the input here, on the source chain |
+| `depositAddress` | string | Send USDC here (TEE-managed smart account on the source chain) |
+| `hubAccount` | string | Smart account on the privacy hub that receives the bridged funds |
+| `hubIsSmartAccount` | boolean | Whether the hub account is a smart account |
 | `status` | string | Starts at `AWAITING_DEPOSIT` |
 
 ## GET /api/private-route/:routeId
@@ -49,23 +54,23 @@ Returns the persisted transfer. Read `status` to drive progress and `error` if i
 
 ## GET /api/relay/chains
 
-Lists bridgeable chains: `chainId`, `name`, `displayName`, `logoUrl`.
+Lists supported chains. Returns `chainId`, `name`, `displayName`, `logoUrl`. In CCTP mode this returns Circle CCTP-supported chains.
 
 ## GET /api/relay/tokens
 
-Lists bridgeable tokens on a chain. Query: `chainId` (required), `search` (optional). Each token has `chainId`, `address`, `symbol`, `name`, `decimals`, `logoUrl`.
+Lists supported tokens on a chain. Query: `chainId` (required), `search` (optional). Each token has `chainId`, `address`, `symbol`, `name`, `decimals`, `logoUrl`. In CCTP mode this returns USDC on each chain.
 
 ## Status lifecycle
 
 | Status | Meaning |
 | --- | --- |
 | `AWAITING_DEPOSIT` | Waiting for the sender to fund the deposit address |
-| `BRIDGING_IN` | Relay is bridging the deposit to the hub |
-| `RECEIVED_ON_HUB` | Funds arrived at the hub; shielding next |
+| `BRIDGING_IN` | Bridging USDC to the hub via CCTP |
+| `RECEIVED_ON_HUB` | USDC arrived at the hub; shielding next |
 | `SHIELDED` | Shielded into Railgun; preparing the payout |
-| `UNSHIELD_SENT` | Unshielded to the outbound bridge |
-| `BRIDGING_OUT` | Relay is delivering to the recipient |
+| `UNSHIELD_SENT` | Unshielded for the outbound bridge |
+| `BRIDGING_OUT` | Bridging USDC to the destination chain via CCTP |
 | `COMPLETED` | Delivered on the destination chain |
-| `FAILED` | Terminal failure; deposited funds are refunded to the sender |
+| `FAILED` | Terminal failure; deposited USDC is refunded to the sender |
 
 Errors return HTTP 400 for a bad request or unsupported pair, 404 for an unknown `routeId`, and 500 otherwise, with the reason in `error`.

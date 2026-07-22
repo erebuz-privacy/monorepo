@@ -1,42 +1,54 @@
 ---
 title: Introduction
-description: Private cross-chain transfers. Deposit one token on one chain, the recipient receives on another, with no on-chain link between them.
+description: Private cross-chain USDC transfers on any CCTP-supported chain.
 ---
 
-Erebuz enables private cross-chain transfers. The sender deposits on the source chain; the recipient receives on the destination chain, in the same token or a different one. Nothing on-chain links the deposit to the payout.
+Send USDC from one chain to another with no on-chain link between deposit and payout. The Erebuz protocol handles bridging through Circle CCTP, privacy through Railgun, and orchestration through a TEE.
+
+[wall8](https://app.erebuz.com) is the reference app built on the protocol.
 
 ## How a transfer works
 
-A transfer runs in three legs:
+The protocol moves USDC through three legs:
 
-1. **Bridge in.** The deposit is bridged, and swapped if needed, into USDC on Arbitrum (the privacy hub). Bridging uses [Relay](https://relay.link) deposit addresses, so the sender just sends funds to an address. No wallet connection, no signing.
-2. **Shield and unshield.** The USDC is shielded into a [Railgun](https://railgun.org) pool and unshielded to a fresh address. This is the step that breaks the link between deposit and payout.
-3. **Bridge out.** The result is bridged, and swapped if needed, into the destination token and sent to the recipient.
+1. **Bridge to the hub.** USDC is burnt on the source chain via Circle CCTP and minted on Arbitrum (the privacy hub). The sender sends USDC to a TEE-managed smart account on the source chain.
+2. **Shield and unshield.** USDC is shielded into a Railgun pool then unshielded to a fresh address. This breaks the on-chain link between the two legs.
+3. **Bridge to the destination.** USDC is burnt on Arbitrum and minted to the recipient on the destination chain.
 
-The sender only touches the first leg. Everything after the deposit is handled by the service.
+The TEE handles everything after the deposit.
 
-## What is private
+## Privacy model
 
-An observer sees a deposit into the hub and, separately, a payout out of the Railgun pool. The shielded pool sits between them, so the deposit cannot be tied to the payout, or the sender to the recipient.
+An observer sees USDC burnt on the source chain and USDC minted from the Railgun pool on the destination. The shielded pool sits between them so the burn cannot be tied to the mint, or the sender to the recipient.
 
-The service knows the full route. Privacy is against outside observers, not the operator.
+The TEE knows the full route. Privacy is against outside observers, not the operator.
 
-## Fees and the quote
+## Fee breakdown
 
-Every transfer is quoted before it runs. The quote is a live estimate refreshed against the market, not a locked rate.
+The total fee bundles three components, charged on the USDC output:
 
-The fee is charged on the token the recipient receives:
+- Service fee: `max($1, 1.5%)`
+- Railgun unshield fee: 0.25%
+- CCTP bridge fee: ~0.03%
 
-- `fee = max($1, 1.5% of the output)`.
-- Deposit 100 USDC and ask for ETH: Relay produces about 0.055 ETH, the fee is 1.5% of that ETH, and the remainder is delivered.
+The quote endpoint returns each component separately (`feeAmount`, `privacyFeeAmount`, `bridgeFeeAmount`).
 
-Because prices move while a transfer runs, the delivered amount tracks the quote within the fee buffer rather than being fixed to the last decimal.
+## Supported chains
 
-## Supported assets
+CCTP-supported chains only. USDC is the only bridged token. No slippage, 1:1 peg.
 
-Any token pair that Relay can route to and from USDC on Arbitrum works, across every chain Relay covers. List what is available with `GET /api/relay/chains` and `GET /api/relay/tokens`.
+Testnet: Sepolia, Base Sepolia, Arbitrum Sepolia, OP Sepolia, Polygon Amoy, Unichain Sepolia, World Chain Sepolia, Sei Atlantic-2, Arc Testnet
+
+Mainnet (expanding): Ethereum, Base, Arbitrum
+
+List available chains and tokens:
+
+```bash
+curl $BASE_URL/api/relay/chains
+curl "$BASE_URL/api/relay/tokens?chainId=42161&search=USDC"
+```
 
 ## Next
 
-- [Quickstart](/docs/quickstart): quote a transfer, create it, and track it.
-- [Reference](/docs/reference): endpoints, fields, and statuses.
+[Quickstart](/docs/quickstart): quote, create, and track a transfer.
+[Reference](/docs/reference): endpoints, fields, and statuses.
