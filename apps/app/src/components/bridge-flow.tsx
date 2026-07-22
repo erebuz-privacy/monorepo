@@ -466,15 +466,15 @@ export function BridgeFlow() {
           {/* Passive status labels: legible but FLAT (no shadow, no hover) so they
               read as chrome, not controls. Only the Activity button is raised +
               interactive — the drop shadow + hover is what marks it as clickable. */}
-          <div className="text-foreground/75 border-foreground/12 bg-foreground/[0.06] flex items-center gap-2 justify-self-start rounded-full border px-3.5 py-2 text-sm font-medium backdrop-blur-sm">
-            <ShieldCheck className="text-foreground/50 size-4" />
-            {TEST_MODE ? "Testnet" : "Private route"}
+          <div className="text-foreground/75 border-foreground/12 bg-foreground/[0.06] flex items-center gap-2 justify-self-start rounded-full border px-2.5 py-2 text-sm font-medium backdrop-blur-sm sm:px-3.5">
+            <ShieldCheck className="text-foreground/50 size-4 shrink-0" />
+            <span className="hidden sm:inline">{TEST_MODE ? "Testnet" : "Private route"}</span>
           </div>
           {/* Prominent centerpiece — brand accent (colour + weight + size) draws the
               eye, but it stays FLAT (no raised shadow / hover) so it isn't mistaken
               for the clickable Activity button. */}
-          <h1 className="text-foreground border-brand/35 bg-brand/12 ring-brand/10 flex items-center gap-2 justify-self-center rounded-full border px-4 py-2 text-base font-semibold tracking-tight whitespace-nowrap ring-1 backdrop-blur-sm">
-            <Lock className="text-brand size-[18px]" />
+          <h1 className="text-foreground border-brand/35 bg-brand/12 ring-brand/10 flex items-center gap-1.5 justify-self-center rounded-full border px-3 py-2 text-sm font-semibold tracking-tight whitespace-nowrap ring-1 backdrop-blur-sm sm:gap-2 sm:px-4 sm:text-base">
+            <Lock className="text-brand size-4 shrink-0 sm:size-[18px]" />
             Send privately
           </h1>
           <button
@@ -482,10 +482,10 @@ export function BridgeFlow() {
             onClick={() => setView("pending")}
             className={cn(
               glassSurfaceVariants({ tone: "ink", depth: "raised", blur: "sm", interactive: true }),
-              "press text-foreground flex cursor-pointer items-center gap-2 justify-self-end rounded-full px-4 py-2.5 text-sm font-semibold",
+              "press text-foreground flex cursor-pointer items-center gap-2 justify-self-end rounded-full px-2.5 py-2.5 text-sm font-semibold sm:px-4",
             )}
           >
-            Activity
+            <span className="hidden sm:inline">Activity</span>
             {pending.length > 0 ? (
               <span className="bg-brand text-brand-foreground flex size-5 items-center justify-center rounded-full text-[10px] font-bold">
                 {pending.length}
