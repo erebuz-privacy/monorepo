@@ -137,10 +137,10 @@ const CHAIN_LOGO: Record<number, string> = {
   80002: "/chains/polygon.jpg",
   84532: "/chains/base.jpg",
   421614: "/chains/arbitrum.jpg",
-  11155111: "/chains/ethereum.webp",
+  11155111: "/chains/ethereum.jpg",
   11155420: "/chains/optimism.jpg",
   // mainnet (ready when mainnet TEE goes live)
-  1: "/chains/ethereum.webp",
+  1: "/chains/ethereum.jpg",
   10: "/chains/optimism.jpg",
   137: "/chains/polygon.jpg",
   8453: "/chains/base.jpg",
