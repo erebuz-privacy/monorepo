@@ -1,45 +1,39 @@
 ---
 title: Introduction
-description: Private cross-chain USDC transfers on any CCTP-supported chain.
+description: Private cross-chain transfers through Relay or Circle CCTP.
 ---
 
-Send USDC from one chain to another with no on-chain link between deposit and payout. The Erebuz protocol handles bridging through Circle CCTP, privacy through Railgun, and orchestration through a TEE.
+Send assets across chains with a Railgun privacy hop between the public deposit and payout legs. Erebuz handles bridging through Relay by default (or Circle CCTP in USDC-only deployments), privacy through Railgun, and orchestration through a TEE.
 
 [wall8](https://app.erebuz.com) is the reference app built on the protocol.
 
 ## How a transfer works
 
-The protocol moves USDC through three legs:
+The protocol moves value through three legs:
 
-1. **Bridge to the hub.** USDC is burnt on the source chain via Circle CCTP and minted on Arbitrum (the privacy hub). The sender sends USDC to a TEE-managed smart account on the source chain.
-2. **Shield and unshield.** USDC is shielded into a Railgun pool then unshielded to a fresh address. This breaks the on-chain link between the two legs.
-3. **Bridge to the destination.** USDC is burnt on Arbitrum and minted to the recipient on the destination chain.
+1. **Bridge to the hub.** The source asset is bridged or swapped into the configured hub asset on Arbitrum. The sender funds a route-specific deposit address.
+2. **Shield and unshield.** The hub asset is shielded into Railgun and later unshielded for the outbound leg. This breaks the direct public on-chain link between the two legs.
+3. **Bridge to the destination.** The unshielded asset is bridged or swapped into the requested destination asset and delivered to the recipient.
 
 The TEE handles everything after the deposit.
 
 ## Privacy model
 
-An observer sees USDC burnt on the source chain and USDC minted from the Railgun pool on the destination. The shielded pool sits between them so the burn cannot be tied to the mint, or the sender to the recipient.
+An observer sees public activity on the source, hub, and destination chains. The shielded pool sits between the public bridge legs so they cannot be linked by a simple transaction trace.
 
 The TEE knows the full route. Privacy is against outside observers, not the operator.
 
 ## Fee breakdown
 
-The total fee bundles three components, charged on the USDC output:
+The service fee is charged on the destination-side output:
 
 - Service fee: `max($1, 1.5%)`
-- Railgun unshield fee: 0.25%
-- CCTP bridge fee: ~0.03%
 
-The quote endpoint returns each component separately (`feeAmount`, `privacyFeeAmount`, `bridgeFeeAmount`).
+In Relay mode, provider costs are already reflected in Relay's expected output and the separate bridge/privacy fee fields are zero or unavailable. In CCTP mode, the quote also itemizes the Railgun unshield fee and estimated destination CCTP fee.
 
 ## Supported chains
 
-CCTP-supported chains only. USDC is the only bridged token. No slippage, 1:1 peg.
-
-Testnet: Sepolia, Base Sepolia, Arbitrum Sepolia, OP Sepolia, Polygon Amoy, Unichain Sepolia, World Chain Sepolia, Sei Atlantic-2, Arc Testnet
-
-Mainnet (expanding): Ethereum, Base, Arbitrum
+Coverage depends on `BRIDGE_PROVIDER`. Relay mode discovers deposit-address-enabled chains and currencies dynamically. CCTP mode exposes the configured Circle networks and USDC only.
 
 List available chains and tokens:
 
@@ -47,6 +41,8 @@ List available chains and tokens:
 curl $BASE_URL/api/relay/chains
 curl "$BASE_URL/api/relay/tokens?chainId=42161&search=USDC"
 ```
+
+See [Supported chains](/docs/concepts/chains) for the provider-specific behavior.
 
 ## Next
 

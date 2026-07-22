@@ -1,0 +1,36 @@
+---
+title: findRoute()
+description: Status and REST alternative for route discovery.
+---
+
+> **Coming soon:** `findRoute()` is not currently exported by `@erebuz/sdk`.
+
+Use `POST /api/private-route/quote` to obtain a route without creating state or allocating a deposit address.
+
+```bash
+curl -X POST $BASE_URL/api/private-route/quote \
+  -H 'content-type: application/json' \
+  -d '{
+    "sourceChainId": 8453,
+    "destChainId": 137,
+    "amount": "100",
+    "tokenSymbol": "USDC",
+    "destTokenSymbol": "USDC"
+  }'
+```
+
+The response includes source and destination token metadata, amounts in smallest units, fees, USD estimates when pricing is available, `etaSeconds`, and display-ready route hops.
+
+See [Routing](/docs/concepts/routing) for provider behavior and [REST API](/docs/reference) for the complete field table.
+
+## Available SDK exports
+
+The current package exports:
+
+- `EREBUZ_SDK_VERSION`
+- `SUPPORTED_CHAINS`
+- `getChainId()`
+- `shortenAddress()`
+- `createConfig()`
+
+Do not import or call `findRoute()` until a future SDK release adds it.

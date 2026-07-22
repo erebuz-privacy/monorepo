@@ -1,0 +1,38 @@
+---
+title: Privacy model
+description: What the Railgun privacy hop protects and where the trust boundaries remain.
+---
+
+Erebuz inserts a Railgun shielded-pool hop between the public inbound and outbound bridge legs. This removes the direct public on-chain link between the sender's deposit and the recipient's payout.
+
+## What observers see
+
+Public observers can see activity on the source chain, activity around the hub, and a destination-chain payout. The shield and unshield operations occur through the shared Railgun pool, preventing those public legs from being linked directly by a simple transaction trace.
+
+Amounts, timing, token rarity, and external wallet behavior can still leak information. Privacy improves when more activity shares the same pool and users avoid immediately recombining identities across the two sides of a transfer.
+
+## What the TEE knows
+
+The TEE orchestrates the complete route. It receives the source and destination selections, amount, recipient, deposit address, bridge request identifiers, and route status. Privacy is therefore against public observers; it is not a claim that the operator never processes route metadata.
+
+Persisted route records include the chain IDs, token data, amount, fee, output, recipient, hub account, bridge identifiers, transaction hashes, timestamps, and errors needed to operate and recover the state machine.
+
+## Railgun operations
+
+On the hub chain, the service:
+
+1. moves the bridged hub asset into the TEE-controlled execution path;
+2. shields the asset into Railgun;
+3. waits until shielded funds are spendable;
+4. unshields to the outbound bridge deposit address or destination transfer path.
+
+Railgun requires a configured wallet, RPC, artifact store, and Proof-of-Innocence node. If those prerequisites are unavailable, the TEE is designed to pause the route at the privacy step for retry rather than pretend the transfer completed.
+
+## Not guaranteed
+
+- Perfect anonymity against global timing or amount-correlation analysis
+- Privacy from the TEE operator
+- Protection when a user publicly links their source and destination identities
+- Completion when bridge, RPC, smart-account, or Railgun prerequisites are unavailable
+
+Formal privacy guarantees and an independent production security audit are **Coming soon**.

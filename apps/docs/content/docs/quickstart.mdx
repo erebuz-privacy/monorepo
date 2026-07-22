@@ -3,9 +3,9 @@ title: Quickstart
 description: Quote a transfer, create it, and track it to completion.
 ---
 
-Set `BASE_URL` to your deployment (locally, `http://localhost:3000`). Every response is JSON with a `success` boolean and `data` or `error`.
+Set `BASE_URL` to your TEE deployment (locally, `http://localhost:3000`). Every response is JSON with a `success` boolean and `data` or `error`.
 
-In its current CCTP configuration, only **USDC to USDC** routes are supported (same-asset, any CCTP-supported source chain to any CCTP-supported destination chain). Cross-token routes are planned for a future release.
+This example uses USDC. Relay deployments can quote other source and destination assets when all route currencies resolve and sufficient liquidity exists. CCTP deployments support USDC only.
 
 <Steps>
 <Step>
@@ -26,7 +26,7 @@ curl -X POST $BASE_URL/api/private-route/quote \
   }'
 ```
 
-Response `data` includes `quotedOutputAmount`, `feeAmount`, `bridgeFeeAmount`, `privacyFeeAmount` (all in destination token smallest units), USD values, `etaSeconds`, and `route` for display. Re-quote every 15 to 20 seconds; the price is live.
+Response `data` includes `quotedOutputAmount`, `feeAmount`, `bridgeFeeAmount`, `privacyFeeAmount` (all in destination-token smallest units), USD values when available, `etaSeconds`, and `route` for display. Re-quote every 15 to 20 seconds; the price is live.
 
 </Step>
 <Step>
@@ -75,4 +75,4 @@ curl $BASE_URL/api/relay/chains
 curl "$BASE_URL/api/relay/tokens?chainId=42161&search=USDC"
 ```
 
-The Circle Faucet at [faucet.circle.com](https://faucet.circle.com) drips test USDC on every CCTP-supported testnet.
+For a CCTP testnet deployment, the Circle Faucet at [faucet.circle.com](https://faucet.circle.com) provides test USDC on supported networks.

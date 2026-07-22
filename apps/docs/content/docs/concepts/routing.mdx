@@ -1,0 +1,43 @@
+---
+title: Routing
+description: How Erebuz quotes and executes private cross-chain transfers.
+---
+
+Erebuz routes a transfer through a privacy hub on Arbitrum. The source and destination legs vary, while the private pool remains the common middle hop.
+
+## Route flow
+
+1. **Quote.** `POST /api/private-route/quote` resolves the source, hub, and destination assets and returns the expected output, fees, route, and estimated duration. It does not persist a transfer or allocate a deposit address.
+2. **Create.** `POST /api/private-route` validates the destination address, creates a route, and returns a route-specific deposit address.
+3. **Deposit.** The sender transfers the quoted source asset to that address on the source chain.
+4. **Bridge in.** The bridge provider moves or swaps the deposit into the configured hub asset on Arbitrum.
+5. **Private hop.** The TEE shields the hub asset into Railgun and later unshields it for the outbound leg.
+6. **Bridge out.** The bridge provider moves or swaps the unshielded asset to the requested destination asset and recipient.
+7. **Track.** `GET /api/private-route/:routeId` exposes the persisted status until it reaches `COMPLETED` or `FAILED`.
+
+## Bridge modes
+
+The TEE selects its bridge mode with `BRIDGE_PROVIDER`.
+
+| Mode | Coverage | Pricing behavior |
+| --- | --- | --- |
+| Relay (default) | Deposit-address-enabled Relay chains and currencies | Supports routes where Relay can resolve the source, hub, and destination assets. Relay costs are reflected in its expected output. |
+| CCTP | Configured Circle CCTP chains | USDC-only burn and mint flow. The quote itemizes the service, Railgun unshield, and estimated destination CCTP fee. |
+
+Availability is resolved at runtime. A chain appearing in discovery does not guarantee that every token pair or amount has a valid quote.
+
+## Status lifecycle
+
+`AWAITING_DEPOSIT → BRIDGING_IN → RECEIVED_ON_HUB → SHIELDED → UNSHIELD_SENT → BRIDGING_OUT → COMPLETED`
+
+Any active route can instead become `FAILED`. Read the route's `error` field for the recorded cause.
+
+## Fees
+
+The service fee is the greater of the configured percentage and USD minimum. Current defaults in the TEE are **1.5%** and **$1**. It is charged from the destination-side output.
+
+Quotes are live. Re-quote before creating a route and display `quotedOutputAmount` as the guaranteed application-level output.
+
+## SDK
+
+High-level `findRoute()` and `send()` SDK methods are **Coming soon**. Use the REST endpoints described in the [Quickstart](/docs/quickstart) today.

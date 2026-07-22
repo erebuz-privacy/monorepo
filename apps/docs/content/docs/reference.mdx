@@ -23,15 +23,15 @@ Response `data`:
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `symbol`, `destSymbol` | string | Source and destination token (always `USDC` in CCTP mode) |
+| `symbol`, `destSymbol` | string | Source and destination token symbols; both are `USDC` in CCTP mode |
 | `sourceChainId`, `destChainId`, `hubChainId` | number | Chain identifiers |
 | `amount` | string | Input, source token units |
 | `quotedOutputAmount` | string | Delivered output, destination token units |
 | `feeAmount` | string | Service fee, destination token units |
-| `bridgeFeeAmount` | string | CCTP bridge fee, destination token units |
-| `privacyFeeAmount` | string | Railgun unshield fee, destination token units |
+| `bridgeFeeAmount` | string | CCTP destination bridge fee, or `"0"` in Relay mode |
+| `privacyFeeAmount` | string | Railgun unshield fee in CCTP mode, or `"0"` in Relay mode |
 | `amountInUsd`, `quotedOutputUsd`, `feeUsd`, `bridgeFeeUsd`, `privacyFeeUsd` | number \| null | USD values when priced |
-| `etaSeconds` | number | Rough end-to-end estimate (~120s for CCTP) |
+| `etaSeconds` | number | Rough end-to-end estimate |
 | `route` | string[] | Display hops |
 
 ## POST /api/private-route
@@ -54,11 +54,11 @@ Returns the persisted transfer. Read `status` to drive progress and `error` if i
 
 ## GET /api/relay/chains
 
-Lists supported chains. Returns `chainId`, `name`, `displayName`, `logoUrl`. In CCTP mode this returns Circle CCTP-supported chains.
+Lists the chains exposed by the active bridge provider. Returns `chainId`, `name`, `displayName`, and optional `logoUrl` and `vmType`. Relay mode returns enabled deposit-address chains; CCTP mode returns configured Circle networks.
 
 ## GET /api/relay/tokens
 
-Lists supported tokens on a chain. Query: `chainId` (required), `search` (optional). Each token has `chainId`, `address`, `symbol`, `name`, `decimals`, `logoUrl`. In CCTP mode this returns USDC on each chain.
+Lists supported tokens on a chain. Query: `chainId` (required), `search` (optional). Each token has `chainId`, `address`, `symbol`, `name`, `decimals`, and `logoUrl` when available. CCTP mode returns USDC only.
 
 ## Status lifecycle
 
@@ -71,6 +71,6 @@ Lists supported tokens on a chain. Query: `chainId` (required), `search` (option
 | `UNSHIELD_SENT` | Unshielded for the outbound bridge |
 | `BRIDGING_OUT` | Bridging USDC to the destination chain via CCTP |
 | `COMPLETED` | Delivered on the destination chain |
-| `FAILED` | Terminal failure; deposited USDC is refunded to the sender |
+| `FAILED` | Terminal failure; inspect the persisted `error` field for the cause |
 
 Errors return HTTP 400 for a bad request or unsupported pair, 404 for an unknown `routeId`, and 500 otherwise, with the reason in `error`.

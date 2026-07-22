@@ -1,0 +1,57 @@
+---
+title: Supported chains
+description: Discover the chains and assets currently available to the router.
+---
+
+import { ChainIcon } from "@/components/chain-icon";
+
+Supported chains are provider-dependent and should be discovered from the running TEE rather than hard-coded in an integration.
+
+```bash
+curl $BASE_URL/api/relay/chains
+```
+
+The response contains `chainId`, `name`, `displayName`, an optional `logoUrl`, and an optional `vmType`.
+
+## Relay mode
+
+Relay is the default bridge provider. The discovery endpoint returns chains that Relay marks as deposit-address-enabled and not disabled. It can include EVM and non-EVM VM families.
+
+List the bridgeable currencies for a selected chain:
+
+```bash
+curl "$BASE_URL/api/relay/tokens?chainId=8453"
+curl "$BASE_URL/api/relay/tokens?chainId=8453&search=USDC"
+```
+
+Each currency includes its authoritative `address`, `symbol`, `decimals`, and available display metadata. A successful end-to-end route still depends on liquidity and on the source, hub, and destination currencies all resolving at quote time.
+
+## CCTP mode
+
+When `BRIDGE_PROVIDER=cctp`, discovery is restricted to the configured CCTP network class and returns USDC as the only token.
+
+Configured mainnets:
+
+<div className="flex flex-wrap gap-3">
+  <ChainIcon name="Ethereum" chainId={1} src="https://www.erebuz.com/protocols/chains/ethereum.webp" />
+  <ChainIcon name="Base" chainId={8453} src="https://www.erebuz.com/protocols/chains/base.jpg" />
+  <ChainIcon name="Arbitrum" chainId={42161} src="https://www.erebuz.com/protocols/chains/arbitrum.jpg" />
+</div>
+
+Configured testnets:
+
+<div className="flex flex-wrap gap-3">
+  <ChainIcon name="Ethereum Sepolia" chainId={11155111} src="https://www.erebuz.com/protocols/chains/ethereum.webp" />
+  <ChainIcon name="Base Sepolia" chainId={84532} src="https://www.erebuz.com/protocols/chains/base.jpg" />
+  <ChainIcon name="Arbitrum Sepolia" chainId={421614} src="https://www.erebuz.com/protocols/chains/arbitrum.jpg" />
+  <ChainIcon name="OP Sepolia" chainId={11155420} src="https://www.erebuz.com/protocols/chains/optimism.jpg" />
+  <ChainIcon name="Polygon Amoy" chainId={80002} src="https://www.erebuz.com/protocols/chains/polygon.jpg" />
+  <ChainIcon name="Unichain Sepolia" chainId={1301} src="https://www.erebuz.com/protocols/chains/unichain.jpg" />
+  <ChainIcon name="World Chain Sepolia" chainId={4801} src="https://www.erebuz.com/protocols/chains/world.jpg" />
+  <ChainIcon name="Sei Atlantic-2" chainId={1328} src="https://www.erebuz.com/protocols/chains/sei.jpg" />
+  <ChainIcon name="Arc Testnet" chainId={5042002} src="https://app.erebuz.com/chains/Arc.jpg" />
+</div>
+
+## SDK chain constants
+
+The current `@erebuz/sdk` exports only `localhost`, `sepolia`, and `mainnet` from `SUPPORTED_CHAINS`. Those constants are shared configuration helpers, not the router's live coverage list. A typed SDK wrapper around dynamic routing coverage is **Coming soon**.

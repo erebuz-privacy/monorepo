@@ -60,6 +60,7 @@ export const contents: Section[] = [
     list: [
       { title: "findRoute()", href: "/docs/sdk/find-route", icon: Route },
       { title: "send()", href: "/docs/sdk/send", icon: Send },
+      { title: "REST API", href: "/docs/reference", icon: Code },
     ],
   },
 ];
