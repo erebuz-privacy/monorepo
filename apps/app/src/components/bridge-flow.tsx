@@ -462,7 +462,13 @@ export function BridgeFlow() {
             <ShieldCheck className="size-4" />
             {TEST_MODE ? "Testnet" : "Private route"}
           </div>
-          <h1 className="text-foreground justify-self-center text-center text-base font-semibold tracking-tight sm:text-lg">
+          <h1
+            className={cn(
+              glassSurfaceVariants({ tone: "ink", depth: "raised", blur: "sm" }),
+              "text-foreground/80 flex items-center gap-2 justify-self-center rounded-full px-4 py-2.5 text-sm font-semibold whitespace-nowrap",
+            )}
+          >
+            <Lock className="size-4" />
             Send privately
           </h1>
           <button
