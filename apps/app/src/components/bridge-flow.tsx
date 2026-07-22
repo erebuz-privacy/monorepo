@@ -453,14 +453,15 @@ export function BridgeFlow() {
     <div className="page-enter mx-auto flex w-full max-w-xl flex-col items-center gap-2.5 px-4 pb-8 pt-3 sm:gap-4 sm:pb-12 sm:pt-9">
       {viewKey === "form" ? (
         <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2 px-1">
-          {/* Passive status labels: FLAT (no shadow) + muted, so they read as
-              chrome, not controls. Only the Activity button is raised+interactive. */}
-          <div className="text-foreground/55 border-foreground/[0.08] flex items-center gap-2 justify-self-start rounded-full border bg-transparent px-3.5 py-2 text-sm font-medium">
-            <ShieldCheck className="size-4" />
+          {/* Passive status labels: legible but FLAT (no shadow, no hover) so they
+              read as chrome, not controls. Only the Activity button is raised +
+              interactive — the drop shadow + hover is what marks it as clickable. */}
+          <div className="text-foreground/75 border-foreground/12 bg-foreground/[0.06] flex items-center gap-2 justify-self-start rounded-full border px-3.5 py-2 text-sm font-medium backdrop-blur-sm">
+            <ShieldCheck className="text-foreground/50 size-4" />
             {TEST_MODE ? "Testnet" : "Private route"}
           </div>
-          <h1 className="text-foreground/55 border-foreground/[0.08] flex items-center gap-2 justify-self-center rounded-full border bg-transparent px-3.5 py-2 text-sm font-medium whitespace-nowrap">
-            <Lock className="size-4" />
+          <h1 className="text-foreground/75 border-foreground/12 bg-foreground/[0.06] flex items-center gap-2 justify-self-center rounded-full border px-3.5 py-2 text-sm font-medium whitespace-nowrap backdrop-blur-sm">
+            <Lock className="text-foreground/50 size-4" />
             Send privately
           </h1>
           <button
