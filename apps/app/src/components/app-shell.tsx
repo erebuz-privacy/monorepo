@@ -21,8 +21,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <DitheringSimplexBackdrop>
       <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center px-4 sm:px-6">
         <Link href="/" className="press text-foreground flex w-fit items-center gap-2.5">
-          <span className={`${glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" })} flex size-8 items-center justify-center rounded-xl`}>
-            <Image src="/wall8-logo.svg" alt="wall8" width={18} height={18} priority unoptimized />
+          <span className={`${glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" })} flex size-8 items-center justify-center rounded-xl bg-white ring-black/20 dark:bg-neutral-950 dark:ring-white/10`}>
+            <Image src="/wall8-logo.svg" alt="wall8" width={18} height={18} priority unoptimized className="invert dark:invert-0" />
           </span>
           <span className="tracking-apple hidden text-lg font-semibold sm:inline">wall8</span>
         </Link>
