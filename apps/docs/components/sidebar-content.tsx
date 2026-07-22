@@ -1,5 +1,6 @@
 import {
   BookOpen,
+  CircleDollarSign,
   Code,
   EyeOff,
   Network,
@@ -35,6 +36,7 @@ export const contents: Section[] = [
     Icon: Sparkles,
     list: [
       { title: "Introduction", href: "/docs/introduction", icon: BookOpen },
+      { title: "Getting test USDC", href: "/docs/getting-test-usdc", icon: CircleDollarSign },
       { title: "Quickstart", href: "/docs/quickstart", icon: Rocket },
     ],
   },
