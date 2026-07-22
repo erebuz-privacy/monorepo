@@ -1,0 +1,35 @@
+---
+title: send()
+description: Status and REST alternative for creating a private transfer.
+---
+
+> **Coming soon:** `send()` is not currently exported by `@erebuz/sdk`.
+
+Today, create and track a transfer through the TEE REST API.
+
+## Create a route
+
+```bash
+curl -X POST $BASE_URL/api/private-route \
+  -H 'content-type: application/json' \
+  -d '{
+    "sourceChainId": 8453,
+    "destChainId": 137,
+    "amount": "100",
+    "tokenSymbol": "USDC",
+    "destTokenSymbol": "USDC",
+    "userDestinationAddress": "0xRecipient"
+  }'
+```
+
+The response provides `routeId`, `depositAddress`, the confirmed output, fee, and initial `AWAITING_DEPOSIT` status. Send the exact quoted source asset and amount to `depositAddress` on the source chain.
+
+## Track the route
+
+```bash
+curl $BASE_URL/api/private-route/$ROUTE_ID
+```
+
+Poll until the route becomes `COMPLETED` or `FAILED`. Preserve `routeId` in the client so the transfer can be resumed after navigation or refresh.
+
+See the [Quickstart](/docs/quickstart) for the complete sequence and [REST API](/docs/reference) for response fields and statuses.

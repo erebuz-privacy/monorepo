@@ -1,0 +1,21 @@
+---
+title: Compliance
+description: Current compliance status and planned controls.
+---
+
+> **Coming soon:** the current TEE and SDK do not implement a public compliance-screening API, policy engine, sanctions check, risk score, or compliance-attestation endpoint.
+
+The live transfer API validates route inputs and destination-address format. Those checks are technical validation, not regulatory or risk screening.
+
+## Current behavior
+
+- EVM destinations are validated as EVM addresses.
+- Non-EVM destinations receive a basic format check before Relay performs provider-specific validation.
+- Unsupported chains, assets, amounts, and routes are rejected.
+- Route state and errors are persisted for orchestration.
+
+None of these behaviors should be represented as AML, sanctions, jurisdiction, travel-rule, or source-of-funds compliance.
+
+## Planned surface
+
+Policy configuration, screening decisions, auditable attestations, and developer-facing compliance hooks are **Coming soon**. Their request fields, response schema, vendors, and enforcement points are not yet defined in the SDK or TEE, so this documentation intentionally does not invent an API contract.
