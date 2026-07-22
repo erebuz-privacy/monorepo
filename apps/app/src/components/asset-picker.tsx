@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { Check, X } from "lucide-react";
+import { ArrowLeft, Check, X } from "lucide-react";
 
 import { AnimatedSearchInput } from "@erebuz/ui/components/animated-search";
 import { glassSurfaceVariants } from "@erebuz/ui/components/glass-surface";
@@ -86,8 +86,8 @@ export function AssetPicker({
     [items, terms],
   );
 
-  // First 6 chains shown; overflow shown in a 3×3 grid "more" tile.
-  // Only the overflow button opens the full networks browse view.
+  // First 6 chains shown as large tiles; overflow shown in a 3×3 grid "more" tile.
+  // The globe tile opens the full networks browse view.
   const displayChains = useMemo(() => (chains ?? []).slice(0, 6), [chains]);
   const overflowChains = useMemo(() => (chains ?? []).slice(6, 9), [chains]);
 
@@ -124,7 +124,19 @@ export function AssetPicker({
           )}
         >
           <div className="border-foreground/[0.08] flex items-center gap-2 border-b p-3 sm:gap-3 sm:p-4">
-            {mode === "tokens" && activeChain ? (
+            {mode === "networks" ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("tokens");
+                  setQuery("");
+                }}
+                className="press border-foreground/[0.07] bg-foreground/[0.05] text-foreground/55 hover:bg-foreground/10 hover:text-foreground flex size-12 shrink-0 items-center justify-center rounded-full border transition-colors"
+                aria-label="Back to tokens"
+              >
+                <ArrowLeft className="size-5" />
+              </button>
+            ) : mode === "tokens" && activeChain ? (
               <button
                 type="button"
                 onClick={() => {
@@ -137,8 +149,8 @@ export function AssetPicker({
                 )}
                 aria-label={`Change network. Current network ${activeChain.label}`}
               >
-                <span className="[&>*]:size-7">{activeChain.icon}</span>
-                <span className="hidden max-w-28 truncate sm:block">{activeChain.label}</span>
+                <span className="inline-flex size-7 overflow-hidden rounded-[6px] [&>*]:w-full [&>*]:h-full">{activeChain.icon}</span>
+                <span className="text-nowrap">{activeChain.label}</span>
               </button>
             ) : null}
 
@@ -160,14 +172,12 @@ export function AssetPicker({
             </DialogClose>
           </div>
 
-        {/* min-h floors the body so loading, a 1-item list, a short result, and the
-            networks grid all settle at the SAME height — the loading skeleton below
-            is kept under this floor, so opening / switching chains never resizes the
-            panel (which read as a flicker / "reload"). */}
-        <div className="min-h-[17rem] flex-1 overflow-y-auto px-3 sm:px-5">
+        {/* min-h keeps the body a comfortable size even for a 1-item list; the
+            networks grid is taller so this only floors the sparse token case. */}
+        <div className="min-h-[15rem] flex-1 overflow-y-auto px-3 sm:px-5">
           {mode === "networks" ? (
             filteredChains.length ? (
-              <ul className="grid auto-rows-fr grid-cols-2 gap-2 py-4 sm:grid-cols-3">
+              <ul className="grid grid-cols-3 gap-x-3 gap-y-6 py-6 sm:grid-cols-5">
                 {filteredChains.map((chain) => {
                   const selected = chain.id === activeChainId;
                   return (
@@ -175,20 +185,30 @@ export function AssetPicker({
                       <button
                         type="button"
                         onClick={() => chooseChain(chain.id)}
-                        className={cn(
-                          "press flex h-full w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors sm:p-4",
-                          selected
-                            ? "border-emerald-300/30 bg-emerald-300/10"
-                            : "border-foreground/[0.07] bg-foreground/[0.025] hover:border-foreground/15 hover:bg-foreground/[0.055]",
-                        )}
+                        className="group press flex w-full flex-col items-center gap-2 text-center"
+                        aria-label={chain.label}
                       >
-                        <span className="flex size-10 shrink-0 items-center justify-center [&>*]:size-10">
-                          {chain.icon}
+                        <span
+                          className={cn(
+                            "relative aspect-square w-full max-w-20 overflow-hidden rounded-[1.15rem] ring-1 ring-inset transition-all duration-200 group-hover:scale-105 sm:rounded-[1.35rem]",
+                            selected
+                              ? "ring-2 ring-emerald-400/70 shadow-[0_0_30px_rgba(110,231,183,0.18)]"
+                              : "ring-foreground/10 group-hover:ring-foreground/20",
+                          )}
+                        >
+                          <span className="flex size-full items-center justify-center bg-foreground/[0.04] [&>*]:size-full [&>*]:object-cover">
+                            {chain.icon}
+                          </span>
+
                         </span>
-                        <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                        <span
+                          className={cn(
+                            "block w-full text-sm font-semibold leading-tight text-balance",
+                            selected ? "text-emerald-200" : "text-foreground/85",
+                          )}
+                        >
                           {chain.label}
                         </span>
-                        {selected ? <Check className="size-4 shrink-0 text-emerald-300" /> : null}
                       </button>
                     </li>
                   );
@@ -198,10 +218,8 @@ export function AssetPicker({
               <Empty label="No networks found" />
             )
           ) : loading ? (
-            // Kept short (≤ the body min-height) so the panel doesn't shrink when
-            // the real (usually 1-item) list arrives.
             <ul className="divide-foreground/[0.06] divide-y">
-              {Array.from({ length: 3 }).map((_, index) => (
+              {Array.from({ length: 6 }).map((_, index) => (
                 <li key={index} className="flex items-center gap-4 px-2 py-5">
                   <Skeleton className="size-12 shrink-0 rounded-full" />
                   <div className="flex-1 space-y-2">
@@ -224,13 +242,13 @@ export function AssetPicker({
                         onOpenChange(false);
                         setQuery("");
                       }}
-                      className="group press flex w-full items-center gap-4 px-2 py-4 text-left sm:py-5"
+                      className="group press flex w-full items-center gap-4 px-2 py-5 text-left sm:py-6"
                     >
-                      <span className="shrink-0 transition-transform duration-200 group-hover:scale-105 [&>*]:size-12">
+                      <span className="shrink-0 inline-flex size-12 overflow-hidden transition-transform duration-200 group-hover:scale-105 [&>*]:w-full [&>*]:h-full">
                         {item.icon}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="text-foreground block truncate text-base font-semibold tracking-tight">
+                        <span className="text-foreground block truncate text-xl font-semibold tracking-tight">
                           {item.label}
                         </span>
                         {item.sublabel ? (
