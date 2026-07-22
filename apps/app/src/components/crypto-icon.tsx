@@ -89,21 +89,24 @@ export function RemoteGlyph({
       width={size}
       height={size}
       onError={() => setFailed(true)}
-      className={cn("bg-muted object-cover", className)}
-      style={{ width: "100%", height: "100%" }}
+      className={cn("bg-muted shrink-0 rounded-full object-cover", className)}
+      style={{ width: size, height: size }}
       aria-hidden
     />
   );
 }
 
 // chainId -> web3icons network slug (kebab-case of the Network<Name> icon).
-// Testnets excluded — local logos from /public/chains/ via tee.ts.
+// Testnets are intentionally excluded — they use local logo files from
+// /public/chains/ mapped in tee.ts via the logoUrl field.
 const WEB3_NETWORK_BY_CHAIN_ID: Record<number, string> = {
   1: "ethereum",
   10: "optimism",
   137: "polygon",
   8453: "base",
   42161: "arbitrum-one",
+  // Arc has no local logo asset; use the web3icons brand (testnet reuses it).
+  5042002: "arc",
 };
 
 /**
@@ -132,7 +135,7 @@ export function ChainGlyph({
       id={network}
       variant="branded"
       size={size}
-      className={cn("shrink-0", className)}
+      className={cn("shrink-0 rounded-full", className)}
       fallback={fallback}
     />
   );
@@ -155,7 +158,7 @@ export function SymbolGlyph({
       symbol={symbol}
       variant="branded"
       size={size}
-      className={cn("shrink-0", className)}
+      className={cn("shrink-0 rounded-full", className)}
       fallback={<RemoteGlyph src={logoUrl} label={symbol} size={size} className={className} />}
     />
   );
