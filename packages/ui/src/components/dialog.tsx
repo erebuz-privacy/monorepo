@@ -31,7 +31,11 @@ function DialogOverlay({
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        // NOTE: intentionally NO backdrop-blur here. The app renders a WebGL shader
+        // backdrop; a full-screen backdrop-filter over WebGL makes Chrome tear down /
+        // rebuild the canvas compositing layer on open+close, which flashes the whole
+        // screen. A plain dim fades cleanly with no repaint. Keep it blur-free.
+        "fixed inset-0 isolate z-50 bg-black/30 duration-150 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
       )}
       {...props}
