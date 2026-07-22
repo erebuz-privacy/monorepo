@@ -58,7 +58,7 @@ import { fromSmallestUnit, tee, type CreatedRoute, type TeeQuote, type TeeToken 
 
 export const TEST_MODE = process.env.NEXT_PUBLIC_TEST_MODE === "true";
 const DEFAULT_FROM_CHAIN = TEST_MODE ? 84532 : 8453; // Base Sepolia : Base
-const DEFAULT_TO_CHAIN = TEST_MODE ? 11155111 : 1; // Ethereum Sepolia : Ethereum
+const DEFAULT_TO_CHAIN = TEST_MODE ? 5042002 : 1; // Arc Testnet : Ethereum
 const DEFAULT_SYMBOL = "USDC";
 const REFRESH_MS = 20_000;
 
@@ -992,13 +992,13 @@ export function BridgeFlow() {
 
       {/* Testnet-only helper: point users without test funds at the faucet guide. */}
       {viewKey === "form" && TEST_MODE ? (
-        <p className="text-foreground/45 mt-1 px-4 text-center text-xs leading-relaxed">
+        <p className="text-foreground/70 mt-1 px-4 text-center text-sm leading-relaxed">
           No testnet USDC or ETH?{" "}
           <a
             href="https://docs.erebuz.com/testnet/quickstart"
             target="_blank"
             rel="noopener noreferrer"
-            className="press text-brand hover:text-brand/80 font-medium underline decoration-brand/40 underline-offset-2 transition-colors"
+            className="press text-brand hover:text-brand/80 font-semibold underline decoration-brand/50 underline-offset-2 transition-colors"
           >
             Get started
           </a>

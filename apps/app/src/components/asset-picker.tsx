@@ -120,7 +120,7 @@ export function AssetPicker({
         <div
           className={cn(
             glassSurfaceVariants({ tone: "ink", depth: "floating", blur: "sm" }),
-            "pop-in border-foreground/12 bg-background/88 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.65rem] sm:rounded-[2rem]",
+            "pop-in border-foreground/12 bg-background/88 flex flex-col overflow-hidden rounded-[1.65rem] sm:rounded-[2rem]",
           )}
         >
           <div className="border-foreground/[0.08] flex items-center gap-2 border-b p-3 sm:gap-3 sm:p-4">
@@ -172,9 +172,11 @@ export function AssetPicker({
             </DialogClose>
           </div>
 
-        {/* min-h keeps the body a comfortable size even for a 1-item list; the
-            networks grid is taller so this only floors the sparse token case. */}
-        <div className="min-h-[15rem] flex-1 overflow-y-auto px-3 sm:px-5">
+        {/* FIXED body height (not content-driven) so the panel NEVER resizes:
+            loading, a 1-item list, a long list, and the networks tile grid all live
+            in this same scrollable box. This is what kills the open/select "expand
+            then shrink" flicker — content swaps in place, the panel size is constant. */}
+        <div className="h-[20rem] overflow-y-auto px-3 sm:px-5">
           {mode === "networks" ? (
             filteredChains.length ? (
               <ul className="grid grid-cols-3 gap-x-3 gap-y-6 py-6 sm:grid-cols-5">
@@ -219,7 +221,7 @@ export function AssetPicker({
             )
           ) : loading ? (
             <ul className="divide-foreground/[0.06] divide-y">
-              {Array.from({ length: 6 }).map((_, index) => (
+              {Array.from({ length: 4 }).map((_, index) => (
                 <li key={index} className="flex items-center gap-4 px-2 py-5">
                   <Skeleton className="size-12 shrink-0 rounded-full" />
                   <div className="flex-1 space-y-2">
@@ -344,11 +346,20 @@ export function AssetPicker({
                   title="More networks"
                 >
                   <span className="flex size-full items-center justify-center rounded-[1.15rem] bg-foreground/[0.05] ring-1 ring-inset ring-foreground/[0.08] transition-colors hover:bg-foreground/[0.09] sm:rounded-[1.35rem]">
-                    <span className="grid size-full grid-cols-3 grid-rows-3 gap-[3px] p-1.5 sm:gap-1 sm:p-2">
+                    {/* Grid sizes to the count: ≤4 overflow chains use a 2×2 so the
+                        few logos fill the tile instead of hiding in a sparse 3×3. */}
+                    <span
+                      className={cn(
+                        "grid size-full",
+                        overflowChains.length <= 4
+                          ? "grid-cols-2 grid-rows-2 gap-1 p-2 sm:gap-1.5 sm:p-2.5"
+                          : "grid-cols-3 grid-rows-3 gap-[3px] p-1.5 sm:gap-1 sm:p-2",
+                      )}
+                    >
                       {overflowChains.map((c) => (
                         <span
                           key={c.id}
-                          className="flex items-center justify-center overflow-hidden rounded-[4px] bg-foreground/[0.06] [&>*]:size-full [&>*]:object-cover sm:rounded-[5px]"
+                          className="flex items-center justify-center overflow-hidden rounded-[5px] bg-foreground/[0.06] [&>*]:size-full [&>*]:object-cover sm:rounded-md"
                         >
                           {c.icon}
                         </span>
