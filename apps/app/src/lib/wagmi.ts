@@ -17,8 +17,13 @@ import {
   worldchainSepolia,
 } from "wagmi/chains";
 
+// WalletConnect project id. This is a PUBLIC client identifier (it ships in the
+// browser bundle), so it's safe to commit as the default; abuse is bounded by the
+// allowed-domains list configured in WalletConnect Cloud. Override per-env with
+// NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID if needed.
 const projectId =
-  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "wall8-dev-placeholder";
+  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ??
+  "8ad4a8c682ffb4d49ff4dda0dc14bb1c";
 
 // Arc Testnet isn't in wagmi/chains — define it so "connect wallet & pay" can
 // switch a wallet to it. USDC is the native gas token there.
