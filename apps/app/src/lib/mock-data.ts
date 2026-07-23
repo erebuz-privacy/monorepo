@@ -56,6 +56,9 @@ export type ActivityLive = {
   toChainLogo?: string;
   sendSymbol: string;
   sendLogo?: string;
+  /** Source-chain token contract address — lets the "connect wallet & pay" flow
+   *  build the ERC-20 transfer to the deposit address. */
+  sendTokenAddress?: string;
   recvSymbol: string;
   routeId?: string;
   /** Raw TEE route status (AWAITING_DEPOSIT, BRIDGING_IN, …, COMPLETED, FAILED).

@@ -41,6 +41,7 @@ import { TextureButton } from "@erebuz/ui/components/texture-button";
 import { cn } from "@erebuz/ui/lib/utils";
 
 import { AssetPicker, type ChainChip, type PickerItem } from "@/components/asset-picker";
+import { ConnectWalletPay } from "@/components/connect-wallet-pay";
 import { ErrorNote } from "@/components/error-note";
 import { QrScanDialog, normalizeScannedAddress } from "@/components/qr-scan-dialog";
 import {
@@ -223,6 +224,7 @@ export function BridgeFlow() {
   const [routeNeedsRecipient, setRouteNeedsRecipient] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [picker, setPicker] = useState<"from" | "to" | null>(null);
+  const [depositMode, setDepositMode] = useState<"address" | "wallet">("address");
 
   const [quote, setQuote] = useState<TeeQuote | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -388,6 +390,7 @@ export function BridgeFlow() {
           toChainLogo: toChain.logoUrl,
           sendSymbol: fromToken.symbol,
           sendLogo: fromToken.logoUrl,
+          sendTokenAddress: fromToken.address,
           recvSymbol: quote.destSymbol,
           routeId: created.routeId,
           stage: created.status ?? "AWAITING_DEPOSIT",
@@ -770,28 +773,59 @@ export function BridgeFlow() {
 
                   {activeRecord.live.depositAddress ? (
                     <>
-                      <div className="flex justify-center">
-                        <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/5">
-                          <QRCodeSVG value={activeRecord.live.depositAddress} size={168} bgColor="#ffffff" fgColor="#0a0a0a" marginSize={0} level="M" />
-                        </div>
-                      </div>
-                      <div className="border-border rounded-2xl border p-4">
-                        <div className="flex items-center justify-between">
-                          <p className="text-muted-foreground text-xs">Deposit address · {activeRecord.live.fromChainName}</p>
-                          <button type="button" onClick={() => copyAddress(activeRecord.live!.depositAddress!)} className="press text-brand flex cursor-pointer items-center gap-1 text-xs font-medium">
-                            {copied ? (
-                              <>
-                                <Check className="size-3.5" /> Copied
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="size-3.5" /> Copy
-                              </>
+                      {/* Two ways to fund: send to the address yourself, or connect a
+                          wallet and pay in one click (ERC-20 transfer to the address). */}
+                      <div className="border-border bg-muted/30 grid grid-cols-2 gap-1 rounded-full border p-1">
+                        {(["address", "wallet"] as const).map((m) => (
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() => setDepositMode(m)}
+                            className={cn(
+                              "press rounded-full px-3 py-2 text-sm font-semibold transition-colors",
+                              depositMode === m ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
                             )}
+                          >
+                            {m === "address" ? "Deposit address" : "Connect wallet"}
                           </button>
-                        </div>
-                        <p className="mt-2 break-all text-sm">{activeRecord.live.depositAddress}</p>
+                        ))}
                       </div>
+
+                      {depositMode === "address" ? (
+                        <>
+                          <div className="flex justify-center">
+                            <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/5">
+                              <QRCodeSVG value={activeRecord.live.depositAddress} size={168} bgColor="#ffffff" fgColor="#0a0a0a" marginSize={0} level="M" />
+                            </div>
+                          </div>
+                          <div className="border-border rounded-2xl border p-4">
+                            <div className="flex items-center justify-between">
+                              <p className="text-muted-foreground text-xs">Deposit address · {activeRecord.live.fromChainName}</p>
+                              <button type="button" onClick={() => copyAddress(activeRecord.live!.depositAddress!)} className="press text-brand flex cursor-pointer items-center gap-1 text-xs font-medium">
+                                {copied ? (
+                                  <>
+                                    <Check className="size-3.5" /> Copied
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="size-3.5" /> Copy
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                            <p className="mt-2 break-all text-sm">{activeRecord.live.depositAddress}</p>
+                          </div>
+                        </>
+                      ) : (
+                        <ConnectWalletPay
+                          chainId={activeRecord.live.fromChainId}
+                          chainName={activeRecord.live.fromChainName}
+                          token={activeRecord.live.sendTokenAddress}
+                          to={activeRecord.live.depositAddress}
+                          amount={String(activeRecord.sendAmount)}
+                          symbol={activeRecord.live.sendSymbol}
+                        />
+                      )}
                     </>
                   ) : null}
 
