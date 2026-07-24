@@ -1,7 +1,13 @@
 // PrivateRoute Model - SQLite
 // Persisted state for the /private-route cross-chain private transfer orchestration.
+//
+// Privacy note: the recipient (user_destination_address) is the secret half of the
+// sender↔recipient link, so it is stored ENCRYPTED at rest (see field-crypto) and
+// REDACTED once the route reaches a terminal state — a stolen DB / old backup never
+// reveals who a transfer paid.
 
 import { db } from '../../managers/db';
+import { decryptField, encryptField } from '../../security/field-crypto';
 
 export type PrivateRouteStatus =
   | 'AWAITING_DEPOSIT' // waiting for user to send funds to the leg-1 deposit address
@@ -93,7 +99,8 @@ function rowToPrivateRoute(row: PrivateRouteRow): PrivateRoute {
     amount: row.amount,
     feeAmount: row.fee_amount ?? '0',
     quotedOutputAmount: row.quoted_output_amount ?? '0',
-    userDestinationAddress: row.user_destination_address,
+    // Decrypt the recipient (stored encrypted at rest); null once redacted post-terminal.
+    userDestinationAddress: decryptField(row.user_destination_address) ?? row.user_destination_address,
     hubAccount: row.hub_account,
     leg1RequestId: row.leg1_request_id,
     leg1DepositAddress: row.leg1_deposit_address,
@@ -166,7 +173,8 @@ export class PrivateRouteModel {
       input.amount,
       input.feeAmount ?? '0',
       input.quotedOutputAmount ?? '0',
-      input.userDestinationAddress,
+      // Encrypt the recipient at rest (the secret half of the sender↔recipient link).
+      encryptField(input.userDestinationAddress),
       input.hubAccount ?? null,
       input.leg1RequestId ?? null,
       input.leg1DepositAddress ?? null
@@ -221,6 +229,24 @@ export class PrivateRouteModel {
 
     if (!row) {
       throw new Error(`PrivateRoute with id ${id} not found`);
+    }
+
+    // Once the route is terminal, the recipient + the on-chain trail are no longer
+    // needed — wipe them so a completed transfer's row can't reveal who was paid or
+    // link the source deposit → shield → unshield → destination. Status, amounts and
+    // chains are kept (non-linking metadata for the status view).
+    if (fields.status && TERMINAL_STATUSES.includes(fields.status as PrivateRouteStatus)) {
+      const redacted = db
+        .prepare(
+          `UPDATE private_routes
+             SET user_destination_address = NULL, hub_account = NULL,
+                 leg1_deposit_address = NULL, leg2_deposit_address = NULL,
+                 leg1_request_id = NULL, leg2_request_id = NULL,
+                 shield_tx = NULL, unshield_tx = NULL
+           WHERE id = ? RETURNING *`
+        )
+        .get(id) as PrivateRouteRow | null;
+      if (redacted) return rowToPrivateRoute(redacted);
     }
 
     return rowToPrivateRoute(row);

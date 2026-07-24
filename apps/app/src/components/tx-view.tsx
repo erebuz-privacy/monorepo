@@ -205,7 +205,9 @@ export function TxView({ id }: { id: string }) {
             <div className="min-w-0 flex-1">
               <p className="text-foreground/45 truncate text-xs font-medium">{toName}</p>
               <p className="text-foreground mt-0.5 text-2xl font-semibold tabular-nums">{formatAmount(recvAmt, "USDC")}</p>
-              <p className="text-foreground/40 mt-0.5 truncate text-xs">to {shortenAddress(record.userDestinationAddress)}</p>
+              {record.userDestinationAddress ? (
+                <p className="text-foreground/40 mt-0.5 truncate text-xs">to {shortenAddress(record.userDestinationAddress)}</p>
+              ) : null}
             </div>
           </div>
         </div>
@@ -247,9 +249,10 @@ export function TxView({ id }: { id: string }) {
           </div>
           <h2 className="text-lg font-semibold">Sent privately</h2>
           <p className="text-muted-foreground text-sm">
-            <span className="text-foreground/90 font-semibold">{formatAmount(recvAmt, "USDC")}</span> delivered to{" "}
-            {shortenAddress(record.userDestinationAddress)} on {toName}.
+            <span className="text-foreground/90 font-semibold">{formatAmount(recvAmt, "USDC")}</span> delivered
+            {record.userDestinationAddress ? <> to {shortenAddress(record.userDestinationAddress)}</> : null} on {toName}.
           </p>
+          <p className="text-foreground/35 text-xs">The recipient was wiped from our records for privacy.</p>
         </div>
       ) : isFailed ? (
         <div className={cn(CARD, "flex flex-col items-center gap-3 p-6 text-center")}>
