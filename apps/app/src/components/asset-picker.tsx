@@ -4,8 +4,8 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { ArrowLeft, Check, X } from "lucide-react";
 
-import { AnimatedSearchInput } from "@erebuz/ui/components/animated-search";
 import { glassSurfaceVariants } from "@erebuz/ui/components/glass-surface";
+import { Input } from "@erebuz/ui/components/input";
 import {
   Dialog,
   DialogClose,
@@ -154,17 +154,27 @@ export function AssetPicker({
               </button>
             ) : null}
 
-            <AnimatedSearchInput
-              aria-label={mode === "tokens" ? "Search tokens" : "Search networks"}
-              autoComplete="off"
-              autoFocus
-              blobTranslucent
-              className="min-w-0 max-w-none flex-1"
-              onChange={(event) => setQuery(event.target.value)}
-              onClear={() => setQuery("")}
-              placeholder={mode === "tokens" ? searchPlaceholder : "Search networks…"}
-              value={query}
-            />
+            <div className="relative min-w-0 flex-1">
+              <Input
+                aria-label={mode === "tokens" ? "Search tokens" : "Search networks"}
+                autoComplete="off"
+                autoFocus
+                className="h-12 w-full rounded-2xl pr-10"
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={mode === "tokens" ? searchPlaceholder : "Search networks…"}
+                value={query}
+              />
+              {query ? (
+                <button
+                  type="button"
+                  aria-label="Clear search"
+                  onClick={() => setQuery("")}
+                  className="text-foreground/45 hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer"
+                >
+                  <X className="size-4" />
+                </button>
+              ) : null}
+            </div>
 
             <DialogClose className="press border-foreground/[0.07] bg-foreground/[0.05] text-foreground/45 hover:bg-foreground/10 hover:text-foreground flex size-12 shrink-0 items-center justify-center rounded-full border transition-colors">
               <X className="size-5" />
