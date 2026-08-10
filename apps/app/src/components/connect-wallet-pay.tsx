@@ -12,13 +12,12 @@ import { useAccount, useReadContract, useSwitchChain, useWaitForTransactionRecei
 import { erc20Abi, formatUnits, getAddress, parseUnits } from "viem";
 import { AlertTriangle, Check, ChevronRight, Loader2, Wallet } from "lucide-react";
 
-import { glassSurfaceVariants } from "@erebuz/ui/components/glass-surface";
 import { cn } from "@erebuz/ui/lib/utils";
 
 import { GradientAvatar } from "@/components/crypto-icon";
 
 const GLASS_BTN = cn(
-  glassSurfaceVariants({ tone: "ink", depth: "raised", blur: "sm", interactive: true }),
+  "border border-border bg-card shadow-sm transition-colors hover:bg-muted/40",
   "press flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl px-4 py-3.5 text-sm font-semibold",
 );
 const BRAND_BTN =

@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useMemo, useState } from "react";
 import { ArrowLeft, Check, X } from "lucide-react";
 
-import { glassSurfaceVariants } from "@erebuz/ui/components/glass-surface";
 import { Input } from "@erebuz/ui/components/input";
 import {
   Dialog,
@@ -119,7 +118,7 @@ export function AssetPicker({
 
         <div
           className={cn(
-            glassSurfaceVariants({ tone: "ink", depth: "floating", blur: "sm" }),
+            "border border-border bg-card shadow-lg",
             "pop-in border-foreground/12 bg-background/88 flex flex-col overflow-hidden rounded-[1.65rem] sm:rounded-[2rem]",
           )}
         >
@@ -144,7 +143,7 @@ export function AssetPicker({
                   setQuery("");
                 }}
                 className={cn(
-                  glassSurfaceVariants({ tone: "clear", depth: "flat", blur: "none", interactive: true }),
+                  "border border-border bg-background transition-colors hover:bg-muted/40",
                   "press flex h-12 shrink-0 items-center gap-2 rounded-2xl px-2.5 text-sm font-semibold sm:px-3",
                 )}
                 aria-label={`Change network. Current network ${activeChain.label}`}
@@ -293,7 +292,7 @@ export function AssetPicker({
         {chains?.length ? (
           <div
             className={cn(
-              glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" }),
+              "border border-border bg-background shadow-sm",
               "pop-in border-foreground/12 bg-background/72 shrink-0 rounded-[1.5rem] p-3 sm:rounded-[1.75rem] sm:p-4",
             )}
           >

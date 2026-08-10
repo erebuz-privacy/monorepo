@@ -15,7 +15,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { glassSurfaceVariants } from "@erebuz/ui/components/glass-surface";
 import { QRCodeSVG } from "qrcode.react";
 import {
   ArrowDown,
@@ -533,7 +532,7 @@ export function BridgeFlow() {
             type="button"
             onClick={() => setView("pending")}
             className={cn(
-              glassSurfaceVariants({ tone: "ink", depth: "raised", blur: "sm", interactive: true }),
+              "border border-border bg-card shadow-sm transition-colors hover:bg-muted/40",
               "press text-foreground flex cursor-pointer items-center gap-2 justify-self-end rounded-full px-2.5 py-2.5 text-sm font-semibold sm:px-4",
             )}
           >
@@ -553,7 +552,7 @@ export function BridgeFlow() {
         layout
         transition={sizeSpring}
         className={cn(
-          glassSurfaceVariants({ tone: "ink", depth: "floating", blur: "sm" }),
+          "border border-border bg-card shadow-lg",
           "text-foreground w-full overflow-hidden rounded-[2rem]",
         )}
       >
@@ -575,7 +574,7 @@ export function BridgeFlow() {
 
                 <div
                   className={cn(
-                    glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" }),
+                    "border border-border bg-background shadow-sm",
                     "border-foreground/[0.14] relative overflow-hidden rounded-[1.65rem] backdrop-saturate-150",
                   )}
                 >
@@ -608,7 +607,7 @@ export function BridgeFlow() {
 
                 <div
                   className={cn(
-                    glassSurfaceVariants({ tone: "clear", depth: "raised", blur: "sm" }),
+                    "border border-border bg-background shadow-sm",
                     "border-foreground/[0.14] rounded-[1.65rem] p-4 backdrop-saturate-150 sm:p-6",
                   )}
                 >
@@ -1024,7 +1023,7 @@ export function BridgeFlow() {
                   setView("route");
                 }}
                 className={cn(
-                  glassSurfaceVariants({ tone: "ink", depth: "floating", blur: "sm" }),
+                  "border border-border bg-card shadow-lg",
                   "text-foreground w-full cursor-pointer rounded-[2rem] p-4 text-left ring-1 ring-brand/35 shadow-lg shadow-brand/10 [-webkit-tap-highlight-color:transparent] transition-shadow hover:shadow-brand/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 sm:p-6",
                 )}
               >

@@ -9,7 +9,6 @@ import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
 import { ArrowLeft, Check, Clock, Copy, Loader2, XCircle } from "lucide-react";
 
-import { glassSurfaceVariants } from "@erebuz/ui/components/glass-surface";
 import { Skeleton } from "@erebuz/ui/components/skeleton";
 import { cn } from "@erebuz/ui/lib/utils";
 
@@ -17,7 +16,7 @@ import { AssetGlyph } from "@/components/crypto-icon";
 import { formatAmount, shortenAddress } from "@/lib/format";
 
 const CARD = cn(
-  glassSurfaceVariants({ tone: "ink", depth: "floating", blur: "sm" }),
+  "border border-border bg-card shadow-lg",
   "border-foreground/12 bg-background/88 rounded-3xl",
 );
 import { useChains } from "@/lib/tee-data";

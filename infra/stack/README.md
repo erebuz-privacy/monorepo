@@ -7,8 +7,6 @@ Everything the private-route backend needs, in one `docker compose up`:
 | `tee`      | The private-route API the app calls                 | `127.0.0.1:3000` |
 | `poi-node` | Railgun Proof-of-Innocence aggregator (Arbitrum + more) | `127.0.0.1:8080` |
 | `mongo`    | Datastore for the POI node                           | internal only    |
-| `asp`      | Erebuz Arc association-set proof API                 | `127.0.0.1:8787` |
-| `asp-operator` | Testnet-only automatic Wall8 deposit approver    | internal only    |
 
 The TEE reaches the POI node over the internal compose network
 (`http://poi-node:8080`), so you only ever expose the TEE (behind TLS).
@@ -56,13 +54,6 @@ Then run the end-to-end check from the repo root:
 ```bash
 NEXT_PUBLIC_TEE_URL=http://localhost:3000 pnpm --filter @erebuz/tee verify:route
 ```
-
-The Arc route expects `privacy-pool-arc` beside this repository (override
-`ARC_ASP_BUILD_CONTEXT` when using another layout). `asp-operator` reads only
-`POOL_DEPOSITED` Arc routes from the shared TEE SQLite volume, atomically updates
-the persistent testnet policy, gateway-verifies the exact Filebase CID, and
-publishes with the dedicated `ASP_POSTMAN_PRIVATE_KEY`. Railgun remains the
-default provider; Arc is an additional quote choice.
 
 ## Hosting on a VPS
 Same commands. Then:
