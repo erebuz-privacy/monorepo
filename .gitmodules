@@ -1,0 +1,3 @@
+[submodule "privacy-pool-arc"]
+	path = privacy-pool-arc
+	url = git@github-codeytechie:codeytechie/privacy-pool-arc.git
