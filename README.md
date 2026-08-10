@@ -16,10 +16,12 @@ This repository contains the public apps, backend services, contracts, shared pa
 
 Erebuz keeps Railgun available and adds the Erebuz Privacy Pool as a separate route. The routes are quoted independently. One does not replace the other.
 
+![Erebuz private USDC routes](apps/deck/public/diagrams/private-usdc-routes.png)
+
 | Route | Path | Purpose |
 | --- | --- | --- |
-| <img src="apps/landing/public/protocols/railgun.jpg" alt="Railgun" width="28" /> Railgun | Source chain → Railgun → destination chain | Existing private transfer route |
-| <img src="apps/landing/public/content/start/assets/images/USDC.png" alt="USDC" width="28" /> Circle CCTP with Erebuz | Base Sepolia → Circle CCTP → Erebuz Privacy Pool on Arc → Arc Testnet | Native USDC transport with privacy pool settlement |
+| <img src="apps/landing/public/protocols/railgun.jpg" alt="Railgun" width="28" /> Railgun | Base Sepolia → Circle CCTP → Railgun Pool → Circle CCTP → Arc Testnet | Private pool route with CCTP transport on both sides |
+| <img src="apps/landing/public/content/start/assets/images/USDC.png" alt="USDC" width="28" /> Erebuz | Base Sepolia → Circle CCTP → Erebuz Privacy Pool on Arc → Arc Testnet | Private pool route settled directly on Arc |
 
 The quote response includes the route name, estimated output, fees, and expected duration. The frontend displays these routes in the quote section so the user can make an explicit choice.
 

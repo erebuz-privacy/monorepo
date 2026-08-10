@@ -225,31 +225,25 @@ export default function App() {
         </Reveal>
       </Slide>
 
-      {/* 4. How it works — routing flow video */}
-      <Slide center nav="How it works" notes="One call, three lanes, settled on-chain.">
+      {/* 4. How it works */}
+      <Slide center nav="How it works" notes="Circle CCTP moves USDC. Railgun and Erebuz provide the privacy pools.">
         <Reveal>
           <h2 className="headline" style={{ textAlign: 'center', marginInline: 'auto', marginBottom: 8 }}>
-            EREBUZ<span style={{ color: 'var(--fg-muted)' }}>?</span>
+            One transfer. Two private routes.
           </h2>
         </Reveal>
         <Reveal delay={0.06}>
           <p className="lead" style={{ textAlign: 'center', marginInline: 'auto', marginBottom: 'clamp(16px, 2.5vh, 28px)', maxWidth: '100%', whiteSpace: 'nowrap', fontSize: 'clamp(14px, 1.5vw, 20px)' }}>
-            Erebuz sits between your wallet and the app and handles everything in between.
+            Circle CCTP moves USDC. Railgun and Erebuz provide privacy.
           </p>
         </Reveal>
         <Reveal delay={0.1}>
-          <div style={{ width: '100%', marginInline: 'auto', maxWidth: 800 }}>
-            <video
-              autoPlay
-              muted
-              loop
-              playsInline
+          <div style={{ width: '100%', marginInline: 'auto', maxWidth: 1040 }}>
+            <img
+              src="/diagrams/private-usdc-routes.png"
+              alt="Base Sepolia USDC routed through Circle CCTP and either the Railgun pool or Erebuz pool before arriving on Arc Testnet"
               style={{ width: '100%', display: 'block' }}
-              aria-label="Erebuz routing flow"
-            >
-              <source src="/diagrams/routing-flow.webm" type="video/webm" />
-              <source src="/diagrams/routing-flow.mp4" type="video/mp4" />
-            </video>
+            />
           </div>
         </Reveal>
       </Slide>
