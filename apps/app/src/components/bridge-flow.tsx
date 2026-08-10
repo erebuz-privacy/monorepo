@@ -62,24 +62,35 @@ const DEFAULT_TO_CHAIN = TEST_MODE ? 5042002 : 1; // Arc Testnet : Ethereum
 const DEFAULT_SYMBOL = "USDC";
 const REFRESH_MS = 20_000;
 
-const PROGRESS: { status: string; label: string }[] = [
+const RAILGUN_PROGRESS: { status: string; label: string }[] = [
   { status: "BRIDGING_IN", label: "Bridging to the privacy hub" },
   { status: "RECEIVED_ON_HUB", label: "Shielding your funds" },
   { status: "SHIELDED", label: "Preparing the private payout" },
   { status: "UNSHIELD_SENT", label: "Sending to the recipient" },
   { status: "BRIDGING_OUT", label: "Finalizing on the destination chain" },
 ];
+const ARC_PROGRESS: { status: string; label: string }[] = [
+  { status: "BRIDGING_IN", label: "Circle CCTP burn → mint on Arc" },
+  { status: "RECEIVED_ON_HUB", label: "Depositing into the Erebuz pool" },
+  { status: "POOL_DEPOSITED", label: "Waiting for pool approval" },
+  { status: "UNSHIELD_SENT", label: "Withdrawing privately" },
+  { status: "BRIDGING_OUT", label: "Circle CCTP burn → destination mint" },
+];
+
+function progressFor(provider?: "railgun" | "arc") {
+  return provider === "arc" ? ARC_PROGRESS : RAILGUN_PROGRESS;
+}
 
 function formatEta(seconds: number): string {
   if (seconds < 120) return `~${Math.max(1, Math.round(seconds))} sec`;
   return `~${Math.max(1, Math.round(seconds / 60))} min`;
 }
 
-function stageLabel(stage?: string): string {
+function stageLabel(stage?: string, provider?: "railgun" | "arc"): string {
   if (!stage || stage === "AWAITING_DEPOSIT") return "Awaiting deposit";
   if (stage === "COMPLETED") return "Completed";
   if (stage === "FAILED") return "Failed";
-  return PROGRESS.find((p) => p.status === stage)?.label ?? "Routing privately";
+  return progressFor(provider).find((p) => p.status === stage)?.label ?? "Routing privately";
 }
 
 /**
@@ -225,21 +236,22 @@ export function BridgeFlow() {
   const [scanOpen, setScanOpen] = useState(false);
   const [picker, setPicker] = useState<"from" | "to" | null>(null);
   const [depositMode, setDepositMode] = useState<"address" | "wallet">("address");
-
   const [quote, setQuote] = useState<TeeQuote | null>(null);
+  const [railgunQuote, setRailgunQuote] = useState<TeeQuote | null>(null);
+  const [arcQuote, setArcQuote] = useState<TeeQuote | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const reqIdRef = useRef(0);
 
   const fromChainId =
-    fromChainSel ??
+    (fromChainSel != null && chains.some((c) => c.chainId === fromChainSel) ? fromChainSel : null) ??
     (chains.length
       ? chains.some((c) => c.chainId === DEFAULT_FROM_CHAIN)
         ? DEFAULT_FROM_CHAIN
         : chains[0].chainId
       : null);
   const toChainId =
-    toChainSel ??
+    (toChainSel != null && chains.some((c) => c.chainId === toChainSel) ? toChainSel : null) ??
     (chains.length
       ? chains.find((c) => c.chainId === DEFAULT_TO_CHAIN)?.chainId ??
         chains.find((c) => c.chainId !== fromChainId)?.chainId ??
@@ -280,11 +292,37 @@ export function BridgeFlow() {
       // dialog never reshapes while it's just re-pricing.
       if (!silent) setQuoteLoading(true);
       setQuoteError(null);
-      tee
-        .quote(i)
-        .then((q) => {
+      Promise.allSettled([
+        tee.quote({ ...i, privacyProvider: "railgun" }),
+        tee.quote({ ...i, privacyProvider: "arc" }),
+      ])
+        .then(([railgunResult, arcResult]) => {
           if (id !== reqIdRef.current) return;
-          setQuote(q);
+          const nextRailgun = railgunResult.status === "fulfilled" ? railgunResult.value : null;
+          const nextArc = arcResult.status === "fulfilled" ? arcResult.value : null;
+          if (!nextRailgun && !nextArc) {
+            if (!silent) {
+              setQuote(null);
+              setRailgunQuote(null);
+              setArcQuote(null);
+              const reason =
+                railgunResult.status === "rejected"
+                  ? railgunResult.reason
+                  : arcResult.status === "rejected"
+                    ? arcResult.reason
+                    : null;
+              setQuoteError(reason instanceof Error ? reason.message : "No private route is available");
+            }
+            setQuoteLoading(false);
+            return;
+          }
+          setRailgunQuote(nextRailgun);
+          setArcQuote(nextArc);
+          setQuote((current) =>
+            current?.privacyProvider === "arc"
+              ? (nextArc ?? nextRailgun)
+              : (nextRailgun ?? nextArc),
+          );
           setQuoteLoading(false);
         })
         .catch((e: Error) => {
@@ -308,7 +346,11 @@ export function BridgeFlow() {
       queueMicrotask(() => {
         if (id !== reqIdRef.current) return;
         setQuoteLoading(false);
-        if (!canQuote) setQuote(null);
+        if (!canQuote) {
+          setQuote(null);
+          setRailgunQuote(null);
+          setArcQuote(null);
+        }
       });
       return;
     }
@@ -324,9 +366,11 @@ export function BridgeFlow() {
   const quotedOut = quote ? fromSmallestUnit(quote.quotedOutputAmount, quote.destDecimals) : 0;
   const sendUsd = quote?.amountInUsd ?? null;
   const receiveUsd = quote?.quotedOutputUsd ?? null;
-  // The private hop is implemented by Railgun. Keep the product-facing route
-  // name stable even if the backend returns a chain-qualified pool label.
-  const pool = "Railgun";
+  const pool = quote?.privacyProvider === "arc" ? "Erebuz Privacy Pool" : "Railgun";
+  const availableQuotes = useMemo(
+    () => [railgunQuote, arcQuote].filter((candidate): candidate is TeeQuote => candidate !== null),
+    [railgunQuote, arcQuote],
+  );
 
   const chainChips: ChainChip[] = useMemo(
     () => chains.map((c) => ({ id: String(c.chainId), label: c.displayName, icon: <ChainGlyph chainId={c.chainId} label={c.displayName} logoUrl={c.logoUrl} size={24} /> })),
@@ -348,6 +392,8 @@ export function BridgeFlow() {
     setAmount("");
     setRecipientAddr("");
     setQuote(null);
+    setRailgunQuote(null);
+    setArcQuote(null);
     setQuoteError(null);
     setCreateError(null);
     setCreating(false);
@@ -366,6 +412,7 @@ export function BridgeFlow() {
         amount,
         tokenSymbol: fromToken.symbol,
         destTokenSymbol: toToken.symbol,
+        privacyProvider: quote.privacyProvider,
         userDestinationAddress: recipient.address,
       });
       const entry: Activity = {
@@ -380,7 +427,7 @@ export function BridgeFlow() {
         receiveAmount: fromSmallestUnit(quote.quotedOutputAmount, quote.destDecimals),
         feeUsd: quote.feeUsd ?? 0,
         status: "pending",
-        route: [fromChain.displayName, "Railgun", toChain.displayName],
+        route: quote.route,
         live: {
           fromChainId: fromChain.chainId,
           fromChainName: fromChain.displayName,
@@ -395,6 +442,7 @@ export function BridgeFlow() {
           routeId: created.routeId,
           stage: created.status ?? "AWAITING_DEPOSIT",
           depositAddress: created.depositAddress,
+          privacyProvider: created.privacyProvider,
           etaSeconds: quote.etaSeconds,
         },
       };
@@ -425,6 +473,7 @@ export function BridgeFlow() {
   );
   const stage = activeRecord?.live?.stage ?? "AWAITING_DEPOSIT";
   const showStatus = !!activeRouteId && !!activeRecord;
+  const activeProgress = progressFor(activeRecord?.live?.privacyProvider);
 
   // Reflect the viewed transfer in the URL (shareable /tx/<id>); a refresh then
   // loads the real /tx page. We only rewrite the bar (replaceState) so the live
@@ -611,10 +660,16 @@ export function BridgeFlow() {
               <div className="p-4 sm:p-6">
                 <header className="mb-5 flex items-center gap-3">
                   <span className="flex size-11 items-center justify-center overflow-hidden rounded-full ring-1 ring-emerald-500/20 ring-inset">
-                    <SymbolGlyph symbol="RAIL" size={44} className="size-full" />
+                    {quote.privacyProvider === "arc" ? (
+                      <ShieldCheck className="text-brand size-6" />
+                    ) : (
+                      <SymbolGlyph symbol="RAIL" size={44} className="size-full" />
+                    )}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-foreground/40 text-xs font-medium">Via</p>
+                    <p className="text-foreground/40 text-xs font-medium">
+                      {quote.privacyProvider === "arc" ? "Circle CCTP · Private via" : "Via"}
+                    </p>
                     <h2 className="text-foreground truncate text-lg font-semibold">{pool}</h2>
                   </div>
                   <button
@@ -736,7 +791,7 @@ export function BridgeFlow() {
                             <span className="block truncate text-sm font-medium">{a.toLabel}</span>
                             <span className="text-brand flex items-center gap-1.5 text-xs">
                               <Loader2 className="size-3 animate-spin" />
-                              {stageLabel(a.live?.stage)}
+                              {stageLabel(a.live?.stage, a.live?.privacyProvider)}
                             </span>
                           </span>
                           <ChevronRight className="text-muted-foreground size-4 shrink-0" />
@@ -862,15 +917,15 @@ export function BridgeFlow() {
                 </div>
                 <div className="flex flex-col items-center text-center">
                   <Loader2 className="text-brand size-10 animate-spin" />
-                  <p className="mt-4 text-base font-medium">{stageLabel(stage)}</p>
+                  <p className="mt-4 text-base font-medium">{stageLabel(stage, activeRecord.live.privacyProvider)}</p>
                   <RoutingStatus
                     etaSeconds={activeRecord.live.etaSeconds}
                     startedAt={activeRecord.live.startedAt ?? new Date(activeRecord.date).getTime()}
                   />
                 </div>
                 <ol className="border-border divide-border divide-y rounded-2xl border">
-                  {PROGRESS.map((p, i) => {
-                    const idx = PROGRESS.findIndex((x) => x.status === stage);
+                  {activeProgress.map((p, i) => {
+                    const idx = activeProgress.findIndex((x) => x.status === stage);
                     const done = idx > i;
                     const active = idx === i;
                     return (
@@ -954,73 +1009,87 @@ export function BridgeFlow() {
         </AnimatePresence>
       </motion.div>
 
-      {viewKey === "form" && quote && fromToken && toToken && toChain ? (
-        <button
-          type="button"
-          onClick={() => {
-            setRouteNeedsRecipient(!recipient);
-            setView("route");
-          }}
-          className={cn(
-            glassSurfaceVariants({ tone: "ink", depth: "floating", blur: "sm" }),
-            "text-foreground w-full cursor-pointer rounded-[2rem] p-4 text-left ring-1 ring-brand/35 shadow-lg shadow-brand/10 [-webkit-tap-highlight-color:transparent] transition-shadow hover:shadow-brand/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 sm:p-6",
-          )}
-        >
-          <div className="flex items-center justify-between gap-3">
-            <span className="bg-foreground/[0.055] text-foreground/75 inline-flex min-w-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold">
-              <ShieldCheck className="text-brand size-3.5 shrink-0" />
-              <span className="truncate">Route found · {pool}</span>
-            </span>
-            <span className="bg-foreground/[0.045] text-foreground/60 flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold tabular-nums">
-              {formatEta(quote.etaSeconds)} <Clock className="size-3.5" />
-            </span>
-          </div>
-
-          <div className="mt-4 flex items-center gap-4 sm:mt-8">
-            <AssetGlyph
-              symbol={toToken.symbol}
-              tokenLogo={toToken.logoUrl}
-              chainId={toChain.chainId}
-              chainLabel={toChain.displayName}
-              chainLogo={toChain.logoUrl}
-              size={52}
-            />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-2xl font-semibold tracking-tight tabular-nums">
-                {formatAmount(quotedOut, quote.destSymbol)}
-              </p>
-              <p className="text-foreground/38 mt-1 text-sm">
-                {receiveUsd != null ? formatUsd(receiveUsd) : `on ${toChain.displayName}`}
-              </p>
-            </div>
-            <span className="relative flex size-10 shrink-0 items-center justify-center">
-              {reduce ? null : (
-                <motion.span
-                  aria-hidden
-                  className="bg-brand/40 absolute inset-0 rounded-full"
-                  animate={{ scale: [1, 1.7], opacity: [0.55, 0] }}
-                  transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
-                />
-              )}
-              <motion.span
-                className="bg-brand text-background relative flex size-10 items-center justify-center rounded-full shadow-lg shadow-brand/30"
-                animate={reduce ? undefined : { scale: [1, 1.12, 1] }}
-                transition={reduce ? undefined : { duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+      {viewKey === "form" && availableQuotes.length > 0 && fromToken && toToken && toChain ? (
+        <div className="w-full space-y-3" aria-label="Available private routes">
+          {availableQuotes.map((candidate) => {
+            const candidatePool = candidate.privacyProvider === "arc" ? "Erebuz Privacy Pool" : "Railgun";
+            const candidateOut = fromSmallestUnit(candidate.quotedOutputAmount, candidate.destDecimals);
+            return (
+              <button
+                key={candidate.privacyProvider}
+                type="button"
+                onClick={() => {
+                  setQuote(candidate);
+                  setRouteNeedsRecipient(!recipient);
+                  setView("route");
+                }}
+                className={cn(
+                  glassSurfaceVariants({ tone: "ink", depth: "floating", blur: "sm" }),
+                  "text-foreground w-full cursor-pointer rounded-[2rem] p-4 text-left ring-1 ring-brand/35 shadow-lg shadow-brand/10 [-webkit-tap-highlight-color:transparent] transition-shadow hover:shadow-brand/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 sm:p-6",
+                )}
               >
-                <ChevronRight className="size-5" />
-              </motion.span>
-            </span>
-          </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="bg-foreground/[0.055] text-foreground/75 inline-flex min-w-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold">
+                    <ShieldCheck className="text-brand size-3.5 shrink-0" />
+                    <span className="truncate">Route found · {candidatePool}</span>
+                  </span>
+                  <span className="bg-foreground/[0.045] text-foreground/60 flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold tabular-nums">
+                    {formatEta(candidate.etaSeconds)} <Clock className="size-3.5" />
+                  </span>
+                </div>
 
-          <div className="mt-4 flex items-center justify-between gap-4 text-xs font-semibold sm:mt-8">
-            <span className="bg-foreground/[0.045] text-foreground/60 rounded-full px-3 py-1.5">
-              Private route
-            </span>
-            <span className="text-foreground/38 tabular-nums">
-              {quote.feeUsd != null && quote.feeUsd > 0 ? `${formatUsd(quote.feeUsd)} fees` : "No extra fees"}
-            </span>
-          </div>
-        </button>
+                <div className="mt-4 flex items-center gap-4 sm:mt-8">
+                  <AssetGlyph
+                    symbol={toToken.symbol}
+                    tokenLogo={toToken.logoUrl}
+                    chainId={toChain.chainId}
+                    chainLabel={toChain.displayName}
+                    chainLogo={toChain.logoUrl}
+                    size={52}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-2xl font-semibold tracking-tight tabular-nums">
+                      {formatAmount(candidateOut, candidate.destSymbol)}
+                    </p>
+                    <p className="text-foreground/38 mt-1 text-sm">
+                      {candidate.quotedOutputUsd != null
+                        ? formatUsd(candidate.quotedOutputUsd)
+                        : `on ${toChain.displayName}`}
+                    </p>
+                  </div>
+                  <span className="relative flex size-10 shrink-0 items-center justify-center">
+                    {reduce ? null : (
+                      <motion.span
+                        aria-hidden
+                        className="bg-brand/40 absolute inset-0 rounded-full"
+                        animate={{ scale: [1, 1.7], opacity: [0.55, 0] }}
+                        transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
+                      />
+                    )}
+                    <motion.span
+                      className="bg-brand text-background relative flex size-10 items-center justify-center rounded-full shadow-lg shadow-brand/30"
+                      animate={reduce ? undefined : { scale: [1, 1.12, 1] }}
+                      transition={reduce ? undefined : { duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <ChevronRight className="size-5" />
+                    </motion.span>
+                  </span>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between gap-4 text-xs font-semibold sm:mt-8">
+                  <span className="bg-foreground/[0.045] text-foreground/60 rounded-full px-3 py-1.5">
+                    {candidate.privacyProvider === "arc" ? "Circle CCTP · Arc" : "Existing private route"}
+                  </span>
+                  <span className="text-foreground/38 tabular-nums">
+                    {candidate.feeUsd != null && candidate.feeUsd > 0
+                      ? `${formatUsd(candidate.feeUsd)} fees`
+                      : "No extra fees"}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       ) : viewKey === "form" && quoteLoading && amountNum > 0 ? (
         <div className="border-foreground/[0.08] bg-background/20 text-foreground/45 flex size-11 items-center justify-center rounded-full border backdrop-blur-sm">
           <Loader2 className="size-4 animate-spin" />

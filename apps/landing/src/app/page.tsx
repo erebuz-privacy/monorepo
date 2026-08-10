@@ -8,11 +8,10 @@ import { Comparison } from "@/components/Comparison";
 import { Faq } from "@/components/Faq";
 import { Cta } from "@/components/Cta";
 import { SiteFooter } from "@/components/SiteFooter";
-import { VideoGate } from "@/components/VideoGate";
 
 export default function Home() {
   return (
-    <VideoGate>
+    <>
       <Nav />
       <div className="mx-auto max-w-[1400px] border-x border-white/10">
         <main>
@@ -27,6 +26,6 @@ export default function Home() {
         </main>
         <SiteFooter />
       </div>
-    </VideoGate>
+    </>
   );
 }

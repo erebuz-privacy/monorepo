@@ -23,12 +23,19 @@ const CARD = cn(
 import { useChains } from "@/lib/tee-data";
 import { fromSmallestUnit, tee, type RouteRecord } from "@/lib/tee";
 
-const PROGRESS: { status: string; label: string }[] = [
+const RAILGUN_PROGRESS: { status: string; label: string }[] = [
   { status: "BRIDGING_IN", label: "Bridging to the privacy hub" },
   { status: "RECEIVED_ON_HUB", label: "Shielding your funds" },
   { status: "SHIELDED", label: "Preparing the private payout" },
   { status: "UNSHIELD_SENT", label: "Sending to the recipient" },
   { status: "BRIDGING_OUT", label: "Finalizing on the destination chain" },
+];
+const ARC_PROGRESS: { status: string; label: string }[] = [
+  { status: "BRIDGING_IN", label: "Circle CCTP burn → mint on Arc" },
+  { status: "RECEIVED_ON_HUB", label: "Depositing into the Erebuz pool" },
+  { status: "POOL_DEPOSITED", label: "Waiting for pool approval" },
+  { status: "UNSHIELD_SENT", label: "Withdrawing privately" },
+  { status: "BRIDGING_OUT", label: "Circle CCTP burn → destination mint" },
 ];
 const TERMINAL = new Set(["COMPLETED", "FAILED"]);
 
@@ -149,7 +156,8 @@ export function TxView({ id }: { id: string }) {
   const isAwaiting = status === "AWAITING_DEPOSIT";
   const isDone = status === "COMPLETED";
   const isFailed = status === "FAILED";
-  const activeIdx = PROGRESS.findIndex((p) => p.status === status);
+  const progress = record.privacyProvider === "arc" ? ARC_PROGRESS : RAILGUN_PROGRESS;
+  const activeIdx = progress.findIndex((p) => p.status === status);
   const deposit = record.leg1DepositAddress ?? record.depositAddress ?? null;
 
   // Elapsed from the server createdAt — but a private route settles in minutes, so
@@ -268,7 +276,7 @@ export function TxView({ id }: { id: string }) {
         <div className={cn(CARD, "p-5 sm:p-6")}>
           <div className="flex flex-col items-center text-center">
             <Loader2 className="text-brand size-9 animate-spin" />
-            <p className="mt-3 text-base font-medium">{PROGRESS[activeIdx]?.label ?? "Routing privately"}</p>
+            <p className="mt-3 text-base font-medium">{progress[activeIdx]?.label ?? "Routing privately"}</p>
             <div className="mt-3 flex justify-center">
               <span className="bg-foreground/[0.06] text-foreground/85 ring-foreground/[0.08] inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold tabular-nums ring-1 ring-inset">
                 <Clock className="size-3.5" /> {mm}:{ss.toString().padStart(2, "0")}
@@ -277,7 +285,7 @@ export function TxView({ id }: { id: string }) {
             </div>
           </div>
           <ol className="border-foreground/[0.1] divide-foreground/[0.08] mt-5 divide-y rounded-2xl border">
-            {PROGRESS.map((p, i) => {
+            {progress.map((p, i) => {
               const done = activeIdx > i;
               const active = activeIdx === i;
               return (

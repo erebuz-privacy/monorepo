@@ -8,9 +8,14 @@ import { logger } from '../../managers/log';
 import { PrivateRouteModel, type PrivateRoute } from '../../database/models/private-route';
 import { getRelayChains, getRelayDepositAddress, getRelayQuote, RELAY_NATIVE } from '../relay';
 import { deriveHubAddress, isAaReady } from '../aa';
-import { cctpSupportsChain, cctpUsdc } from '../cctp';
-import { BRIDGE_PROVIDER, PRIVACY_HUB_CHAIN_ID } from '../../config/global-config';
-import { computeServiceFee, computeCctpRouteFees } from './fee';
+import { cctpSupportsChainForHub, cctpUsdc } from '../cctp';
+import {
+  ARC_PRIVACY_HUB_CHAIN_ID,
+  BRIDGE_PROVIDER,
+  DEFAULT_PRIVACY_PROVIDER,
+  PRIVACY_HUB_CHAIN_ID,
+} from '../../config/global-config';
+import { computeServiceFee, computeArcCctpRouteFees, computeCctpRouteFees } from './fee';
 import { resolveRouteTokens } from './shared';
 import type { CreatePrivateRouteInput, CreatePrivateRouteResult } from './types';
 
@@ -22,7 +27,9 @@ export async function createPrivateRoute(input: CreatePrivateRouteInput): Promis
   // Validate the recipient against the destination chain's VM. EVM chains get a
   // strict checksum check; non-EVM chains (Solana, Tron, TON, ...) just need a
   // plausible non-empty address, and Relay validates the exact format on leg-2.
-  const cctp = BRIDGE_PROVIDER === 'cctp';
+  const privacyProvider = input.privacyProvider ?? DEFAULT_PRIVACY_PROVIDER;
+  if (privacyProvider !== 'railgun' && privacyProvider !== 'arc') throw new Error('Invalid privacyProvider');
+  const cctp = BRIDGE_PROVIDER === 'cctp' || privacyProvider === 'arc';
   // Recipient validation. CCTP is EVM-only; Relay may target non-EVM chains.
   const destChain = cctp ? undefined : (await getRelayChains()).find((c) => c.chainId === input.destChainId);
   const destIsEvm = cctp || !destChain || (destChain.vmType ?? 'evm') === 'evm';
@@ -32,7 +39,7 @@ export async function createPrivateRoute(input: CreatePrivateRouteInput): Promis
   const storedRecipient = destIsEvm ? getAddress(recipient) : recipient;
 
   const routeId = newRouteId();
-  if (cctp) return createCctpRoute(input, routeId, storedRecipient);
+  if (cctp) return createCctpRoute(input, routeId, storedRecipient, privacyProvider);
 
   // ---- Relay path (any token, liquidity-based bridge) ----
   // Source is bridged/swapped into the canonical hub token, shielded, then
@@ -96,6 +103,7 @@ export async function createPrivateRoute(input: CreatePrivateRouteInput): Promis
     sourceChainId: input.sourceChainId,
     destChainId: input.destChainId,
     hubChainId,
+    privacyProvider,
     tokenSymbol: hubSymbol, // the shielded hub token (matches tokenAddress)
     tokenAddress: hub.address,
     destTokenSymbol: destSymbol,
@@ -126,6 +134,7 @@ export async function createPrivateRoute(input: CreatePrivateRouteInput): Promis
     amount: amount.toString(),
     feeAmount: fee.toString(),
     quotedOutputAmount: quotedOutput.toString(),
+    privacyProvider,
   };
 }
 
@@ -139,11 +148,20 @@ export async function createPrivateRoute(input: CreatePrivateRouteInput): Promis
 async function createCctpRoute(
   input: CreatePrivateRouteInput,
   routeId: string,
-  storedRecipient: string
+  storedRecipient: string,
+  privacyProvider: 'railgun' | 'arc'
 ): Promise<CreatePrivateRouteResult> {
-  const hubChainId = PRIVACY_HUB_CHAIN_ID;
-  for (const cid of [input.sourceChainId, hubChainId, input.destChainId]) {
-    if (!cctpSupportsChain(cid)) throw new Error(`CCTP: unsupported chain ${cid}`);
+  if (
+    (input.tokenSymbol ?? 'USDC').toUpperCase() !== 'USDC' ||
+    (input.destTokenSymbol ?? 'USDC').toUpperCase() !== 'USDC'
+  ) {
+    throw new Error('Invalid token: CCTP privacy routes currently support USDC only');
+  }
+  const hubChainId = privacyProvider === 'arc' ? ARC_PRIVACY_HUB_CHAIN_ID : PRIVACY_HUB_CHAIN_ID;
+  for (const cid of [input.sourceChainId, input.destChainId]) {
+    if (!cctpSupportsChainForHub(cid, hubChainId)) {
+      throw new Error(`CCTP: chain ${cid} is unsupported for hub ${hubChainId}`);
+    }
   }
   const amount = parseUnits(input.amount, 6); // USDC has 6 decimals
 
@@ -157,7 +175,10 @@ async function createCctpRoute(
   // service fee (margin); the monitor unshields `amount − feeAmount` and delivers
   // the remainder (see the SHIELDED step), which nets to `quotedOutput`.
   const outputUsd = Number(amount) / 1e6;
-  const { serviceFee: fee, quotedOutput } = computeCctpRouteFees(amount, outputUsd);
+  const { serviceFee: fee, quotedOutput } =
+    privacyProvider === 'arc'
+      ? computeArcCctpRouteFees(amount, outputUsd)
+      : computeCctpRouteFees(amount, outputUsd);
 
   logger.info(
     `Creating CCTP route ${routeId}: ${input.amount} USDC ${input.sourceChainId} -> ${input.destChainId} via hub ${hubChainId}`,
@@ -170,6 +191,7 @@ async function createCctpRoute(
     sourceChainId: input.sourceChainId,
     destChainId: input.destChainId,
     hubChainId,
+    privacyProvider,
     tokenSymbol: 'USDC',
     tokenAddress: cctpUsdc(hubChainId),
     destTokenSymbol: 'USDC',
@@ -199,6 +221,7 @@ async function createCctpRoute(
     amount: amount.toString(),
     feeAmount: fee.toString(),
     quotedOutputAmount: quotedOutput.toString(),
+    privacyProvider,
   };
 }
 

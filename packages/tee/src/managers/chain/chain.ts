@@ -145,7 +145,10 @@ export class Chain {
     this.id = config.id;
     this.address = config.address;
     this.name = config.name;
-    this.url = config.url;
+    this.url =
+      process.env[`RAILGUN_RPC_${config.id}`] ||
+      process.env[`RPC_${config.id}`] ||
+      config.url;
     this.tokens = config.tokens;
     this.modules = config.modules;
     this.contracts = config.contracts ?? [];
@@ -321,4 +324,3 @@ export class Chain {
     logger.debug(`Cleared cache for chain ${this.name}`, 'Chain');
   }
 }
-

@@ -25,6 +25,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@0xbow/privacy-pools-core-sdk": "1.1.1",
     "@fluidkey/stealth-account-kit": "^1.1.0",
     "@hono/node-server": "^2.0.8",
     "@railgun-community/shared-models": "8.0.1",
@@ -36,6 +37,7 @@
     "itty-router": "4.2.2",
     "level": "^10.0.0",
     "leveldown": "^6.1.1",
+    "maci-crypto": "2.5.0",
     "snarkjs": "^0.7.6",
     "tsx": "^4.23.0",
     "viem": "^2.38.6"

@@ -56,6 +56,13 @@ export function cctpSupportsChain(chainId: number): boolean {
   return chainId in CCTP_CHAINS;
 }
 
+/** True when a chain belongs to the same Circle environment as the selected hub. */
+export function cctpSupportsChainForHub(chainId: number, hubChainId = PRIVACY_HUB_CHAIN_ID): boolean {
+  const chain = CCTP_CHAINS[chainId];
+  const hub = CCTP_CHAINS[hubChainId];
+  return Boolean(chain && hub && chain.testnet === hub.testnet);
+}
+
 export function cctpDomain(chainId: number): number {
   const c = CCTP_CHAINS[chainId];
   if (!c) throw new Error(`CCTP: unsupported chain ${chainId}`);
@@ -81,8 +88,10 @@ function cctpFinality(sourceChainId: number): number {
  * Chains available in CCTP mode, as the app's chain-picker list expects. Filtered
  * to the privacy hub's network class (a testnet hub only offers testnet chains).
  */
-export function cctpChains(): Array<{ chainId: number; name: string; displayName: string; vmType: string }> {
-  const hubIsTestnet = CCTP_CHAINS[PRIVACY_HUB_CHAIN_ID]?.testnet ?? true;
+export function cctpChains(
+  hubChainId = PRIVACY_HUB_CHAIN_ID
+): Array<{ chainId: number; name: string; displayName: string; vmType: string }> {
+  const hubIsTestnet = CCTP_CHAINS[hubChainId]?.testnet ?? true;
   return Object.entries(CCTP_CHAINS)
     .filter(([, info]) => info.testnet === hubIsTestnet)
     .map(([id, info]) => ({ chainId: Number(id), name: info.name, displayName: info.name, vmType: 'evm' }));

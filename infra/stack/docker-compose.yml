@@ -78,6 +78,7 @@ services:
       # Reach the POI node over the internal compose network.
       RAILGUN_POI_NODE_URL: http://poi-node:8080
       PRIVATE_KEY: ${PRIVATE_KEY:?Set PRIVATE_KEY in .env (funded Arbitrum signer)}
+      ROUTE_ENCRYPTION_KEY: ${ROUTE_ENCRYPTION_KEY:?Set ROUTE_ENCRYPTION_KEY in .env}
       RAILGUN_MNEMONIC: ${RAILGUN_MNEMONIC:?Set RAILGUN_MNEMONIC in .env}
       RAILGUN_ENCRYPTION_KEY: ${RAILGUN_ENCRYPTION_KEY:?Set RAILGUN_ENCRYPTION_KEY in .env}
       RELAY_API_URL: ${RELAY_API_URL:-https://api.relay.link}
@@ -89,6 +90,10 @@ services:
       ETH_MAINNET_RPC_URL: ${ETH_MAINNET_RPC_URL:-}
       PRIVACY_HUB_CHAIN_ID: ${PRIVACY_HUB_CHAIN_ID:-42161}
       PRIVACY_HUB_TOKEN_SYMBOL: ${PRIVACY_HUB_TOKEN_SYMBOL:-USDC}
+      DEFAULT_PRIVACY_PROVIDER: ${DEFAULT_PRIVACY_PROVIDER:-railgun}
+      BRIDGE_PROVIDER: ${BRIDGE_PROVIDER:-relay}
+      ARC_PRIVACY_ASP_URL: ${ARC_PRIVACY_ASP_URL:-http://asp:8787}
+      ARC_PRIVACY_ARTIFACTS_URL: ${ARC_PRIVACY_ARTIFACTS_URL:-}
       # RPC for the Railgun hub chain (required for the privacy leg). Set the one
       # matching PRIVACY_HUB_CHAIN_ID: 42161 for prod (Arbitrum), 11155111 for the
       # Sepolia test hub. Use your own (Alchemy/Infura) for reliability.
@@ -105,6 +110,78 @@ services:
     ports:
       - "${TEE_BIND:-127.0.0.1}:${TEE_HOST_PORT:-3000}:3000"
 
+  asp:
+    image: erebuz-arc-asp:testnet
+    build:
+      context: ${ARC_ASP_BUILD_CONTEXT:-../../../privacy-pool-arc}
+      dockerfile: packages/asp/Dockerfile
+    restart: unless-stopped
+    init: true
+    read_only: true
+    environment:
+      NODE_ENV: production
+      ARC_TESTNET_RPC: ${ARC_TESTNET_RPC:-https://rpc.drpc.testnet.arc.network}
+      ASP_HOST: 0.0.0.0
+      ASP_PORT: "8787"
+      ASP_SYNC_CONFIRMATIONS: ${ASP_SYNC_CONFIRMATIONS:-2}
+      ASP_RELOAD_INTERVAL_MS: ${ASP_RELOAD_INTERVAL_MS:-5000}
+      ASP_IPFS_API_URL: ${ASP_IPFS_API_URL:-https://rpc.filebase.io}
+      ASP_IPFS_BEARER_TOKEN: ${ASP_IPFS_BEARER_TOKEN:?Set ASP_IPFS_BEARER_TOKEN in .env}
+      ASP_IPFS_GATEWAY_URL: ${ASP_IPFS_GATEWAY_URL:-https://ipfs.filebase.io}
+    ports:
+      - "${ASP_BIND:-127.0.0.1}:${ASP_HOST_PORT:-8787}:8787"
+    volumes:
+      - asp-data:/srv/privacy-pools/packages/asp/data/arc-testnet
+      - asp-policy:/srv/privacy-pools/packages/asp/config
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+
+  asp-operator:
+    image: erebuz-arc-asp:testnet
+    restart: unless-stopped
+    init: true
+    read_only: true
+    depends_on:
+      asp:
+        condition: service_healthy
+      tee:
+        condition: service_started
+    command: ["node", "src/operator.mjs"]
+    healthcheck:
+      disable: true
+    environment:
+      NODE_ENV: production
+      ARC_TESTNET_RPC: ${ARC_TESTNET_RPC:-https://rpc.drpc.testnet.arc.network}
+      WALL8_DATABASE_PATH: /wall8/tee.sqlite
+      ASP_POSTMAN_PRIVATE_KEY: ${ASP_POSTMAN_PRIVATE_KEY:?Set ASP_POSTMAN_PRIVATE_KEY in .env}
+      ASP_OPERATOR_TESTNET_ONLY: "true"
+      ASP_OPERATOR_INTERVAL_MS: ${ASP_OPERATOR_INTERVAL_MS:-15000}
+      ASP_IPFS_API_URL: ${ASP_IPFS_API_URL:-https://rpc.filebase.io}
+      ASP_IPFS_BEARER_TOKEN: ${ASP_IPFS_BEARER_TOKEN:?Set ASP_IPFS_BEARER_TOKEN in .env}
+      ASP_IPFS_GATEWAY_URL: ${ASP_IPFS_GATEWAY_URL:-https://ipfs.filebase.io}
+    volumes:
+      - asp-data:/srv/privacy-pools/packages/asp/data/arc-testnet
+      - asp-policy:/srv/privacy-pools/packages/asp/config
+      - tee-data:/wall8:ro
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
 volumes:
   poi-mongo-data:
   tee-data:
+  asp-data:
+  asp-policy:

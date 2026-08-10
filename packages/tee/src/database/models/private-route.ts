@@ -14,6 +14,7 @@ export type PrivateRouteStatus =
   | 'BRIDGING_IN' // Relay leg-1 in flight (Base -> hub SA)
   | 'RECEIVED_ON_HUB' // funds arrived at the hub smart account
   | 'SHIELDED' // funds shielded into Railgun
+  | 'POOL_DEPOSITED' // funds deposited into the Arc Privacy Pool; waiting for ASP approval
   | 'UNSHIELD_SENT' // unshield tx sent to the leg-2 deposit address
   | 'BRIDGING_OUT' // Relay leg-2 in flight (hub -> destination)
   | 'COMPLETED' // funds delivered on destination chain
@@ -27,6 +28,9 @@ export type PrivateRoute = {
   sourceChainId: number;
   destChainId: number;
   hubChainId: number;
+  privacyProvider: 'railgun' | 'arc';
+  /** Provider-private note material, encrypted at rest. Never returned by the API. */
+  privacyPayload: string | null;
   tokenSymbol: string; // source token symbol (also shielded on the hub)
   tokenAddress: string; // source token address on the hub chain
   destTokenSymbol: string; // destination token symbol delivered to the user
@@ -53,6 +57,8 @@ type PrivateRouteRow = {
   source_chain_id: number;
   dest_chain_id: number;
   hub_chain_id: number;
+  privacy_provider: string | null;
+  privacy_payload: string | null;
   token_symbol: string;
   token_address: string;
   dest_token_symbol: string | null;
@@ -92,6 +98,8 @@ function rowToPrivateRoute(row: PrivateRouteRow): PrivateRoute {
     sourceChainId: row.source_chain_id,
     destChainId: row.dest_chain_id,
     hubChainId: row.hub_chain_id,
+    privacyProvider: row.privacy_provider === 'arc' ? 'arc' : 'railgun',
+    privacyPayload: decryptField(row.privacy_payload) ?? null,
     tokenSymbol: row.token_symbol,
     tokenAddress: row.token_address,
     destTokenSymbol: row.dest_token_symbol ?? row.token_symbol,
@@ -120,6 +128,8 @@ export interface CreatePrivateRouteInput {
   sourceChainId: number;
   destChainId: number;
   hubChainId: number;
+  privacyProvider?: 'railgun' | 'arc';
+  privacyPayload?: string | null;
   tokenSymbol: string;
   tokenAddress: string;
   destTokenSymbol?: string | null;
@@ -144,6 +154,7 @@ const UPDATABLE_COLUMNS: Record<string, string> = {
   shieldTx: 'shield_tx',
   unshieldTx: 'unshield_tx',
   error: 'error',
+  privacyPayload: 'privacy_payload',
 };
 
 export class PrivateRouteModel {
@@ -151,12 +162,13 @@ export class PrivateRouteModel {
     const stmt = db.prepare(`
       INSERT INTO private_routes (
         id, status, source_chain_id, dest_chain_id, hub_chain_id,
+        privacy_provider, privacy_payload,
         token_symbol, token_address, dest_token_symbol, dest_token_address,
         amount, fee_amount, quoted_output_amount,
         user_destination_address, hub_account,
         leg1_request_id, leg1_deposit_address
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       RETURNING *
     `);
 
@@ -166,6 +178,8 @@ export class PrivateRouteModel {
       input.sourceChainId,
       input.destChainId,
       input.hubChainId,
+      input.privacyProvider ?? 'railgun',
+      encryptField(input.privacyPayload ?? null),
       input.tokenSymbol,
       input.tokenAddress,
       input.destTokenSymbol ?? input.tokenSymbol,
@@ -209,8 +223,9 @@ export class PrivateRouteModel {
     const values: (string | null)[] = [];
 
     for (const [key, column] of Object.entries(UPDATABLE_COLUMNS)) {
-      const value = (fields as Record<string, string | null | undefined>)[key];
+      let value = (fields as Record<string, string | null | undefined>)[key];
       if (value !== undefined) {
+        if (key === 'privacyPayload') value = encryptField(value) ?? null;
         setClauses.push(`${column} = ?`);
         values.push(value);
       }
@@ -239,7 +254,7 @@ export class PrivateRouteModel {
       const redacted = db
         .prepare(
           `UPDATE private_routes
-             SET user_destination_address = NULL, hub_account = NULL,
+             SET user_destination_address = '', hub_account = NULL,
                  leg1_deposit_address = NULL, leg2_deposit_address = NULL,
                  leg1_request_id = NULL, leg2_request_id = NULL,
                  shield_tx = NULL, unshield_tx = NULL

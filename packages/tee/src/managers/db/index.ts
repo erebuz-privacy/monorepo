@@ -140,6 +140,8 @@ class DbManager {
         source_chain_id INTEGER NOT NULL,
         dest_chain_id INTEGER NOT NULL,
         hub_chain_id INTEGER NOT NULL,
+        privacy_provider TEXT NOT NULL DEFAULT 'railgun',
+        privacy_payload TEXT,
         token_symbol TEXT NOT NULL DEFAULT 'USDC',
         token_address TEXT NOT NULL,
         dest_token_symbol TEXT,
@@ -240,6 +242,14 @@ class DbManager {
         if (!prColumns.includes('dest_token_address')) {
           this.database.exec(`ALTER TABLE private_routes ADD COLUMN dest_token_address TEXT;`);
           logger.info('Added dest_token_address column to private_routes', 'DbManager');
+        }
+        if (!prColumns.includes('privacy_provider')) {
+          this.database.exec(`ALTER TABLE private_routes ADD COLUMN privacy_provider TEXT NOT NULL DEFAULT 'railgun';`);
+          logger.info('Added privacy_provider column to private_routes', 'DbManager');
+        }
+        if (!prColumns.includes('privacy_payload')) {
+          this.database.exec(`ALTER TABLE private_routes ADD COLUMN privacy_payload TEXT;`);
+          logger.info('Added privacy_payload column to private_routes', 'DbManager');
         }
       }
     } catch (error) {

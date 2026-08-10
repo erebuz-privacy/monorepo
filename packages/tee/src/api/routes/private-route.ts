@@ -32,6 +32,7 @@ export async function handleQuotePrivateRoute(request: Request): Promise<Respons
       amount?: string;
       tokenSymbol?: string;
       destTokenSymbol?: string;
+      privacyProvider?: 'railgun' | 'arc';
     };
 
     if (typeof body.sourceChainId !== 'number' || typeof body.destChainId !== 'number') {
@@ -47,6 +48,7 @@ export async function handleQuotePrivateRoute(request: Request): Promise<Respons
       amount: body.amount,
       tokenSymbol: body.tokenSymbol,
       destTokenSymbol: body.destTokenSymbol,
+      privacyProvider: body.privacyProvider,
     });
 
     return jsonResponse({ success: true, data: result });
@@ -68,6 +70,7 @@ export async function handleCreatePrivateRoute(request: Request): Promise<Respon
       userDestinationAddress?: string;
       tokenSymbol?: string;
       destTokenSymbol?: string;
+      privacyProvider?: 'railgun' | 'arc';
     };
 
     if (typeof body.sourceChainId !== 'number' || typeof body.destChainId !== 'number') {
@@ -87,6 +90,7 @@ export async function handleCreatePrivateRoute(request: Request): Promise<Respon
       userDestinationAddress: body.userDestinationAddress,
       tokenSymbol: body.tokenSymbol,
       destTokenSymbol: body.destTokenSymbol,
+      privacyProvider: body.privacyProvider,
     });
 
     return jsonResponse({ success: true, data: result });
@@ -110,7 +114,10 @@ export async function handleGetPrivateRoute(request: Request): Promise<Response>
       throw new Error('Route not found');
     }
 
-    return jsonResponse({ success: true, data: route });
+    // Pool nullifiers/secrets are operator-private and must never cross the API.
+    const publicRoute: Partial<typeof route> = { ...route };
+    delete publicRoute.privacyPayload;
+    return jsonResponse({ success: true, data: publicRoute });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to get private route';
     return jsonResponse({ success: false, error: message }, statusForError(message));

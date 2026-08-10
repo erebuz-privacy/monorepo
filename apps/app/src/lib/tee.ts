@@ -51,6 +51,7 @@ export type TeeToken = {
 // ---- Quote / route ----------------------------------------------------------
 
 export type TeeQuote = {
+  privacyProvider: "railgun" | "arc";
   /** Source token (sent). */
   symbol: string;
   decimals: number;
@@ -88,6 +89,7 @@ export type QuoteInput = {
   tokenSymbol?: string;
   /** Destination token symbol; defaults to the source symbol (same-asset route). */
   destTokenSymbol?: string;
+  privacyProvider?: "railgun" | "arc";
 };
 
 export type CreateRouteInput = QuoteInput & { userDestinationAddress: string };
@@ -107,6 +109,7 @@ export type CreatedRoute = {
   amount: string;
   feeAmount: string;
   quotedOutputAmount: string;
+  privacyProvider: "railgun" | "arc";
 };
 
 /** Persisted route as returned by GET /api/private-route/:routeId. */
@@ -116,6 +119,7 @@ export type RouteRecord = {
   sourceChainId: number;
   destChainId: number;
   hubChainId: number;
+  privacyProvider: "railgun" | "arc";
   tokenSymbol: string;
   amount: string;
   feeAmount: string;

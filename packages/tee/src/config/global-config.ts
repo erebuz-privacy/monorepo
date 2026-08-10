@@ -70,6 +70,16 @@ export const PRIVATE_ROUTE_MONITOR_ENABLED = process.env.PRIVATE_ROUTE_MONITOR_E
 export const BRIDGE_PROVIDER = (process.env.BRIDGE_PROVIDER || 'relay').toLowerCase();
 
 /**
+ * Privacy implementation selected for new routes when the API caller does not
+ * choose one explicitly. Railgun remains the backwards-compatible default;
+ * `arc` routes through Erebuz's PrivacyPoolComplex deployment on Arc Testnet.
+ */
+export type PrivacyProvider = 'railgun' | 'arc';
+export const DEFAULT_PRIVACY_PROVIDER: PrivacyProvider =
+  process.env.DEFAULT_PRIVACY_PROVIDER?.toLowerCase() === 'arc' ? 'arc' : 'railgun';
+export const ARC_PRIVACY_HUB_CHAIN_ID = 5_042_002;
+
+/**
  * The route fee is the spread between what the user sends and the output we
  * GUARANTEE to deliver: fee = max(min-USD floor, bps of amount). It's not a
  * separate skim — it's the buffer that covers the actual costs (Railgun's 0.5%
@@ -118,4 +128,3 @@ export function buildRegistrationMessage(params: {
     zcashAddress: params.zcashAddress,
   });
 }
-

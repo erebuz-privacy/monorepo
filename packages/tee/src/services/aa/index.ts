@@ -10,11 +10,10 @@
 // it builds + signs the UserOp and submits it via EntryPoint.handleOps (no
 // third-party bundler). Gas is pluggable/degradable via a paymaster hook.
 //
-// VALIDATION STATUS: address derivation is verified against mainnet (a read).
-// The UserOp execution path (factory init, ERC-7579 batch encoding, k1Validator
-// signature/nonce, self-bundled handleOps, paymaster) is built to spec but must
-// be validated on a fork/testnet with a funded account + paymaster before a real
-// run — it cannot be exercised locally.
+// VALIDATION STATUS: address derivation is verified against mainnet. Factory
+// deployment, ERC-7579 batch encoding, k1Validator signature/nonce, and
+// self-bundled handleOps are exercised against the deployed Arc stack by the
+// optional Arc fork integration test.
 
 import { privateKeyToAccount } from 'viem/accounts';
 import {
@@ -152,12 +151,12 @@ export async function deriveHubAddress(chainId: number, routeId: string): Promis
   const factory = chain?.getNexusAccountFactory();
   if (!publicClient || !factory) throw new Error(`Chain ${chainId} missing publicClient/factory`);
   const { initData, salt } = buildInit(chainId, routeId);
-  const address = (await publicClient.readContract({
+  const address = await publicClient.readContract({
     address: factory.address as Address,
     abi: NEXUS_ACCOUNT_FACTORY_ABI,
     functionName: 'computeAccountAddress',
     args: [initData, salt],
-  })) as Address;
+  });
   const derived = getAddress(address);
   hubAddressCache.set(cacheKey, derived);
   return derived;
@@ -228,12 +227,12 @@ export async function executeBatch(chainId: number, routeId: string, calls: Call
   // and reverts ValidatorNotInstalled (AA23). So the nonce key is 0 (validator=0,
   // validation mode=0 => validate).
   const nonceKey = 0n;
-  const nonce = (await publicClient.readContract({
+  const nonce = await publicClient.readContract({
     address: entryPoint07Address,
     abi: entryPoint07Abi,
     functionName: 'getNonce',
     args: [sender, nonceKey],
-  })) as bigint;
+  });
 
   const callData = encodeExecuteBatch(calls);
   const fees = await publicClient.estimateFeesPerGas();

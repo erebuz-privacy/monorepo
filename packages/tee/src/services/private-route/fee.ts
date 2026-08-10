@@ -48,6 +48,14 @@ export interface CctpRouteFees {
   quotedOutput: bigint;
 }
 
+export interface ArcCctpRouteFees {
+  serviceFee: bigint;
+  bridgeFee: bigint;
+  poolDepositFee: bigint;
+  withdrawalAmount: bigint;
+  quotedOutput: bigint;
+}
+
 /**
  * Break an input `amount` (USDC smallest units) into the CCTP-route fee components
  * and the guaranteed net output. The state machine unshields `unshieldAmount`
@@ -65,4 +73,23 @@ export function computeCctpRouteFees(amount: bigint, amountInUsd: number | null)
   const quotedOutput = afterUnshield - bridgeFee;
   if (quotedOutput <= 0n) throw new Error('Amount too small for this route');
   return { serviceFee, privacyFee, bridgeFee, unshieldAmount, quotedOutput };
+}
+
+/**
+ * Arc Privacy Pool route economics. The 1% pool vetting fee and inbound CCTP
+ * fee are absorbed by the service spread; the user-visible output is the pool
+ * withdrawal minus the conservative destination CCTP fee.
+ */
+export function computeArcCctpRouteFees(amount: bigint, amountInUsd: number | null): ArcCctpRouteFees {
+  const serviceFee = computeServiceFee(amount, amountInUsd);
+  const withdrawalAmount = amount - serviceFee;
+  const poolDepositFee = (amount * 100n) / 10_000n;
+  const bridgeFee = (withdrawalAmount * CCTP_BRIDGE_FEE_BPS) / 10_000n;
+  const quotedOutput = withdrawalAmount - bridgeFee;
+  if (withdrawalAmount <= 0n || quotedOutput <= 0n) throw new Error('Amount too small for this route');
+  // The spread must cover the 1% vetting fee plus an inbound CCTP allowance.
+  if (serviceFee <= poolDepositFee + (amount * CCTP_BRIDGE_FEE_BPS) / 10_000n) {
+    throw new Error('Amount too small to cover the Arc privacy route costs');
+  }
+  return { serviceFee, bridgeFee, poolDepositFee, withdrawalAmount, quotedOutput };
 }

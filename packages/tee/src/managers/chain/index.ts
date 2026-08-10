@@ -59,7 +59,7 @@ class ChainManager {
       const files = await readdir(CHAIN_CONFIG_DIR);
       
       // Filter for JSON files
-      const jsonFiles = files.filter((file) => file.endsWith('.json'));
+      const jsonFiles = files.filter((file) => file.endsWith('.json') && !file.startsWith('._'));
 
       // Load and register each chain config
       for (const file of jsonFiles) {
@@ -564,4 +564,3 @@ export * from './module-encoders';
 
 // Export deployment manager
 export * from './deployment';
-

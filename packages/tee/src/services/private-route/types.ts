@@ -11,6 +11,8 @@ export interface CreatePrivateRouteInput {
   tokenSymbol?: string;
   /** Destination token symbol; defaults to the source symbol (same-asset route). */
   destTokenSymbol?: string;
+  /** Privacy pool used for this route. Defaults to Railgun. */
+  privacyProvider?: 'railgun' | 'arc';
 }
 
 export interface CreatePrivateRouteResult {
@@ -35,4 +37,5 @@ export interface CreatePrivateRouteResult {
   feeAmount: string;
   /** Output delivered to the user, in the DESTINATION token's smallest unit (gross - fee). */
   quotedOutputAmount: string;
+  privacyProvider: 'railgun' | 'arc';
 }

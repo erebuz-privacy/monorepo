@@ -9,14 +9,20 @@
 
 import { parseUnits } from 'viem';
 import { getRelayQuote, getRelayChains, chainDisplayName } from '../relay';
-import { cctpChainName } from '../cctp';
-import { BRIDGE_PROVIDER, PRIVACY_HUB_CHAIN_ID } from '../../config/global-config';
-import { computeServiceFee, computeCctpRouteFees } from './fee';
+import { cctpChainName, cctpSupportsChainForHub } from '../cctp';
+import {
+  ARC_PRIVACY_HUB_CHAIN_ID,
+  BRIDGE_PROVIDER,
+  DEFAULT_PRIVACY_PROVIDER,
+  PRIVACY_HUB_CHAIN_ID,
+} from '../../config/global-config';
+import { computeServiceFee, computeArcCctpRouteFees, computeCctpRouteFees } from './fee';
 import { resolveRouteTokens, type RouteTokensInput } from './shared';
 
 export type QuotePrivateRouteInput = RouteTokensInput;
 
 export interface QuotePrivateRouteResult {
+  privacyProvider: 'railgun' | 'arc';
   /** Source token (what the user sends). */
   symbol: string;
   decimals: number;
@@ -49,15 +55,35 @@ export interface QuotePrivateRouteResult {
 }
 
 export async function quotePrivateRoute(input: QuotePrivateRouteInput): Promise<QuotePrivateRouteResult> {
+  const privacyProvider = input.privacyProvider ?? DEFAULT_PRIVACY_PROVIDER;
+  if (privacyProvider !== 'railgun' && privacyProvider !== 'arc') throw new Error('Invalid privacyProvider');
   // CCTP mode: USDC bridges 1:1 (burn/mint), no slippage. Output = amount minus
   // our service fee, the Railgun unshield fee, and the CCTP dest-leg fee — all
   // subtracted so the recipient receives at least the shown amount.
-  if (BRIDGE_PROVIDER === 'cctp') {
-    const hubChainId = PRIVACY_HUB_CHAIN_ID;
+  if (BRIDGE_PROVIDER === 'cctp' || privacyProvider === 'arc') {
+    const hubChainId = privacyProvider === 'arc' ? ARC_PRIVACY_HUB_CHAIN_ID : PRIVACY_HUB_CHAIN_ID;
+    if (
+      !cctpSupportsChainForHub(input.sourceChainId, hubChainId) ||
+      !cctpSupportsChainForHub(input.destChainId, hubChainId)
+    ) {
+      throw new Error(`Unsupported CCTP route: ${input.sourceChainId} -> ${input.destChainId}`);
+    }
+    if (
+      (input.tokenSymbol ?? 'USDC').toUpperCase() !== 'USDC' ||
+      (input.destTokenSymbol ?? 'USDC').toUpperCase() !== 'USDC'
+    ) {
+      throw new Error('Invalid token: CCTP privacy routes currently support USDC only');
+    }
     const amount = parseUnits(input.amount, 6);
     const outputUsd = Number(amount) / 1e6;
-    const { serviceFee, privacyFee, bridgeFee, quotedOutput } = computeCctpRouteFees(amount, outputUsd);
+    const fees =
+      privacyProvider === 'arc'
+        ? computeArcCctpRouteFees(amount, outputUsd)
+        : computeCctpRouteFees(amount, outputUsd);
+    const { serviceFee, bridgeFee, quotedOutput } = fees;
+    const privacyFee = 'privacyFee' in fees ? fees.privacyFee : 0n;
     return {
+      privacyProvider,
       symbol: 'USDC',
       decimals: 6,
       destSymbol: 'USDC',
@@ -75,8 +101,17 @@ export async function quotePrivateRoute(input: QuotePrivateRouteInput): Promise<
       feeUsd: Number(serviceFee) / 1e6,
       bridgeFeeUsd: Number(bridgeFee) / 1e6,
       privacyFeeUsd: Number(privacyFee) / 1e6,
-      etaSeconds: 120,
-      route: [cctpChainName(input.sourceChainId), 'Private pool', cctpChainName(input.destChainId)],
+      etaSeconds: privacyProvider === 'arc' ? 300 : 120,
+      route:
+        privacyProvider === 'arc'
+          ? [
+              cctpChainName(input.sourceChainId),
+              ...(input.sourceChainId === hubChainId ? [] : ['Circle CCTP']),
+              'Erebuz Privacy Pool (Arc)',
+              ...(input.destChainId === hubChainId ? [] : ['Circle CCTP']),
+              cctpChainName(input.destChainId),
+            ]
+          : [cctpChainName(input.sourceChainId), 'Railgun', cctpChainName(input.destChainId)],
     };
   }
 
@@ -134,6 +169,7 @@ export async function quotePrivateRoute(input: QuotePrivateRouteInput): Promise<
     outputUsd != null && grossOutput > 0n ? outputUsd * (Number(quotedOutput) / Number(grossOutput)) : null;
 
   return {
+    privacyProvider,
     symbol,
     decimals: source.decimals,
     destSymbol,

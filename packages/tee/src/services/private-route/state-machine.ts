@@ -16,8 +16,17 @@ import { isRailgunReady, buildShieldCalls, shieldFromEOA, unshieldERC20, waitFor
 import { buildCctpBurnCalls, cctpMint, cctpTryAttestation, cctpUsdc } from '../cctp';
 import { BRIDGE_PROVIDER } from '../../config/global-config';
 import { chainManager } from '../../managers/chain';
+import {
+  createArcPrivacyPayload,
+  clearArcWithdrawal,
+  depositIntoArcPrivacyPool,
+  parseArcPrivacyPayload,
+  prepareArcPoolWithdrawal,
+  serializeArcPrivacyPayload,
+  submitArcPoolWithdrawal,
+} from '../arc-privacy-pool';
 
-const CCTP = BRIDGE_PROVIDER === 'cctp';
+const DEFAULT_CCTP = BRIDGE_PROVIDER === 'cctp';
 
 // Auto-cancel a route that's still AWAITING_DEPOSIT after this window (no funds sent).
 const DEPOSIT_EXPIRY_MS = Number(process.env.PRIVATE_ROUTE_DEPOSIT_EXPIRY_MS) || 5 * 60 * 1000;
@@ -29,13 +38,30 @@ async function set(routeId: string, status: PrivateRouteStatus, extra?: Record<s
 export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
   const { id, hubChainId } = route;
   const token = route.tokenAddress as Address;
+  const cctp = DEFAULT_CCTP || route.privacyProvider === 'arc';
 
   switch (route.status) {
     // ---- Bridge in: user's USDC -> hub. CCTP (burn/mint) or Relay. ----
     case 'AWAITING_DEPOSIT':
     case 'BRIDGING_IN': {
-      if (CCTP) {
+      if (cctp) {
         const sourceUsdc = cctpUsdc(route.sourceChainId) as Address;
+        // Same-chain funding: the source account and hub account are the same
+        // deterministic account, so no CCTP burn/attestation is required.
+        if (route.sourceChainId === hubChainId) {
+          const balance = await chainManager.getTokenBalance(
+            hubChainId,
+            getAddress(route.hubAccount!),
+            sourceUsdc
+          );
+          if (balance > 0n) return void (await set(id, 'RECEIVED_ON_HUB'));
+          if (route.status === 'AWAITING_DEPOSIT' && Date.now() - route.createdAt.getTime() > DEPOSIT_EXPIRY_MS) {
+            return void (await set(id, 'FAILED', {
+              error: 'Deposit window expired — no funds received within 5 minutes. Start a new transfer.',
+            }));
+          }
+          return;
+        }
         if (!route.leg1RequestId) {
           // Not burned yet: wait for the user's USDC at the source smart account,
           // then CCTP-burn it to the hub smart account.
@@ -92,6 +118,28 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
 
     // ---- Shield: SA (AA hub) or EOA (fallback hub) shields the received funds ----
     case 'RECEIVED_ON_HUB': {
+      if (route.privacyProvider === 'arc') {
+        if (!route.hubAccount) return pause(id, 'Arc privacy route has no hub account');
+        const received = await chainManager.getTokenBalance(hubChainId, getAddress(route.hubAccount), token);
+        if (received <= 0n) return;
+
+        // Persist note secrets before broadcasting. If the process stops after
+        // the UserOp lands, the next tick recovers the receipt by precommitment.
+        if (!route.privacyPayload) {
+          const payload = createArcPrivacyPayload();
+          await set(id, 'RECEIVED_ON_HUB', { privacyPayload: serializeArcPrivacyPayload(payload) });
+          return;
+        }
+        const payload = parseArcPrivacyPayload(route.privacyPayload);
+        const confirmed = payload.deposit
+          ? payload
+          : await depositIntoArcPrivacyPool(route, payload, received);
+        await set(id, 'POOL_DEPOSITED', {
+          privacyPayload: serializeArcPrivacyPayload(confirmed),
+          shieldTx: confirmed.deposit?.transactionHash ?? null,
+        });
+        return;
+      }
       const aaReady = isAaReady(hubChainId);
       // EOA-hub fallback needs the signer key; AA hub needs the Nexus stack.
       if (!aaReady && !process.env.PRIVATE_KEY) return pause(id, `no hub executor on ${hubChainId}`);
@@ -118,6 +166,38 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
       return;
     }
 
+    // ---- Erebuz Arc pool: wait for ASP approval, prove, then withdraw ----
+    case 'POOL_DEPOSITED': {
+      if (route.privacyProvider !== 'arc') {
+        return void (await set(id, 'FAILED', { error: 'POOL_DEPOSITED is only valid for Arc privacy routes' }));
+      }
+      let payload = parseArcPrivacyPayload(route.privacyPayload);
+      if (!payload.withdrawal) {
+        const prepared = await prepareArcPoolWithdrawal(route, payload);
+        if (!prepared) return; // ASP has not approved/published this deposit yet
+        payload = prepared;
+        await set(id, 'POOL_DEPOSITED', { privacyPayload: serializeArcPrivacyPayload(payload) });
+        return;
+      }
+      let txHash: `0x${string}`;
+      try {
+        txHash = await submitArcPoolWithdrawal(route, payload);
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('roots changed after proof generation')) {
+          await set(id, 'POOL_DEPOSITED', {
+            privacyPayload: serializeArcPrivacyPayload(clearArcWithdrawal(payload)),
+          });
+          return;
+        }
+        throw error;
+      }
+      await set(id, 'UNSHIELD_SENT', {
+        privacyPayload: serializeArcPrivacyPayload(payload),
+        unshieldTx: txHash,
+      });
+      return;
+    }
+
     // ---- Unshield the quoted output, then bridge out (CCTP or Relay) ----
     case 'SHIELDED': {
       if (!isRailgunReady()) return;
@@ -129,8 +209,8 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
       // fee + CCTP dest-leg fee then bring it down to the quoted net (see fee.ts,
       // computeCctpRouteFees). Relay unshields the leg-2 required input computed below.
       const cctpUnshieldAmount = BigInt(route.amount) - BigInt(route.feeAmount);
-      const unshieldToken = CCTP ? cctpUsdc(hubChainId) : token;
-      const minSpendable = CCTP ? cctpUnshieldAmount : BigInt(route.quotedOutputAmount);
+      const unshieldToken = cctp ? cctpUsdc(hubChainId) : token;
+      const minSpendable = cctp ? cctpUnshieldAmount : BigInt(route.quotedOutputAmount);
       const { spendable } = await waitForShieldedBalance({
         chainId: hubChainId,
         tokenAddress: unshieldToken,
@@ -138,7 +218,7 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
         timeoutMs: 240_000,
       });
       if (spendable < minSpendable) return; // not scanned / POI-Valid yet; retry next tick
-      if (CCTP) {
+      if (cctp) {
         // Unshield the gross to the hub smart account; leg-2 CCTP-burns it to the
         // recipient on the destination chain (handled in BRIDGING_OUT).
         const hubUsdc = cctpUsdc(hubChainId);
@@ -194,7 +274,7 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
     // ---- Bridge out: hub -> recipient. CCTP (burn/mint) or Relay. ----
     case 'UNSHIELD_SENT':
     case 'BRIDGING_OUT': {
-      if (CCTP) {
+      if (cctp) {
         const hubUsdc = cctpUsdc(hubChainId) as Address;
         // Same-chain delivery: when the destination IS the hub chain there is no
         // CCTP hop (CCTP cannot send within a single domain, which left routes
