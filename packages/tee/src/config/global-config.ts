@@ -74,10 +74,45 @@ export const BRIDGE_PROVIDER = (process.env.BRIDGE_PROVIDER || 'relay').toLowerC
  * choose one explicitly. Railgun remains the backwards-compatible default;
  * `arc` routes through Erebuz's PrivacyPoolComplex deployment on Arc Testnet.
  */
-export type PrivacyProvider = 'railgun' | 'arc';
-export const DEFAULT_PRIVACY_PROVIDER: PrivacyProvider =
-  process.env.DEFAULT_PRIVACY_PROVIDER?.toLowerCase() === 'arc' ? 'arc' : 'railgun';
+export type PrivacyProvider = 'railgun' | 'arc' | 'strk20';
+const PRIVACY_PROVIDERS: PrivacyProvider[] = ['railgun', 'arc', 'strk20'];
+export function isPrivacyProvider(value: unknown): value is PrivacyProvider {
+  return typeof value === 'string' && (PRIVACY_PROVIDERS as string[]).includes(value);
+}
+export const DEFAULT_PRIVACY_PROVIDER: PrivacyProvider = (() => {
+  const raw = process.env.DEFAULT_PRIVACY_PROVIDER?.toLowerCase();
+  return isPrivacyProvider(raw) ? raw : 'railgun';
+})();
 export const ARC_PRIVACY_HUB_CHAIN_ID = 5_042_002;
+/**
+ * STRK20 (StarkWare's Starknet privacy pool) routes hub on Starknet: source
+ * chain -> CCTP -> Starknet hub account -> STRK20 pool -> CCTP -> destination.
+ * Both CCTP legs are validated by scripts/test-cctp-starknet.ts; the pool hop
+ * needs STRK20_PROVING_SERVICE_URL + STRK20_INDEXER_URL to be configured.
+ */
+export const STRK20_PRIVACY_HUB_CHAIN_ID = 23_448_594; // Starknet Sepolia (synthetic id)
+export const STRK20_POOL_ADDRESS =
+  process.env.STRK20_POOL_ADDRESS || '0x0254a6b2997ef52e9f830ce1f543f6b29768295e8d17e2267d672c552cfe0d91';
+/** The privacy leg is only live once BOTH services are configured. */
+export function strk20PoolConfigured(): boolean {
+  return Boolean(process.env.STRK20_PROVING_SERVICE_URL && process.env.STRK20_INDEXER_URL);
+}
+
+/**
+ * DEMO ONLY. Routes USDC through Starknet over pure CCTP with NO privacy hop, so a
+ * Base -> Starknet -> destination transfer completes end to end while StarkWare's
+ * proving service stays unavailable.
+ *
+ * This is NOT a private route. It exists because a STRK20 pool deposit needs a
+ * STARK proof, proofs come from a proving service StarkWare does not publish, and
+ * there is no self-hostable prover in the open-source SDK. Without this flag such
+ * a route correctly parks funds on the hub and waits.
+ *
+ * Every surface that can express it MUST say so: the quote carries
+ * `transportOnly: true` and the route trail is labelled. Never enable it on a
+ * deployment that presents these as private transfers.
+ */
+export const STRK20_TRANSPORT_ONLY = process.env.STRK20_TRANSPORT_ONLY === 'true';
 
 /**
  * The route fee is the spread between what the user sends and the output we

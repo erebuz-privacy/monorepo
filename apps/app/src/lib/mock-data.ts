@@ -48,7 +48,7 @@ export type TxStatus = "confirmed" | "pending" | "failed";
  * to render on its own. When present, ActivityRow + the detail view prefer it.
  */
 export type ActivityLive = {
-  privacyProvider?: "railgun" | "arc";
+  privacyProvider?: "railgun" | "arc" | "strk20";
   fromChainId: number;
   fromChainName: string;
   fromChainLogo?: string;

@@ -35,8 +35,15 @@ export type TeeChain = {
   name: string;
   displayName: string;
   logoUrl?: string;
-  /** VM family: evm, svm (Solana), tvm (Tron), tonvm, bvm, etc. */
+  /** VM family: evm, starknet, svm (Solana), tvm (Tron), tonvm, bvm, etc. */
   vmType?: string;
+  /**
+   * Can this chain be the SOURCE of a route? Source deposits land on a per-route
+   * Nexus smart account, which only exists on EVM chains — so Starknet is a hub
+   * or destination only. The picker greys it out rather than letting the user
+   * pick a route the TEE will reject at create time.
+   */
+  canBeSource?: boolean;
 };
 
 export type TeeToken = {
@@ -51,7 +58,7 @@ export type TeeToken = {
 // ---- Quote / route ----------------------------------------------------------
 
 export type TeeQuote = {
-  privacyProvider: "railgun" | "arc";
+  privacyProvider: "railgun" | "arc" | "strk20";
   /** Source token (sent). */
   symbol: string;
   decimals: number;
@@ -78,6 +85,12 @@ export type TeeQuote = {
   privacyFeeUsd: number | null;
   etaSeconds: number;
   route: string[];
+  /**
+   * TRUE when the TEE is moving funds WITHOUT a privacy hop (demo mode, set via
+   * STRK20_TRANSPORT_ONLY). Must be surfaced to the user — it is not a private
+   * transfer, just a cross-chain one.
+   */
+  transportOnly?: boolean;
 };
 
 export type QuoteInput = {
@@ -89,7 +102,7 @@ export type QuoteInput = {
   tokenSymbol?: string;
   /** Destination token symbol; defaults to the source symbol (same-asset route). */
   destTokenSymbol?: string;
-  privacyProvider?: "railgun" | "arc";
+  privacyProvider?: "railgun" | "arc" | "strk20";
 };
 
 export type CreateRouteInput = QuoteInput & { userDestinationAddress: string };
@@ -109,7 +122,7 @@ export type CreatedRoute = {
   amount: string;
   feeAmount: string;
   quotedOutputAmount: string;
-  privacyProvider: "railgun" | "arc";
+  privacyProvider: "railgun" | "arc" | "strk20";
 };
 
 /** Persisted route as returned by GET /api/private-route/:routeId. */
@@ -119,7 +132,7 @@ export type RouteRecord = {
   sourceChainId: number;
   destChainId: number;
   hubChainId: number;
-  privacyProvider: "railgun" | "arc";
+  privacyProvider: "railgun" | "arc" | "strk20";
   tokenSymbol: string;
   amount: string;
   feeAmount: string;
@@ -144,6 +157,7 @@ const CHAIN_LOGO: Record<number, string> = {
   11155111: "/chains/ethereum.jpg",
   11155420: "/chains/optimism.jpg",
   5042002: "/chains/Arc.jpg",
+  23448594: "/chains/starknet.svg", // Starknet Sepolia (STRK20 hub)
   // mainnet (ready when mainnet TEE goes live)
   1: "/chains/ethereum.jpg",
   10: "/chains/optimism.jpg",

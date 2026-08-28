@@ -7,13 +7,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { QRCodeSVG } from "qrcode.react";
-import { ArrowLeft, Check, Clock, Copy, Loader2, XCircle } from "lucide-react";
+import { ArrowLeft, Check, Clock, Copy, ExternalLink, Loader2, XCircle } from "lucide-react";
 
 import { Skeleton } from "@erebuz/ui/components/skeleton";
 import { cn } from "@erebuz/ui/lib/utils";
 
 import { AssetGlyph } from "@/components/crypto-icon";
 import { formatAmount, shortenAddress } from "@/lib/format";
+import { explorerName, explorerTxUrl } from "@/lib/explorer";
 
 const CARD = cn(
   "border border-border bg-card shadow-lg",
@@ -33,6 +34,13 @@ const ARC_PROGRESS: { status: string; label: string }[] = [
   { status: "BRIDGING_IN", label: "Circle CCTP burn → mint on Arc" },
   { status: "RECEIVED_ON_HUB", label: "Depositing into the Erebuz pool" },
   { status: "POOL_DEPOSITED", label: "Waiting for pool approval" },
+  { status: "UNSHIELD_SENT", label: "Withdrawing privately" },
+  { status: "BRIDGING_OUT", label: "Circle CCTP burn → destination mint" },
+];
+const STRK20_PROGRESS: { status: string; label: string }[] = [
+  { status: "BRIDGING_IN", label: "Circle CCTP burn → mint on Starknet" },
+  { status: "RECEIVED_ON_HUB", label: "Depositing into the STRK20 pool" },
+  { status: "NOTE_MATURING", label: "Waiting for the private note to mature" },
   { status: "UNSHIELD_SENT", label: "Withdrawing privately" },
   { status: "BRIDGING_OUT", label: "Circle CCTP burn → destination mint" },
 ];
@@ -155,7 +163,12 @@ export function TxView({ id }: { id: string }) {
   const isAwaiting = status === "AWAITING_DEPOSIT";
   const isDone = status === "COMPLETED";
   const isFailed = status === "FAILED";
-  const progress = record.privacyProvider === "arc" ? ARC_PROGRESS : RAILGUN_PROGRESS;
+  const progress =
+    record.privacyProvider === "arc"
+      ? ARC_PROGRESS
+      : record.privacyProvider === "strk20"
+        ? STRK20_PROGRESS
+        : RAILGUN_PROGRESS;
   const activeIdx = progress.findIndex((p) => p.status === status);
   const deposit = record.leg1DepositAddress ?? record.depositAddress ?? null;
 
@@ -299,6 +312,57 @@ export function TxView({ id }: { id: string }) {
           </ol>
         </div>
       )}
+
+      {/* on-chain trail — every leg that has actually landed, per chain explorer.
+          Note the hub legs disappear once the route is COMPLETED/FAILED: the TEE
+          nulls shield/unshield/request ids at terminal so a finished transfer's
+          record can't be used to link source -> hub -> recipient. */}
+      {(() => {
+        const hubChainId = record.hubChainId;
+        const hubName = chainFor(hubChainId)?.displayName ?? `Chain ${hubChainId}`;
+        const poolIn = record.privacyProvider === "railgun" ? "Shield into pool" : "Pool deposit";
+        const poolOut = record.privacyProvider === "railgun" ? "Unshield from pool" : "Pool withdrawal";
+        // Every hop is TWO transactions on a CCTP route — the burn on the origin
+        // and the mint on the destination — so both are listed. The mints only
+        // exist for CCTP-mode routes; a Relay leg has no receiveMessage.
+        const legs: { label: string; chainId: number; tx: string | null | undefined }[] = [
+          { label: `1 · Deposit burn on ${fromName}`, chainId: record.sourceChainId, tx: record.leg1RequestId as string | null },
+          { label: `2 · Bridge mint on ${hubName}`, chainId: hubChainId, tx: record.leg1MintTx as string | null },
+          { label: `3 · ${poolIn} on ${hubName}`, chainId: hubChainId, tx: record.shieldTx as string | null },
+          { label: `4 · ${poolOut} on ${hubName}`, chainId: hubChainId, tx: record.unshieldTx as string | null },
+          { label: `5 · Payout burn on ${hubName}`, chainId: hubChainId, tx: record.leg2RequestId as string | null },
+          { label: `6 · Payout mint on ${toName}`, chainId: record.destChainId, tx: record.leg2MintTx as string | null },
+        ];
+        const shown = legs
+          .map((l) => ({ ...l, url: explorerTxUrl(l.chainId, l.tx) }))
+          .filter((l): l is typeof l & { url: string } => Boolean(l.url));
+        if (!shown.length) return null;
+        return (
+          <div className={cn(CARD, "p-5 sm:p-6")}>
+            <h2 className="text-foreground mb-3 text-sm font-semibold">On-chain trail</h2>
+            <ul className="border-foreground/[0.1] divide-foreground/[0.08] divide-y rounded-2xl border">
+              {shown.map((l) => (
+                <li key={l.label} className="flex items-center justify-between gap-3 p-3.5">
+                  <span className="min-w-0">
+                    <span className="text-foreground block text-sm">{l.label}</span>
+                    <span className="text-foreground/40 block font-mono text-xs">
+                      {shortenAddress(String(l.tx))}
+                    </span>
+                  </span>
+                  <a
+                    href={l.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-foreground/60 hover:text-foreground flex shrink-0 items-center gap-1.5 text-xs font-medium"
+                  >
+                    {explorerName(l.chainId)} <ExternalLink className="size-3.5" />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -1,5 +1,8 @@
 # Erebuz TEE service (private-route API). Self-contained — no workspace deps.
-FROM node:20-bookworm-slim
+# Node 22 (not 20): starknet.js requires >=22 and is now on the main import path
+# via services/cctp/starknet.ts, so a Node 20 base fails at boot rather than at
+# install. The STRK20 privacy SDK will need >=24 when it lands.
+FROM node:22-bookworm-slim
 
 # better-sqlite3 compiles a native binding if no prebuilt is available.
 RUN apt-get update \

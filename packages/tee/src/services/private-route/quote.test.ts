@@ -18,7 +18,11 @@ void test('quotes the Arc pool as a separate testnet CCTP route', async () => {
     'Erebuz Privacy Pool (Arc)',
     'Arc Testnet',
   ]);
-  assert.equal(quote.quotedOutputAmount, '3998800');
+  // Destination IS the hub (Arc), so there is no outbound CCTP leg and no bridge
+  // fee: the state machine transfers straight from the hub account. Previously
+  // this asserted 3998800, from a hardcoded 3 bps charged for a hop that never ran.
+  assert.equal(quote.bridgeFeeAmount, '0');
+  assert.equal(quote.quotedOutputAmount, '4000000');
 
   await assert.rejects(
     quotePrivateRoute({

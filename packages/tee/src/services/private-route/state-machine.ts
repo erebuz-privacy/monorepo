@@ -13,8 +13,24 @@ import { PrivateRouteModel, type PrivateRoute, type PrivateRouteStatus } from '.
 import { getRelayDepositAddress, getRelayStatus, isRelayFilled, isRelayFailed, resolveCurrency, RELAY_NATIVE } from '../relay';
 import { executeBatch, isAaReady } from '../aa';
 import { isRailgunReady, buildShieldCalls, shieldFromEOA, unshieldERC20, waitForShieldedBalance } from '../railgun';
-import { buildCctpBurnCalls, cctpMint, cctpTryAttestation, cctpUsdc } from '../cctp';
-import { BRIDGE_PROVIDER } from '../../config/global-config';
+import {
+  buildCctpBurnCalls,
+  cctpIsStarknet,
+  cctpMint,
+  cctpDomain,
+  cctpTryAttestation,
+  cctpUsdc,
+  cctpUsdcBalance,
+} from '../cctp';
+import { starknetCctpBurn, starknetSignerReady } from '../cctp/starknet';
+import {
+  depositIntoStrk20Pool,
+  isStrk20NotConfigured,
+  strk20PoolBlockedReason,
+  strk20PoolReady,
+  withdrawFromStrk20Pool,
+} from '../strk20-pool';
+import { BRIDGE_PROVIDER, STRK20_TRANSPORT_ONLY } from '../../config/global-config';
 import { chainManager } from '../../managers/chain';
 import {
   createArcPrivacyPayload,
@@ -27,6 +43,8 @@ import {
 } from '../arc-privacy-pool';
 
 const DEFAULT_CCTP = BRIDGE_PROVIDER === 'cctp';
+/** Blocks the STRK20 note-maturity window (10 blocks, ~20s at 2s/block). */
+const STRK20_NOTE_MATURITY_MS = 30_000;
 
 // Auto-cancel a route that's still AWAITING_DEPOSIT after this window (no funds sent).
 const DEPOSIT_EXPIRY_MS = Number(process.env.PRIVATE_ROUTE_DEPOSIT_EXPIRY_MS) || 5 * 60 * 1000;
@@ -38,7 +56,7 @@ async function set(routeId: string, status: PrivateRouteStatus, extra?: Record<s
 export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
   const { id, hubChainId } = route;
   const token = route.tokenAddress as Address;
-  const cctp = DEFAULT_CCTP || route.privacyProvider === 'arc';
+  const cctp = DEFAULT_CCTP || route.privacyProvider === 'arc' || route.privacyProvider === 'strk20';
 
   switch (route.status) {
     // ---- Bridge in: user's USDC -> hub. CCTP (burn/mint) or Relay. ----
@@ -84,7 +102,10 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
             destChainId: hubChainId,
             usdc: sourceUsdc,
             amount: bal,
-            mintRecipient: getAddress(route.hubAccount!),
+            // Felt for a Starknet hub, checksummed hex for EVM.
+            mintRecipient: cctpIsStarknet(hubChainId)
+              ? route.hubAccount!
+              : getAddress(route.hubAccount!),
           });
           const { txHash } = await executeBatch(route.sourceChainId, id, calls);
           await set(id, 'BRIDGING_IN', { leg1RequestId: txHash });
@@ -92,18 +113,18 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
         }
         // Burned: mint on the hub once Circle attests. Hub gets funded on mint, so
         // a positive hub balance means we already minted -> advance.
-        const hubUsdc = cctpUsdc(hubChainId) as Address;
-        const hubBal = await chainManager.getTokenBalance(hubChainId, getAddress(route.hubAccount!), hubUsdc);
+        // cctpUsdcBalance (not chainManager) because a Starknet hub is not a viem chain.
+        const hubBal = await cctpUsdcBalance(hubChainId, route.hubAccount!);
         if (hubBal > 0n) return void (await set(id, 'RECEIVED_ON_HUB'));
         const att = await cctpTryAttestation({ sourceChainId: route.sourceChainId, burnTxHash: route.leg1RequestId });
         if (!att) return; // attestation not ready
-        await cctpMint({
+        const leg1Mint = await cctpMint({
           destChainId: hubChainId,
           message: att.message,
           attestation: att.attestation,
           signerPrivateKey: process.env.PRIVATE_KEY as string,
         });
-        await set(id, 'RECEIVED_ON_HUB');
+        await set(id, 'RECEIVED_ON_HUB', { leg1MintTx: leg1Mint.txHash });
         return;
       }
       // ---- Relay leg-1 ----
@@ -118,6 +139,41 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
 
     // ---- Shield: SA (AA hub) or EOA (fallback hub) shields the received funds ----
     case 'RECEIVED_ON_HUB': {
+      if (route.privacyProvider === 'strk20') {
+        // DEMO MODE: no privacy hop. Skip the pool and go straight to the payout
+        // burn so the route completes while StarkWare's prover is unavailable.
+        // Logged loudly, because a route that skips its privacy hop is not a
+        // private route — see STRK20_TRANSPORT_ONLY in global-config.
+        if (STRK20_TRANSPORT_ONLY) {
+          logger.warn(
+            `Route ${id}: STRK20_TRANSPORT_ONLY — skipping the pool hop. This transfer is ` +
+              `NOT private; funds move source -> Starknet -> destination over CCTP only.`,
+            'PrivateRoute'
+          );
+          await set(id, 'UNSHIELD_SENT');
+          return;
+        }
+        // Starknet hub: the TEE's own Starknet account holds the CCTP-minted USDC
+        // and deposits it into the STRK20 pool as a private note.
+        if (!strk20PoolReady()) {
+          return pause(id, `STRK20 privacy leg unavailable: ${strk20PoolBlockedReason() ?? 'unknown'}`);
+        }
+        const received = await cctpUsdcBalance(hubChainId, route.hubAccount!);
+        if (received <= 0n) return; // mint not settled on the hub yet
+        try {
+          const { txHash } = await depositIntoStrk20Pool(route, received);
+          await set(id, 'NOTE_MATURING', { shieldTx: txHash });
+        } catch (error) {
+          // Missing config is a PAUSE, never a FAILED and never a bypass:
+          // finishing without the pool hop would deliver the funds with no
+          // privacy break while still reporting a private route.
+          if (isStrk20NotConfigured(error)) {
+            return pause(id, (error as Error).message);
+          }
+          throw error;
+        }
+        return;
+      }
       if (route.privacyProvider === 'arc') {
         if (!route.hubAccount) return pause(id, 'Arc privacy route has no hub account');
         const received = await chainManager.getTokenBalance(hubChainId, getAddress(route.hubAccount), token);
@@ -163,6 +219,29 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
         }));
       }
       await set(id, 'SHIELDED', { shieldTx: txHash });
+      return;
+    }
+
+    // ---- STRK20 pool: wait out note maturity, then withdraw to the hub ----
+    case 'NOTE_MATURING': {
+      if (route.privacyProvider !== 'strk20') {
+        return void (await set(id, 'FAILED', { error: 'NOTE_MATURING is only valid for STRK20 routes' }));
+      }
+      if (!strk20PoolReady()) {
+        return pause(id, `STRK20 privacy leg unavailable: ${strk20PoolBlockedReason() ?? 'unknown'}`);
+      }
+      // Notes mature 10 blocks after creation; spending earlier proves against a
+      // state where the note is not yet spendable and the tx fails.
+      if (Date.now() - route.updatedAt.getTime() < STRK20_NOTE_MATURITY_MS) return;
+      const withdrawAmount = BigInt(route.amount) - BigInt(route.feeAmount);
+      try {
+        const result = await withdrawFromStrk20Pool(route, withdrawAmount);
+        if (!result) return; // note not spendable yet; retry next tick
+        await set(id, 'UNSHIELD_SENT', { unshieldTx: result.txHash });
+      } catch (error) {
+        if (isStrk20NotConfigured(error)) return pause(id, (error as Error).message);
+        throw error;
+      }
       return;
     }
 
@@ -275,6 +354,46 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
     case 'UNSHIELD_SENT':
     case 'BRIDGING_OUT': {
       if (cctp) {
+        // Starknet hub: burn with starknet.js, not a Nexus UserOp. Native account
+        // abstraction puts approve + deposit_for_burn in ONE transaction.
+        if (cctpIsStarknet(hubChainId)) {
+          if (!starknetSignerReady()) return pause(id, 'no Starknet signer for the outbound burn');
+          if (!route.leg2RequestId) {
+            const bal = await cctpUsdcBalance(hubChainId, route.hubAccount!);
+            if (bal <= 0n) return; // pool withdrawal not settled yet
+            const { txHash } = await starknetCctpBurn({
+              destDomain: cctpDomain(route.destChainId),
+              amount: bal,
+              mintRecipient: route.userDestinationAddress,
+              minFinalityThreshold: 1000, // Fast Transfer
+            });
+            await set(id, 'BRIDGING_OUT', { leg2RequestId: txHash });
+            return;
+          }
+          const att = await cctpTryAttestation({
+            sourceChainId: hubChainId,
+            burnTxHash: route.leg2RequestId,
+          });
+          if (!att) return; // attestation not ready
+          let snLeg2Mint: string | null = null;
+          try {
+            snLeg2Mint = (
+              await cctpMint({
+                destChainId: route.destChainId,
+                message: att.message,
+                attestation: att.attestation,
+                signerPrivateKey: process.env.PRIVATE_KEY as string,
+              })
+            ).txHash;
+          } catch (e) {
+            logger.warn(
+              `CCTP leg-2 mint (may be already minted): ${String((e as Error)?.message || e)}`,
+              'PrivateRoute'
+            );
+          }
+          await set(id, 'COMPLETED', snLeg2Mint ? { leg2MintTx: snLeg2Mint } : undefined);
+          return;
+        }
         const hubUsdc = cctpUsdc(hubChainId) as Address;
         // Same-chain delivery: when the destination IS the hub chain there is no
         // CCTP hop (CCTP cannot send within a single domain, which left routes
@@ -322,18 +441,21 @@ export async function advancePrivateRoute(route: PrivateRoute): Promise<void> {
         // Burned: mint on the destination once attested (then the recipient has USDC).
         const att = await cctpTryAttestation({ sourceChainId: hubChainId, burnTxHash: route.leg2RequestId });
         if (!att) return; // attestation not ready
+        let leg2Mint: string | null = null;
         try {
-          await cctpMint({
-            destChainId: route.destChainId,
-            message: att.message,
-            attestation: att.attestation,
-            signerPrivateKey: process.env.PRIVATE_KEY as string,
-          });
+          leg2Mint = (
+            await cctpMint({
+              destChainId: route.destChainId,
+              message: att.message,
+              attestation: att.attestation,
+              signerPrivateKey: process.env.PRIVATE_KEY as string,
+            })
+          ).txHash;
         } catch (e) {
           // Nonce may already be consumed (minted on a prior tick) — treat as done.
           logger.warn(`CCTP leg-2 mint (may be already minted): ${String((e as Error)?.message || e)}`, 'PrivateRoute');
         }
-        await set(id, 'COMPLETED');
+        await set(id, 'COMPLETED', leg2Mint ? { leg2MintTx: leg2Mint } : undefined);
         return;
       }
       // ---- Relay leg-2 ----

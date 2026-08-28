@@ -76,8 +76,42 @@ const ARC_PROGRESS: { status: string; label: string }[] = [
   { status: "BRIDGING_OUT", label: "Circle CCTP burn → destination mint" },
 ];
 
-function progressFor(provider?: "railgun" | "arc") {
-  return provider === "arc" ? ARC_PROGRESS : RAILGUN_PROGRESS;
+const STRK20_PROGRESS: { status: string; label: string }[] = [
+  { status: "BRIDGING_IN", label: "Circle CCTP burn → mint on Starknet" },
+  { status: "RECEIVED_ON_HUB", label: "Depositing into the STRK20 pool" },
+  { status: "NOTE_MATURING", label: "Waiting for the private note to mature" },
+  { status: "UNSHIELD_SENT", label: "Withdrawing privately" },
+  { status: "BRIDGING_OUT", label: "Circle CCTP burn → destination mint" },
+];
+
+/** Every privacy pool we price a route against, in display order. */
+export const PRIVACY_PROVIDERS = ["railgun", "arc", "strk20"] as const;
+export type PrivacyProvider = (typeof PRIVACY_PROVIDERS)[number];
+
+const POOL_LABEL: Record<PrivacyProvider, string> = {
+  railgun: "Railgun",
+  arc: "Erebuz Privacy Pool",
+  strk20: "STRK20 (Starknet)",
+};
+
+// Keyed per provider rather than an if/else, so adding a pool can never fall
+// through and render under another pool's name.
+const POOL_SUBTITLE: Record<PrivacyProvider, string> = {
+  railgun: "Existing private route",
+  arc: "Circle CCTP · Arc",
+  strk20: "Circle CCTP · Starknet",
+};
+
+const POOL_KICKER: Record<PrivacyProvider, string> = {
+  railgun: "Via",
+  arc: "Circle CCTP · Private via",
+  strk20: "Circle CCTP · Private via",
+};
+
+function progressFor(provider?: PrivacyProvider) {
+  if (provider === "arc") return ARC_PROGRESS;
+  if (provider === "strk20") return STRK20_PROGRESS;
+  return RAILGUN_PROGRESS;
 }
 
 function formatEta(seconds: number): string {
@@ -85,7 +119,7 @@ function formatEta(seconds: number): string {
   return `~${Math.max(1, Math.round(seconds / 60))} min`;
 }
 
-function stageLabel(stage?: string, provider?: "railgun" | "arc"): string {
+function stageLabel(stage?: string, provider?: PrivacyProvider): string {
   if (!stage || stage === "AWAITING_DEPOSIT") return "Awaiting deposit";
   if (stage === "COMPLETED") return "Completed";
   if (stage === "FAILED") return "Failed";
@@ -236,8 +270,9 @@ export function BridgeFlow() {
   const [picker, setPicker] = useState<"from" | "to" | null>(null);
   const [depositMode, setDepositMode] = useState<"address" | "wallet">("address");
   const [quote, setQuote] = useState<TeeQuote | null>(null);
-  const [railgunQuote, setRailgunQuote] = useState<TeeQuote | null>(null);
-  const [arcQuote, setArcQuote] = useState<TeeQuote | null>(null);
+  // One entry per privacy pool, so adding a provider is a list change, not a
+  // new piece of state and a new branch in every consumer.
+  const [quotes, setQuotes] = useState<Partial<Record<PrivacyProvider, TeeQuote | null>>>({});
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState<string | null>(null);
   const reqIdRef = useRef(0);
@@ -291,37 +326,36 @@ export function BridgeFlow() {
       // dialog never reshapes while it's just re-pricing.
       if (!silent) setQuoteLoading(true);
       setQuoteError(null);
-      Promise.allSettled([
-        tee.quote({ ...i, privacyProvider: "railgun" }),
-        tee.quote({ ...i, privacyProvider: "arc" }),
-      ])
-        .then(([railgunResult, arcResult]) => {
+      Promise.allSettled(
+        PRIVACY_PROVIDERS.map((privacyProvider) => tee.quote({ ...i, privacyProvider })),
+      )
+        .then((results) => {
           if (id !== reqIdRef.current) return;
-          const nextRailgun = railgunResult.status === "fulfilled" ? railgunResult.value : null;
-          const nextArc = arcResult.status === "fulfilled" ? arcResult.value : null;
-          if (!nextRailgun && !nextArc) {
+          const next: Partial<Record<PrivacyProvider, TeeQuote | null>> = {};
+          PRIVACY_PROVIDERS.forEach((provider, idx) => {
+            const r = results[idx];
+            next[provider] = r.status === "fulfilled" ? r.value : null;
+          });
+          const anyQuote = PRIVACY_PROVIDERS.some((p) => next[p]);
+          if (!anyQuote) {
             if (!silent) {
               setQuote(null);
-              setRailgunQuote(null);
-              setArcQuote(null);
-              const reason =
-                railgunResult.status === "rejected"
-                  ? railgunResult.reason
-                  : arcResult.status === "rejected"
-                    ? arcResult.reason
-                    : null;
+              setQuotes({});
+              // Surface the first real rejection rather than a generic message.
+              const rejected = results.find((r) => r.status === "rejected");
+              const reason = rejected && rejected.status === "rejected" ? rejected.reason : null;
               setQuoteError(reason instanceof Error ? reason.message : "No private route is available");
             }
             setQuoteLoading(false);
             return;
           }
-          setRailgunQuote(nextRailgun);
-          setArcQuote(nextArc);
-          setQuote((current) =>
-            current?.privacyProvider === "arc"
-              ? (nextArc ?? nextRailgun)
-              : (nextRailgun ?? nextArc),
-          );
+          setQuotes(next);
+          // Keep the user's chosen pool selected across re-prices; fall back to
+          // the first pool that actually quoted.
+          setQuote((current) => {
+            const keep = current?.privacyProvider ? next[current.privacyProvider] : null;
+            return keep ?? PRIVACY_PROVIDERS.map((p) => next[p]).find(Boolean) ?? null;
+          });
           setQuoteLoading(false);
         })
         .catch((e: Error) => {
@@ -347,8 +381,7 @@ export function BridgeFlow() {
         setQuoteLoading(false);
         if (!canQuote) {
           setQuote(null);
-          setRailgunQuote(null);
-          setArcQuote(null);
+          setQuotes({});
         }
       });
       return;
@@ -365,15 +398,29 @@ export function BridgeFlow() {
   const quotedOut = quote ? fromSmallestUnit(quote.quotedOutputAmount, quote.destDecimals) : 0;
   const sendUsd = quote?.amountInUsd ?? null;
   const receiveUsd = quote?.quotedOutputUsd ?? null;
-  const pool = quote?.privacyProvider === "arc" ? "Erebuz Privacy Pool" : "Railgun";
+  const pool = quote?.privacyProvider ? POOL_LABEL[quote.privacyProvider] : "Railgun";
   const availableQuotes = useMemo(
-    () => [railgunQuote, arcQuote].filter((candidate): candidate is TeeQuote => candidate !== null),
-    [railgunQuote, arcQuote],
+    () =>
+      PRIVACY_PROVIDERS.map((p) => quotes[p]).filter(
+        (candidate): candidate is TeeQuote => candidate != null,
+      ),
+    [quotes],
   );
 
   const chainChips: ChainChip[] = useMemo(
     () => chains.map((c) => ({ id: String(c.chainId), label: c.displayName, icon: <ChainGlyph chainId={c.chainId} label={c.displayName} logoUrl={c.logoUrl} size={24} /> })),
     [chains]
+  );
+  // Source list excludes chains that can't hold a per-route deposit account
+  // (Starknet). They stay available as a destination, so only the "from" picker
+  // is filtered — better than letting the user pick a route create() will reject.
+  const sourceChainChips: ChainChip[] = useMemo(
+    () =>
+      chainChips.filter((chip) => {
+        const chain = chains.find((c) => String(c.chainId) === chip.id);
+        return chain?.canBeSource !== false;
+      }),
+    [chainChips, chains]
   );
   const toPickerItems = (tokens: TeeToken[]): PickerItem[] =>
     tokens.map((t) => ({ id: t.address, label: t.symbol, sublabel: t.name, icon: <SymbolGlyph symbol={t.symbol} logoUrl={t.logoUrl} size={32} /> }));
@@ -391,8 +438,7 @@ export function BridgeFlow() {
     setAmount("");
     setRecipientAddr("");
     setQuote(null);
-    setRailgunQuote(null);
-    setArcQuote(null);
+    setQuotes({});
     setQuoteError(null);
     setCreateError(null);
     setCreating(false);
@@ -661,14 +707,15 @@ export function BridgeFlow() {
                   <span className="flex size-11 items-center justify-center overflow-hidden rounded-full ring-1 ring-emerald-500/20 ring-inset">
                     {quote.privacyProvider === "arc" ? (
                       <ShieldCheck className="text-brand size-6" />
+                    ) : quote.privacyProvider === "strk20" ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- static local svg
+                      <img src="/chains/starknet.svg" alt="Starknet" className="size-full" />
                     ) : (
                       <SymbolGlyph symbol="RAIL" size={44} className="size-full" />
                     )}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-foreground/40 text-xs font-medium">
-                      {quote.privacyProvider === "arc" ? "Circle CCTP · Private via" : "Via"}
-                    </p>
+                    <p className="text-foreground/40 text-xs font-medium">{POOL_KICKER[quote.privacyProvider]}</p>
                     <h2 className="text-foreground truncate text-lg font-semibold">{pool}</h2>
                   </div>
                   <button
@@ -1011,7 +1058,7 @@ export function BridgeFlow() {
       {viewKey === "form" && availableQuotes.length > 0 && fromToken && toToken && toChain ? (
         <div className="w-full space-y-3" aria-label="Available private routes">
           {availableQuotes.map((candidate) => {
-            const candidatePool = candidate.privacyProvider === "arc" ? "Erebuz Privacy Pool" : "Railgun";
+            const candidatePool = POOL_LABEL[candidate.privacyProvider];
             const candidateOut = fromSmallestUnit(candidate.quotedOutputAmount, candidate.destDecimals);
             return (
               <button
@@ -1077,7 +1124,7 @@ export function BridgeFlow() {
 
                 <div className="mt-4 flex items-center justify-between gap-4 text-xs font-semibold sm:mt-8">
                   <span className="bg-foreground/[0.045] text-foreground/60 rounded-full px-3 py-1.5">
-                    {candidate.privacyProvider === "arc" ? "Circle CCTP · Arc" : "Existing private route"}
+                    {POOL_SUBTITLE[candidate.privacyProvider]}
                   </span>
                   <span className="text-foreground/38 tabular-nums">
                     {candidate.feeUsd != null && candidate.feeUsd > 0
@@ -1121,7 +1168,7 @@ export function BridgeFlow() {
           const t = fromTokens.find((x) => x.address === address);
           if (t) setFromToken(t);
         }}
-        chains={chainChips}
+        chains={sourceChainChips}
         activeChainId={fromChainId != null ? String(fromChainId) : undefined}
         onChainSelect={(id) => setFromChainId(Number(id))}
         activeItemId={fromToken?.address}

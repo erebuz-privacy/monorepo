@@ -4,18 +4,27 @@
 // monitor drives the rest.
 
 import { isAddress, getAddress, parseUnits } from 'viem';
+import { cctpIsStarknet } from '../cctp';
+import { normalizeStarknetAddress, starknetHubAccount } from '../cctp/starknet';
 import { logger } from '../../managers/log';
 import { PrivateRouteModel, type PrivateRoute } from '../../database/models/private-route';
 import { getRelayChains, getRelayDepositAddress, getRelayQuote, RELAY_NATIVE } from '../relay';
 import { deriveHubAddress, isAaReady } from '../aa';
-import { cctpSupportsChainForHub, cctpUsdc } from '../cctp';
 import {
-  ARC_PRIVACY_HUB_CHAIN_ID,
-  BRIDGE_PROVIDER,
-  DEFAULT_PRIVACY_PROVIDER,
-  PRIVACY_HUB_CHAIN_ID,
-} from '../../config/global-config';
-import { computeServiceFee, computeArcCctpRouteFees, computeCctpRouteFees } from './fee';
+  cctpCanBeSource,
+  cctpFeeBps,
+  cctpSupportsChainForHub,
+  cctpUsdc,
+  cctpValidRecipient,
+} from '../cctp';
+import { BRIDGE_PROVIDER, DEFAULT_PRIVACY_PROVIDER, isPrivacyProvider } from '../../config/global-config';
+import { privacyHubChainId } from './quote';
+import {
+  computeServiceFee,
+  computeArcCctpRouteFees,
+  computeCctpRouteFees,
+  computeStrk20RouteFees,
+} from './fee';
 import { resolveRouteTokens } from './shared';
 import type { CreatePrivateRouteInput, CreatePrivateRouteResult } from './types';
 
@@ -28,15 +37,26 @@ export async function createPrivateRoute(input: CreatePrivateRouteInput): Promis
   // strict checksum check; non-EVM chains (Solana, Tron, TON, ...) just need a
   // plausible non-empty address, and Relay validates the exact format on leg-2.
   const privacyProvider = input.privacyProvider ?? DEFAULT_PRIVACY_PROVIDER;
-  if (privacyProvider !== 'railgun' && privacyProvider !== 'arc') throw new Error('Invalid privacyProvider');
-  const cctp = BRIDGE_PROVIDER === 'cctp' || privacyProvider === 'arc';
+  if (!isPrivacyProvider(privacyProvider)) throw new Error('Invalid privacyProvider');
+  const cctp = BRIDGE_PROVIDER === 'cctp' || privacyProvider === 'arc' || privacyProvider === 'strk20';
   // Recipient validation. CCTP is EVM-only; Relay may target non-EVM chains.
   const destChain = cctp ? undefined : (await getRelayChains()).find((c) => c.chainId === input.destChainId);
-  const destIsEvm = cctp || !destChain || (destChain.vmType ?? 'evm') === 'evm';
   const recipient = (input.userDestinationAddress ?? '').trim();
-  const recipientValid = destIsEvm ? isAddress(recipient) : /^[A-Za-z0-9:._-]{8,120}$/.test(recipient);
-  if (!recipientValid) throw new Error('Invalid userDestinationAddress');
-  const storedRecipient = destIsEvm ? getAddress(recipient) : recipient;
+  let storedRecipient: string;
+  if (cctp) {
+    // CCTP destinations carry their own address format (EVM hex vs Starknet felt).
+    if (!cctpValidRecipient(input.destChainId, recipient)) {
+      throw new Error('Invalid userDestinationAddress');
+    }
+    storedRecipient = cctpIsStarknet(input.destChainId)
+      ? normalizeStarknetAddress(recipient)
+      : getAddress(recipient);
+  } else {
+    const destIsEvm = !destChain || (destChain.vmType ?? 'evm') === 'evm';
+    const recipientValid = destIsEvm ? isAddress(recipient) : /^[A-Za-z0-9:._-]{8,120}$/.test(recipient);
+    if (!recipientValid) throw new Error('Invalid userDestinationAddress');
+    storedRecipient = destIsEvm ? getAddress(recipient) : recipient;
+  }
 
   const routeId = newRouteId();
   if (cctp) return createCctpRoute(input, routeId, storedRecipient, privacyProvider);
@@ -149,7 +169,7 @@ async function createCctpRoute(
   input: CreatePrivateRouteInput,
   routeId: string,
   storedRecipient: string,
-  privacyProvider: 'railgun' | 'arc'
+  privacyProvider: 'railgun' | 'arc' | 'strk20'
 ): Promise<CreatePrivateRouteResult> {
   if (
     (input.tokenSymbol ?? 'USDC').toUpperCase() !== 'USDC' ||
@@ -157,7 +177,10 @@ async function createCctpRoute(
   ) {
     throw new Error('Invalid token: CCTP privacy routes currently support USDC only');
   }
-  const hubChainId = privacyProvider === 'arc' ? ARC_PRIVACY_HUB_CHAIN_ID : PRIVACY_HUB_CHAIN_ID;
+  const hubChainId = privacyHubChainId(privacyProvider);
+  if (!cctpCanBeSource(input.sourceChainId)) {
+    throw new Error(`Unsupported source chain ${input.sourceChainId}: non-EVM chains cannot be a route source`);
+  }
   for (const cid of [input.sourceChainId, input.destChainId]) {
     if (!cctpSupportsChainForHub(cid, hubChainId)) {
       throw new Error(`CCTP: chain ${cid} is unsupported for hub ${hubChainId}`);
@@ -168,17 +191,26 @@ async function createCctpRoute(
   // Per-route TEE smart accounts: source (receives + burns the user's USDC) and
   // hub (CCTP mint target + shields). Both counterfactual via the Nexus factory.
   const sourceAccount = getAddress(await deriveHubAddress(input.sourceChainId, routeId));
-  const hubAccount = getAddress(await deriveHubAddress(hubChainId, routeId));
+  // A non-EVM hub CANNOT use deriveHubAddress: it falls back to the TEE's EVM EOA
+  // for chains without a Nexus stack, and a 20-byte EVM address used as a Starknet
+  // felt is unspendable. Resolve the real Starknet account instead, and throw here
+  // (before any funds move) if it is missing or malformed.
+  const hubAccount = cctpIsStarknet(hubChainId)
+    ? starknetHubAccount()
+    : getAddress(await deriveHubAddress(hubChainId, routeId));
 
   // Net output after our service fee + the Railgun unshield fee + the CCTP dest-leg
   // fee, so the recipient receives at least the quoted amount. feeAmount stores our
   // service fee (margin); the monitor unshields `amount − feeAmount` and delivers
   // the remainder (see the SHIELDED step), which nets to `quotedOutput`.
   const outputUsd = Number(amount) / 1e6;
+  const bridgeFeeBps = await cctpFeeBps(hubChainId, input.destChainId);
   const { serviceFee: fee, quotedOutput } =
     privacyProvider === 'arc'
-      ? computeArcCctpRouteFees(amount, outputUsd)
-      : computeCctpRouteFees(amount, outputUsd);
+      ? computeArcCctpRouteFees(amount, outputUsd, bridgeFeeBps)
+      : privacyProvider === 'strk20'
+        ? computeStrk20RouteFees(amount, outputUsd, bridgeFeeBps)
+        : computeCctpRouteFees(amount, outputUsd, bridgeFeeBps);
 
   logger.info(
     `Creating CCTP route ${routeId}: ${input.amount} USDC ${input.sourceChainId} -> ${input.destChainId} via hub ${hubChainId}`,

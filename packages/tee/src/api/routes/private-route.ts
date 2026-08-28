@@ -32,7 +32,7 @@ export async function handleQuotePrivateRoute(request: Request): Promise<Respons
       amount?: string;
       tokenSymbol?: string;
       destTokenSymbol?: string;
-      privacyProvider?: 'railgun' | 'arc';
+      privacyProvider?: 'railgun' | 'arc' | 'strk20';
     };
 
     if (typeof body.sourceChainId !== 'number' || typeof body.destChainId !== 'number') {
@@ -70,7 +70,7 @@ export async function handleCreatePrivateRoute(request: Request): Promise<Respon
       userDestinationAddress?: string;
       tokenSymbol?: string;
       destTokenSymbol?: string;
-      privacyProvider?: 'railgun' | 'arc';
+      privacyProvider?: 'railgun' | 'arc' | 'strk20';
     };
 
     if (typeof body.sourceChainId !== 'number' || typeof body.destChainId !== 'number') {

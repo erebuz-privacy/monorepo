@@ -94,6 +94,20 @@ services:
       BRIDGE_PROVIDER: ${BRIDGE_PROVIDER:-relay}
       ARC_PRIVACY_ASP_URL: ${ARC_PRIVACY_ASP_URL:-http://asp:8787}
       ARC_PRIVACY_ARTIFACTS_URL: ${ARC_PRIVACY_ARTIFACTS_URL:-}
+      # ── STRK20 (Starknet hub) ────────────────────────────────────────────────
+      # The Starknet account that receives the CCTP mint and pays STRK gas to
+      # deliver mints. Required for any strk20 route; route creation throws
+      # without it rather than deriving an unspendable address.
+      STARKNET_ACCOUNT_ADDRESS: ${STARKNET_ACCOUNT_ADDRESS:-}
+      STARKNET_PRIVATE_KEY: ${STARKNET_PRIVATE_KEY:-}
+      STARKNET_RPC_URL: ${STARKNET_RPC_URL:-}
+      # The privacy hop needs BOTH; until StarkWare provides them a strk20 route
+      # pauses on the hub instead of completing.
+      STRK20_PROVING_SERVICE_URL: ${STRK20_PROVING_SERVICE_URL:-}
+      STRK20_INDEXER_URL: ${STRK20_INDEXER_URL:-}
+      # DEMO ONLY — completes strk20 routes with NO privacy hop. Leave unset on
+      # any deployment that presents these as private transfers.
+      STRK20_TRANSPORT_ONLY: ${STRK20_TRANSPORT_ONLY:-}
       # RPC for the Railgun hub chain (required for the privacy leg). Set the one
       # matching PRIVACY_HUB_CHAIN_ID: 42161 for prod (Arbitrum), 11155111 for the
       # Sepolia test hub. Use your own (Alchemy/Infura) for reliability.

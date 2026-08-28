@@ -157,6 +157,11 @@ class DbManager {
         leg2_deposit_address TEXT,
         shield_tx TEXT,
         unshield_tx TEXT,
+        -- CCTP mint (receiveMessage) hashes for each leg. The burns live in
+        -- leg{1,2}_request_id; without these the arrival half of each hop has no
+        -- explorer link, which is most of the trail on a CCTP route.
+        leg1_mint_tx TEXT,
+        leg2_mint_tx TEXT,
         error TEXT,
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT DEFAULT (datetime('now'))
@@ -250,6 +255,12 @@ class DbManager {
         if (!prColumns.includes('privacy_payload')) {
           this.database.exec(`ALTER TABLE private_routes ADD COLUMN privacy_payload TEXT;`);
           logger.info('Added privacy_payload column to private_routes', 'DbManager');
+        }
+        for (const column of ['leg1_mint_tx', 'leg2_mint_tx']) {
+          if (!prColumns.includes(column)) {
+            this.database.exec(`ALTER TABLE private_routes ADD COLUMN ${column} TEXT;`);
+            logger.info(`Added ${column} column to private_routes`, 'DbManager');
+          }
         }
       }
     } catch (error) {

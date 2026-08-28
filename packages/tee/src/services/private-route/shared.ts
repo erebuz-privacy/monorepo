@@ -15,7 +15,7 @@ export interface RouteTokensInput {
   /** Destination token symbol; defaults to the source symbol (same-asset route). */
   destTokenSymbol?: string;
   /** Privacy pool used for this route. Defaults to Railgun. */
-  privacyProvider?: 'railgun' | 'arc';
+  privacyProvider?: 'railgun' | 'arc' | 'strk20';
 }
 
 export interface ResolvedRoute {

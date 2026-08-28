@@ -19,7 +19,9 @@
     "test:sepolia": "tsx src/scripts/test-sepolia.ts",
     "test:cctp": "tsx src/scripts/test-cctp.ts",
     "test:aa": "tsx src/scripts/test-aa.ts",
-    "test:e2e": "tsx src/scripts/test-route-e2e.ts"
+    "test:e2e": "tsx src/scripts/test-route-e2e.ts",
+    "test:cctp:starknet": "tsx src/scripts/test-cctp-starknet.ts",
+    "starknet:account": "tsx src/scripts/create-starknet-account.ts"
   },
   "keywords": [],
   "author": "",
@@ -47,6 +49,7 @@
     "@types/node": "^24.10.0",
     "@typescript-eslint/eslint-plugin": "6.21.0",
     "@typescript-eslint/parser": "6.21.0",
-    "eslint": "8.57.1"
+    "eslint": "8.57.1",
+    "starknet": "10.0.2"
   }
 }

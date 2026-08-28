@@ -8,6 +8,7 @@
 
 import { db } from '../../managers/db';
 import { decryptField, encryptField } from '../../security/field-crypto';
+import { isPrivacyProvider } from '../../config/global-config';
 
 export type PrivateRouteStatus =
   | 'AWAITING_DEPOSIT' // waiting for user to send funds to the leg-1 deposit address
@@ -15,6 +16,7 @@ export type PrivateRouteStatus =
   | 'RECEIVED_ON_HUB' // funds arrived at the hub smart account
   | 'SHIELDED' // funds shielded into Railgun
   | 'POOL_DEPOSITED' // funds deposited into the Arc Privacy Pool; waiting for ASP approval
+  | 'NOTE_MATURING' // deposited into the STRK20 pool; note matures 10 blocks after creation
   | 'UNSHIELD_SENT' // unshield tx sent to the leg-2 deposit address
   | 'BRIDGING_OUT' // Relay leg-2 in flight (hub -> destination)
   | 'COMPLETED' // funds delivered on destination chain
@@ -28,7 +30,7 @@ export type PrivateRoute = {
   sourceChainId: number;
   destChainId: number;
   hubChainId: number;
-  privacyProvider: 'railgun' | 'arc';
+  privacyProvider: 'railgun' | 'arc' | 'strk20';
   /** Provider-private note material, encrypted at rest. Never returned by the API. */
   privacyPayload: string | null;
   tokenSymbol: string; // source token symbol (also shielded on the hub)
@@ -46,6 +48,9 @@ export type PrivateRoute = {
   leg2DepositAddress: string | null;
   shieldTx: string | null;
   unshieldTx: string | null;
+  /** CCTP receiveMessage hashes — the arrival half of each bridge hop. */
+  leg1MintTx: string | null;
+  leg2MintTx: string | null;
   error: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -74,6 +79,8 @@ type PrivateRouteRow = {
   leg2_deposit_address: string | null;
   shield_tx: string | null;
   unshield_tx: string | null;
+  leg1_mint_tx: string | null;
+  leg2_mint_tx: string | null;
   error: string | null;
   created_at: string;
   updated_at: string;
@@ -98,7 +105,7 @@ function rowToPrivateRoute(row: PrivateRouteRow): PrivateRoute {
     sourceChainId: row.source_chain_id,
     destChainId: row.dest_chain_id,
     hubChainId: row.hub_chain_id,
-    privacyProvider: row.privacy_provider === 'arc' ? 'arc' : 'railgun',
+    privacyProvider: isPrivacyProvider(row.privacy_provider) ? row.privacy_provider : 'railgun',
     privacyPayload: decryptField(row.privacy_payload) ?? null,
     tokenSymbol: row.token_symbol,
     tokenAddress: row.token_address,
@@ -116,6 +123,8 @@ function rowToPrivateRoute(row: PrivateRouteRow): PrivateRoute {
     leg2DepositAddress: row.leg2_deposit_address,
     shieldTx: row.shield_tx,
     unshieldTx: row.unshield_tx,
+    leg1MintTx: row.leg1_mint_tx,
+    leg2MintTx: row.leg2_mint_tx,
     error: row.error,
     createdAt: parseSqliteUtc(row.created_at),
     updatedAt: parseSqliteUtc(row.updated_at),
@@ -128,7 +137,7 @@ export interface CreatePrivateRouteInput {
   sourceChainId: number;
   destChainId: number;
   hubChainId: number;
-  privacyProvider?: 'railgun' | 'arc';
+  privacyProvider?: 'railgun' | 'arc' | 'strk20';
   privacyPayload?: string | null;
   tokenSymbol: string;
   tokenAddress: string;
@@ -153,6 +162,8 @@ const UPDATABLE_COLUMNS: Record<string, string> = {
   leg2DepositAddress: 'leg2_deposit_address',
   shieldTx: 'shield_tx',
   unshieldTx: 'unshield_tx',
+  leg1MintTx: 'leg1_mint_tx',
+  leg2MintTx: 'leg2_mint_tx',
   error: 'error',
   privacyPayload: 'privacy_payload',
 };
@@ -257,7 +268,8 @@ export class PrivateRouteModel {
              SET user_destination_address = '', hub_account = NULL,
                  leg1_deposit_address = NULL, leg2_deposit_address = NULL,
                  leg1_request_id = NULL, leg2_request_id = NULL,
-                 shield_tx = NULL, unshield_tx = NULL
+                 shield_tx = NULL, unshield_tx = NULL,
+                 leg1_mint_tx = NULL, leg2_mint_tx = NULL
            WHERE id = ? RETURNING *`
         )
         .get(id) as PrivateRouteRow | null;

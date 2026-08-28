@@ -9,20 +9,28 @@
 
 import { parseUnits } from 'viem';
 import { getRelayQuote, getRelayChains, chainDisplayName } from '../relay';
-import { cctpChainName, cctpSupportsChainForHub } from '../cctp';
+import { cctpChainName, cctpCanBeSource, cctpFeeBps, cctpSupportsChainForHub } from '../cctp';
 import {
   ARC_PRIVACY_HUB_CHAIN_ID,
   BRIDGE_PROVIDER,
   DEFAULT_PRIVACY_PROVIDER,
   PRIVACY_HUB_CHAIN_ID,
+  STRK20_PRIVACY_HUB_CHAIN_ID,
+  STRK20_TRANSPORT_ONLY,
+  isPrivacyProvider,
 } from '../../config/global-config';
-import { computeServiceFee, computeArcCctpRouteFees, computeCctpRouteFees } from './fee';
+import {
+  computeServiceFee,
+  computeArcCctpRouteFees,
+  computeCctpRouteFees,
+  computeStrk20RouteFees,
+} from './fee';
 import { resolveRouteTokens, type RouteTokensInput } from './shared';
 
 export type QuotePrivateRouteInput = RouteTokensInput;
 
 export interface QuotePrivateRouteResult {
-  privacyProvider: 'railgun' | 'arc';
+  privacyProvider: 'railgun' | 'arc' | 'strk20';
   /** Source token (what the user sends). */
   symbol: string;
   decimals: number;
@@ -52,16 +60,33 @@ export interface QuotePrivateRouteResult {
   etaSeconds: number;
   /** Display hops for the UI route trail. */
   route: string[];
+  /**
+   * TRUE when this route moves funds WITHOUT a privacy hop (demo mode). The UI
+   * must warn on it — it is not a private transfer.
+   */
+  transportOnly?: boolean;
+}
+
+/** Which chain hosts the privacy pool for a provider. */
+export function privacyHubChainId(provider: 'railgun' | 'arc' | 'strk20'): number {
+  if (provider === 'arc') return ARC_PRIVACY_HUB_CHAIN_ID;
+  if (provider === 'strk20') return STRK20_PRIVACY_HUB_CHAIN_ID;
+  return PRIVACY_HUB_CHAIN_ID;
 }
 
 export async function quotePrivateRoute(input: QuotePrivateRouteInput): Promise<QuotePrivateRouteResult> {
   const privacyProvider = input.privacyProvider ?? DEFAULT_PRIVACY_PROVIDER;
-  if (privacyProvider !== 'railgun' && privacyProvider !== 'arc') throw new Error('Invalid privacyProvider');
+  if (!isPrivacyProvider(privacyProvider)) throw new Error('Invalid privacyProvider');
   // CCTP mode: USDC bridges 1:1 (burn/mint), no slippage. Output = amount minus
   // our service fee, the Railgun unshield fee, and the CCTP dest-leg fee — all
   // subtracted so the recipient receives at least the shown amount.
-  if (BRIDGE_PROVIDER === 'cctp' || privacyProvider === 'arc') {
-    const hubChainId = privacyProvider === 'arc' ? ARC_PRIVACY_HUB_CHAIN_ID : PRIVACY_HUB_CHAIN_ID;
+  if (BRIDGE_PROVIDER === 'cctp' || privacyProvider === 'arc' || privacyProvider === 'strk20') {
+    const hubChainId = privacyHubChainId(privacyProvider);
+    // The user pays FROM the source, so it needs per-route Nexus deposit accounts.
+    // Non-EVM chains (Starknet) can be a hub or a destination, never a source.
+    if (!cctpCanBeSource(input.sourceChainId)) {
+      throw new Error(`Unsupported source chain ${input.sourceChainId}: non-EVM chains cannot be a route source`);
+    }
     if (
       !cctpSupportsChainForHub(input.sourceChainId, hubChainId) ||
       !cctpSupportsChainForHub(input.destChainId, hubChainId)
@@ -76,10 +101,16 @@ export async function quotePrivateRoute(input: QuotePrivateRouteInput): Promise<
     }
     const amount = parseUnits(input.amount, 6);
     const outputUsd = Number(amount) / 1e6;
+    // Circle's REAL fee for the destination-facing burn (hub -> dest). Critical
+    // for a Starknet hub, whose outbound leg is 14 bps where Sepolia's is 1.
+    const bridgeFeeBps = await cctpFeeBps(hubChainId, input.destChainId);
+    const strk20TransportOnly = privacyProvider === 'strk20' && STRK20_TRANSPORT_ONLY;
     const fees =
       privacyProvider === 'arc'
-        ? computeArcCctpRouteFees(amount, outputUsd)
-        : computeCctpRouteFees(amount, outputUsd);
+        ? computeArcCctpRouteFees(amount, outputUsd, bridgeFeeBps)
+        : privacyProvider === 'strk20'
+          ? computeStrk20RouteFees(amount, outputUsd, bridgeFeeBps)
+          : computeCctpRouteFees(amount, outputUsd, bridgeFeeBps);
     const { serviceFee, bridgeFee, quotedOutput } = fees;
     const privacyFee = 'privacyFee' in fees ? fees.privacyFee : 0n;
     return {
@@ -101,9 +132,19 @@ export async function quotePrivateRoute(input: QuotePrivateRouteInput): Promise<
       feeUsd: Number(serviceFee) / 1e6,
       bridgeFeeUsd: Number(bridgeFee) / 1e6,
       privacyFeeUsd: Number(privacyFee) / 1e6,
-      etaSeconds: privacyProvider === 'arc' ? 300 : 120,
+      etaSeconds:
+        privacyProvider === 'arc' ? 300 : privacyProvider === 'strk20' ? (strk20TransportOnly ? 150 : 240) : 120,
+      transportOnly: strk20TransportOnly || undefined,
       route:
-        privacyProvider === 'arc'
+        privacyProvider === 'strk20'
+          ? [
+              cctpChainName(input.sourceChainId),
+              'Circle CCTP',
+              strk20TransportOnly ? 'Starknet (transport only — NOT private)' : 'STRK20 pool (Starknet)',
+              'Circle CCTP',
+              cctpChainName(input.destChainId),
+            ]
+          : privacyProvider === 'arc'
           ? [
               cctpChainName(input.sourceChainId),
               ...(input.sourceChainId === hubChainId ? [] : ['Circle CCTP']),
